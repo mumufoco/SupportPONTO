@@ -15,6 +15,23 @@ use Psr\Log\LoggerInterface;
 
 class PersonalizationController extends BaseController
 {
+    /**
+     * Catálogo curado de fontes (Google Fonts) oferecidas na Tipografia.
+     * Chave = nome exibido/valor salvo; valor = spec da API css2 do Google Fonts.
+     */
+    private const AVAILABLE_FONTS = [
+        'Inter'         => 'Inter:wght@300;400;500;600;700',
+        'Open Sans'     => 'Open+Sans:wght@300;400;500;600;700',
+        'Roboto'        => 'Roboto:wght@300;400;500;700',
+        'Nunito'        => 'Nunito:wght@300;400;500;600;700',
+        'Poppins'       => 'Poppins:wght@300;400;500;600;700',
+        'Montserrat'    => 'Montserrat:wght@300;400;500;600;700',
+        'Lato'          => 'Lato:wght@300;400;700',
+        'Work Sans'     => 'Work+Sans:wght@300;400;500;600;700',
+        'Rubik'         => 'Rubik:wght@300;400;500;600;700',
+        'Source Sans 3' => 'Source+Sans+3:wght@300;400;600;700',
+    ];
+
     protected AppearanceSettingsService $appearanceService;
     protected SessionSecurityService    $sessionSecurityService;
     protected SettingsSafetyService     $settingsSafetyService;
@@ -41,6 +58,7 @@ class PersonalizationController extends BaseController
             ],
             'settings'      => $pageData['settings'],
             'currentConfig' => $pageData['currentConfig'],
+            'availableFonts' => self::AVAILABLE_FONTS,
         ]);
     }
 
@@ -92,6 +110,17 @@ class PersonalizationController extends BaseController
     public function uploadLogoSidebar()
     {
         return $this->handleUpload('logo_sidebar', fn($file) => $this->appearanceService->uploadLogoSidebar($file));
+    }
+
+    public function removeImage(string $field)
+    {
+        $this->requireRole('admin');
+
+        if (! $this->request->is('post')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Método inválido']);
+        }
+
+        return $this->response->setJSON($this->appearanceService->removeImage($field));
     }
 
     public function reset()

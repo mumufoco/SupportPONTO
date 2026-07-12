@@ -98,8 +98,17 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->post('appearance/upload-logo', 'Admin\AppearanceController::uploadLogo', ['as' => 'admin.settings.appearance.upload-logo']);
     $routes->post('appearance/upload-favicon', 'Admin\AppearanceController::uploadFavicon', ['as' => 'admin.settings.appearance.upload-favicon']);
     $routes->post('appearance/upload-login-background', 'Admin\AppearanceController::uploadLoginBackground', ['as' => 'admin.settings.appearance.upload-login-background']);
+    // Rotas de upload/remoção da Personalização. upload-logo, upload-favicon,
+    // upload-login-background e reset já existiam como métodos no controller
+    // mas nunca tinham rota — os botões correspondentes na página falhavam
+    // silenciosamente (sp_route_url() cai para '/' quando a rota não existe).
+    $routes->post('personalization/upload-logo', 'Admin\\PersonalizationController::uploadLogo', ['as' => 'admin.settings.personalization.upload-logo']);
+    $routes->post('personalization/upload-favicon', 'Admin\\PersonalizationController::uploadFavicon', ['as' => 'admin.settings.personalization.upload-favicon']);
     $routes->post('personalization/upload-logo-auth', 'Admin\\PersonalizationController::uploadLogoAuth', ['as' => 'admin.settings.personalization.upload-logo-auth']);
     $routes->post('personalization/upload-logo-sidebar', 'Admin\\PersonalizationController::uploadLogoSidebar', ['as' => 'admin.settings.personalization.upload-logo-sidebar']);
+    $routes->post('personalization/upload-login-background', 'Admin\\PersonalizationController::uploadLoginBackground', ['as' => 'admin.settings.personalization.upload-login-background']);
+    $routes->post('personalization/images/(:segment)/delete', 'Admin\\PersonalizationController::removeImage/$1', ['as' => 'admin.settings.personalization.images.delete']);
+    $routes->post('personalization/reset', 'Admin\\PersonalizationController::reset', ['as' => 'admin.settings.personalization.reset']);
     $routes->post('appearance/reset', 'Admin\AppearanceController::reset', ['as' => 'admin.settings.appearance.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->post('appearance/preview', 'Admin\AppearanceController::preview', ['as' => 'admin.settings.appearance.preview']);
     $routes->get('authentication', 'Admin\AuthenticationController::index', ['as' => 'admin.settings.authentication']);

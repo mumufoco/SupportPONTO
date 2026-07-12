@@ -82,14 +82,15 @@ class AppearanceSettingsService
     {
         $hexRule = 'permit_empty|regex_match[/^#[0-9A-Fa-f]{6}$/]';
         return [
-            'primary_color'   => $hexRule,
-            'secondary_color' => $hexRule,
-            'success_color'   => $hexRule,
-            'warning_color'   => $hexRule,
-            'danger_color'    => $hexRule,
-            'info_color'      => $hexRule,
-            'font_family'     => 'permit_empty|max_length[100]',
-            'theme_mode'      => 'permit_empty|in_list[light,dark,auto]',
+            'primary_color'    => $hexRule,
+            'secondary_color'  => $hexRule,
+            'success_color'    => $hexRule,
+            'warning_color'    => $hexRule,
+            'danger_color'     => $hexRule,
+            'info_color'       => $hexRule,
+            'font_family'      => 'permit_empty|max_length[100]',
+            'font_size_base'   => 'permit_empty|is_natural_no_zero|greater_than_equal_to[12]|less_than_equal_to[20]',
+            'theme_mode'       => 'permit_empty|in_list[light,dark,auto]',
         ];
     }
 
@@ -118,6 +119,10 @@ class AppearanceSettingsService
 
             if (isset($data['font_family'])) {
                 $this->design()->updateTypography(['font_family' => $data['font_family']]);
+            }
+
+            if (isset($data['font_size_base']) && $data['font_size_base'] !== '') {
+                $this->design()->updateTypography(['font_size_base' => ((int) $data['font_size_base']) . 'px']);
             }
 
             $this->design()->updateCustom([
@@ -241,6 +246,49 @@ class AppearanceSettingsService
             'message' => 'Logo do menu lateral enviada com sucesso',
             'url' => base_url($result['path']),
         ];
+    }
+
+    /**
+     * Remove a imagem atual de um slot (logo, logo_auth, logo_sidebar, favicon,
+     * login_background) sem enviar uma nova — limpa o arquivo em disco e a(s)
+     * chave(s) de configuração associada(s), espelhando o que cada uploadX()
+     * grava (ver aliases sincronizados em uploadLogo/uploadFavicon acima).
+     */
+    public function removeImage(string $field): array
+    {
+        $rule = self::FILE_RULES[$field] ?? null;
+        if ($rule === null) {
+            return ['success' => false, 'message' => 'Tipo de imagem inválido.'];
+        }
+
+        $current = (string) $this->settings()->get($rule['setting_key'], '');
+        if ($current === '') {
+            return ['success' => false, 'message' => $rule['label'] . ': não há imagem para remover.'];
+        }
+
+        $this->deletePublicAsset($current);
+        $this->settings()->setSetting($rule['setting_key'], '', 'file', 'appearance');
+
+        if ($field === 'logo') {
+            foreach (['company_logo', 'company_logo_small', 'company_logo_crop', 'company_logo_original'] as $key) {
+                $this->settings()->setSetting($key, '', 'string', 'appearance');
+            }
+            $this->design()->updateCustom(['logo' => '']);
+        } elseif ($field === 'favicon') {
+            $this->settings()->setSetting('company_favicon', '', 'string', 'appearance');
+            foreach (['favicon_path_16', 'favicon_path_32', 'favicon_path_48', 'favicon_path_180'] as $key) {
+                $this->settings()->setSetting($key, '', 'string', 'appearance');
+            }
+            $this->design()->updateCustom(['favicon' => '']);
+        } elseif ($field === 'login_background') {
+            $this->settings()->setSetting('login_background', '', 'string', 'appearance');
+            $this->design()->updateCustom(['login_background' => '']);
+        }
+
+        $this->settings()->clearCache();
+        $this->clearCache();
+
+        return ['success' => true, 'message' => $rule['label'] . ' removido(a) com sucesso.'];
     }
 
     public function reset(): array
