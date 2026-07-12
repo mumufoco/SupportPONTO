@@ -133,7 +133,7 @@
                             <td class="ps-3">
                                 <div class="d-flex align-items-center gap-2">
                                     <?php if (!empty($row['employee']->photo_path)): ?>
-                                    <img src="<?= base_url($row['employee']->photo_path) ?>"
+                                    <img src="<?= site_url('employees/' . ($row['employee']->id ?? '') . '/photo') ?>"
                                          alt="" class="rounded-circle"
                                          style="width:32px;height:32px;object-fit:cover;flex-shrink:0">
                                     <?php else: ?>

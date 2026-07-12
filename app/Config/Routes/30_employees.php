@@ -70,6 +70,9 @@ $routes->get('admin/employees/overview', 'Employees\EmployeeController::adminOve
 $routes->get('cadastros/controle-colaboradores', 'Employees\EmployeeController::adminOverview', ['as' => 'cadastros.controle.colaboradores', 'filter' => ['auth', 'admin']]);
 
 $routes->post('employees/(:num)/photo', 'Employees\EmployeeController::uploadPhoto/$1', ['as' => 'employees.photo.upload', 'filter' => 'auth']);
+// MED-09 (auditoria): foto servida por rota autenticada (self/admin/rh/gestor do mesmo
+// departamento), não mais por arquivo estático em URL pública previsível.
+$routes->get('employees/(:num)/photo', 'Employees\EmployeeController::photo/$1', ['as' => 'employees.photo.view', 'filter' => 'auth']);
 
 // Employee change requests
 $routes->get('employees/change-request/create/(:num)',  'Employees\EmployeeChangeRequestController::create/$1',  ['as' => 'employees.change-request.create',  'filter' => 'auth']);

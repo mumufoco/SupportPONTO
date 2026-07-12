@@ -61,7 +61,7 @@ $hasFingerprint       = $hasFingerprintBiometric ?? $emp->has_fingerprint_biomet
 $faceT                = $faceTemplate ?? null;
 $fpT                  = $fingerprintTemplate ?? null;
 $hasPhoto             = !empty($emp->photo_path);
-$photoUrl             = $hasPhoto ? base_url($emp->photo_path) : null;
+$photoUrl             = $hasPhoto ? site_url('employees/' . ($emp->id ?? '') . '/photo') : null;
 $isSelf               = isset($currentUser) && ((int)($currentUser->id ?? 0) === (int)($emp->id ?? -1));
 $isManager            = in_array($currentUser->role ?? '', ['admin','rh','gestor'], true);
 $canUploadPhoto       = $isSelf || $isManager;

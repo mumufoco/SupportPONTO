@@ -663,10 +663,14 @@ class EmployeeController extends BaseController
             return $this->respondError('Colaborador não encontrado.', null, 404);
         }
 
-        // Accept either a file upload or base64 from camera
-        $uploadDir = FCPATH . 'store/employees/photos/';
+        // MED-09 (auditoria): antes ficava em FCPATH (webroot público), com nome
+        // previsível (emp_{id}_{timestamp}.jpg) e sem nenhum controle de acesso na
+        // leitura — dado pessoal (LGPD) acessível a qualquer um com a URL. Agora fica em
+        // WRITEPATH (fora do webroot), só acessível via photo() abaixo, que exige
+        // autenticação e checa posse (self/admin/rh/gestor do mesmo departamento).
+        $uploadDir = WRITEPATH . 'uploads/employees/photos/';
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0775, true);
+            mkdir($uploadDir, 0750, true);
         }
 
         $imgData = null;
@@ -679,6 +683,10 @@ class EmployeeController extends BaseController
             }
             if ($file->getSizeByUnit('mb') > 5) {
                 return $this->respondError('Tamanho máximo permitido: 5 MB.', null, 422);
+            }
+            $realMime = (new \App\Services\Upload\SafeUploadService())->detectRealMime((string) $file->getTempName());
+            if (! in_array($realMime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+                return $this->respondError('Apenas imagens são aceitas (JPG, PNG, WEBP).', null, 422);
             }
             $imgData = file_get_contents($file->getTempName());
         } elseif ($b64 = $this->request->getPost('photo_base64')) {
@@ -694,24 +702,72 @@ class EmployeeController extends BaseController
             return $this->respondError('Nenhuma imagem recebida.', null, 400);
         }
 
-        // Delete old photo if any
+        // Delete old photo if any (localização legada em FCPATH ou nova em WRITEPATH)
         $oldPath = is_array($employee) ? ($employee['photo_path'] ?? null) : ($employee->photo_path ?? null);
         if ($oldPath) {
-            $oldFull = FCPATH . ltrim($oldPath, '/');
+            $oldFull = str_starts_with($oldPath, 'uploads/')
+                ? WRITEPATH . $oldPath
+                : FCPATH . ltrim($oldPath, '/');
             if (file_exists($oldFull)) {
                 @unlink($oldFull);
             }
         }
 
-        // Save new photo
-        $filename = 'emp_' . $id . '_' . time() . '.jpg';
+        // Save new photo com nome não previsível
+        $filename = 'emp_' . $id . '_' . bin2hex(random_bytes(16)) . '.jpg';
         $filepath = $uploadDir . $filename;
         file_put_contents($filepath, $imgData);
+        @chmod($filepath, 0640);
 
-        $relativePath = 'store/employees/photos/' . $filename;
+        $relativePath = 'uploads/employees/photos/' . $filename;
         $employeeModel->update($id, ['photo_path' => $relativePath]);
 
-        return $this->respondSuccess(['photo_url' => base_url($relativePath)], 'Foto atualizada com sucesso.');
+        return $this->respondSuccess(['photo_url' => site_url('employees/' . $id . '/photo')], 'Foto atualizada com sucesso.');
+    }
+
+    /**
+     * Serve a foto do funcionário sob autenticação + checagem de posse — ver MED-09
+     * na auditoria. Nunca serve arquivo estático diretamente do webroot público.
+     */
+    public function photo(int $id)
+    {
+        $this->requireAuth();
+
+        $employeeModel = new \App\Models\EmployeeModel();
+        $employee = $employeeModel->find($id);
+        if (!$employee) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        if (!$this->canAccessEmployeeRecord($employee)) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $photoPath = is_array($employee) ? ($employee['photo_path'] ?? null) : ($employee->photo_path ?? null);
+        if (!$photoPath) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $candidate = str_starts_with($photoPath, 'uploads/')
+            ? WRITEPATH . $photoPath
+            : FCPATH . ltrim($photoPath, '/');
+
+        $safeUpload = new \App\Services\Upload\SafeUploadService();
+        $resolved = $safeUpload->safeDownloadPath($candidate, [
+            realpath(WRITEPATH . 'uploads/employees/photos') ?: WRITEPATH . 'uploads/employees/photos',
+            realpath(FCPATH . 'store/employees/photos') ?: FCPATH . 'store/employees/photos',
+        ]);
+
+        if ($resolved === null) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $mime = $safeUpload->detectRealMime($resolved) ?? 'application/octet-stream';
+
+        return $this->response
+            ->setHeader('Cache-Control', 'private, max-age=300')
+            ->setContentType($mime)
+            ->setBody(file_get_contents($resolved));
     }
 
 }
