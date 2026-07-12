@@ -38,8 +38,14 @@ class OAuth2Filter implements FilterInterface
     {
         $path = trim($request->getUri()->getPath(), '/');
 
+        // BAIXO-02 (auditoria): str_starts_with sem checar limite de segmento fazia
+        // "api/oauth/token" casar também com "api/oauth/tokens" (rota real que lista
+        // tokens ativos), e qualquer rota futura prefixada por "api/health"/"api/ping"
+        // herdaria bypass de autenticação. Hoje isso já é neutralizado por revalidação
+        // nos controllers, mas é uma fragilidade de implementação — exige igualdade
+        // exata ou fim de segmento ("/" ou "?").
         foreach ($this->publicEndpoints as $publicEndpoint) {
-            if (str_starts_with($path, $publicEndpoint)) {
+            if ($path === $publicEndpoint || str_starts_with($path, $publicEndpoint . '/')) {
                 return null;
             }
         }
