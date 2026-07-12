@@ -192,6 +192,11 @@ class Filters extends BaseConfig
                 'auth/login',
                 'auth/register',
                 'auth/positions-by-department',
+                // ALTO-01 (auditoria): auth/2fa/verify não tinha nenhum rate limit — dava
+                // para tentar força bruta o código TOTP (6 dígitos) ou os backup codes
+                // (8 dígitos) sem qualquer bloqueio, mesmo já existindo o bucket
+                // '2fa_verify' dedicado em RateLimitPolicyService (5 tentativas/10min).
+                'auth/2fa/verify',
                 'timesheet/punch',
                 'timesheet/punch/*',
             ],

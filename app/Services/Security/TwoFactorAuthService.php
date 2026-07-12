@@ -98,20 +98,23 @@ class TwoFactorAuthService
         $timestamp = $timestamp ?? time();
         $counter = (int)floor($timestamp / $this->period);
 
+        // ALTO-01 (auditoria): comparação trocada de === para hash_equals — === teria
+        // tempo de execução dependente de onde os dígitos divergem, abrindo uma janela
+        // (pequena, mas real) para timing attack contra o código TOTP de 6 dígitos.
         // Check current time window
-        if ($this->generateHOTP($secret, $counter) === $code) {
+        if (hash_equals($this->generateHOTP($secret, $counter), $code)) {
             return true;
         }
 
         // Check previous/next time windows (tolerance for clock drift)
         for ($i = 1; $i <= $this->window; $i++) {
             // Check previous window
-            if ($this->generateHOTP($secret, $counter - $i) === $code) {
+            if (hash_equals($this->generateHOTP($secret, $counter - $i), $code)) {
                 return true;
             }
 
             // Check next window
-            if ($this->generateHOTP($secret, $counter + $i) === $code) {
+            if (hash_equals($this->generateHOTP($secret, $counter + $i), $code)) {
                 return true;
             }
         }
