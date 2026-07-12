@@ -34,7 +34,7 @@ class EmployeeModel extends Model
         
         // Reset de senha / remember-me
         'password_reset_token', 'password_reset_expires', 'must_change_password', 'password_changed_at',
-        'remember_token', 'remember_token_expires',
+        'remember_token', 'remember_token_series', 'remember_token_expires',
         
         // Campos obrigatórios da Portaria do MTE
         'rg', 'rg_orgao_emissor', 'rg_data_expedicao', 'nacionalidade', 'logradouro', 'numero', 'complemento',
