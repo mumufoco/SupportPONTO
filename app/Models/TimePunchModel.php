@@ -247,9 +247,19 @@ class TimePunchModel extends Model
         return ($now - $lastPunchTime) >= self::MIN_SECONDS_BETWEEN_PUNCHES;
     }
 
+    /**
+     * O parâmetro $date é mantido apenas por compatibilidade de assinatura
+     * (TimePunchServiceInterface) e não restringe mais a busca da última marcação.
+     *
+     * PunchType::nextExpected() já fecha o ciclo corretamente (Saída -> Entrada), então
+     * restringir a busca ao dia civil da nova marcação só introduzia um bug real: um turno
+     * que atravessa a meia-noite (ex.: entrada 23h, saída 07h do dia seguinte) tinha sua
+     * saída rejeitada, porque a busca "esquecia" a entrada registrada no dia anterior (ver
+     * auditoria CRIT-03).
+     */
     public function getNextPunchType(int $employeeId, ?string $date = null): PunchType
     {
-        $lastPunch = $this->getLastPunch($employeeId, $date);
+        $lastPunch = $this->getLastPunch($employeeId);
 
         if (!$lastPunch) {
             return PunchType::Entrada;

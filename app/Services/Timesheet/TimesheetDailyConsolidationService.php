@@ -59,6 +59,13 @@ class TimesheetDailyConsolidationService
             ->orderBy('punch_time', 'ASC')
             ->findAll();
 
+        // Turno que atravessa a meia-noite: um par entrada/saída (ou início/fim de intervalo)
+        // dividido estritamente por dia civil fica com metade "aberta" em cada dia, gerando
+        // 0h trabalhadas e débito integral duplicado nos dois dias (ver auditoria CRIT-04). O
+        // turno inteiro é atribuído ao dia em que começou.
+        $punches = $this->appendCrossMidnightClosingPunch($employeeId, $dayEndAt, $punches);
+        $punches = $this->stripCrossMidnightOpeningConsumedByPreviousDay($employeeId, $dayStartAt, $punches);
+
         $calculation = $this->computationService->calculateDailyHours($punches, ['employee' => $employee]);
         $validation = $this->computationService->validatePunchPairs($punches);
         $justification = $this->findApprovedJustification($employeeId, $date);
@@ -170,6 +177,90 @@ class TimesheetDailyConsolidationService
             'needs_recalculation' => true,
             'processed_at' => null,
         ]);
+    }
+
+    /**
+     * Se o dia termina com uma abertura sem fechamento (entrada ou início de intervalo sem o
+     * par correspondente), busca a primeira marcação após o fim do dia civil — não o dia
+     * seguinte inteiro, para não puxar acidentalmente o início de um turno novo — e a inclui
+     * neste cálculo, desde que seja exatamente o fechamento esperado para o tipo em aberto.
+     *
+     * @param list<object> $punches
+     * @return list<object>
+     */
+    private function appendCrossMidnightClosingPunch(int $employeeId, string $dayEndAt, array $punches): array
+    {
+        if ($punches === []) {
+            return $punches;
+        }
+
+        $lastType = $this->timePunchModel->normalizePunchType((string) $punches[array_key_last($punches)]->punch_type);
+        if (! in_array($lastType, ['entrada', 'intervalo_inicio'], true)) {
+            return $punches;
+        }
+
+        $closing = $this->timePunchModel
+            ->where('employee_id', $employeeId)
+            ->where('punch_time >=', $dayEndAt)
+            ->orderBy('punch_time', 'ASC')
+            ->first();
+
+        if ($closing === null) {
+            return $punches;
+        }
+
+        $closingType = $this->timePunchModel->normalizePunchType((string) $closing->punch_type);
+        $expectedClosing = $lastType === 'entrada' ? 'saida' : 'intervalo_fim';
+
+        if ($closingType !== $expectedClosing) {
+            return $punches;
+        }
+
+        $punches[] = $closing;
+
+        return $punches;
+    }
+
+    /**
+     * Se o dia começa com um fechamento (saída/fim de intervalo) sem abertura correspondente
+     * dentro do próprio dia, e a marcação imediatamente anterior ao início do dia é a abertura
+     * esperada, esse par já foi consumido por appendCrossMidnightClosingPunch() ao consolidar
+     * o dia anterior — remove daqui para não contar o mesmo turno duas vezes.
+     *
+     * @param list<object> $punches
+     * @return list<object>
+     */
+    private function stripCrossMidnightOpeningConsumedByPreviousDay(int $employeeId, string $dayStartAt, array $punches): array
+    {
+        if ($punches === []) {
+            return $punches;
+        }
+
+        $firstType = $this->timePunchModel->normalizePunchType((string) $punches[0]->punch_type);
+        if (! in_array($firstType, ['saida', 'intervalo_fim'], true)) {
+            return $punches;
+        }
+
+        $previous = $this->timePunchModel
+            ->where('employee_id', $employeeId)
+            ->where('punch_time <', $dayStartAt)
+            ->orderBy('punch_time', 'DESC')
+            ->first();
+
+        if ($previous === null) {
+            return $punches;
+        }
+
+        $previousType = $this->timePunchModel->normalizePunchType((string) $previous->punch_type);
+        $expectedOpening = $firstType === 'saida' ? 'entrada' : 'intervalo_inicio';
+
+        if ($previousType !== $expectedOpening) {
+            return $punches;
+        }
+
+        array_shift($punches);
+
+        return $punches;
     }
 
     private function expectedDailyHours(?object $employee): float
