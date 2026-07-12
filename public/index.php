@@ -62,6 +62,23 @@ if (function_exists('ini_set')) {
 
 /*
  *---------------------------------------------------------------
+ * MAINTENANCE MODE
+ *---------------------------------------------------------------
+ * Checked before Composer autoload / DB config so it still works
+ * mid-deploy (new code checked out, migrations not yet applied).
+ * Toggle by creating/removing writable/maintenance.lock (not versioned).
+ */
+$maintenanceLock = dirname(__DIR__) . '/writable/maintenance.lock';
+if (is_file($maintenanceLock)) {
+    http_response_code(503);
+    header('Retry-After: 120');
+    header('Content-Type: text/html; charset=UTF-8');
+    echo '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Manutenção programada</title><style>body{font-family:Arial,sans-serif;background:#f6f8f7;color:#2f3a2f;margin:0;padding:32px}main{max-width:560px;margin:80px auto;background:#fff;border:1px solid #d9e2d8;border-radius:14px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center}h1{margin-top:0;font-size:1.4rem}</style></head><body><main><h1>Manutenção programada</h1><p>O SupportPONTO está em manutenção rápida. Tente novamente em alguns minutos.</p></main></body></html>';
+    exit;
+}
+
+/*
+ *---------------------------------------------------------------
  * CHECK PHP VERSION
  *---------------------------------------------------------------
  */
