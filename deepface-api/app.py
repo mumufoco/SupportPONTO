@@ -402,11 +402,14 @@ def enroll():
 
         try:
             # Extract faces using DeepFace
+            # ALTO-06 (auditoria): ANTI_SPOOFING_ENABLED existia na config mas nunca era
+            # passado a nenhuma chamada do DeepFace — a flag não tinha efeito real.
             faces = DeepFace.extract_faces(
                 img_path=temp_path,
                 detector_backend=Config.DETECTOR_BACKEND,
                 enforce_detection=Config.ENFORCE_DETECTION,
-                align=Config.ALIGN
+                align=Config.ALIGN,
+                anti_spoofing=Config.ANTI_SPOOFING_ENABLED
             )
 
             # Validate face count
@@ -425,6 +428,17 @@ def enroll():
                 }), 400
 
             face = faces[0]
+
+            # extract_faces() com anti_spoofing=True anota is_real/antispoof_score no
+            # dict retornado mas não levanta exceção por si só — a checagem explícita
+            # abaixo é o que de fato rejeita uma foto impressa/tela usada para cadastro.
+            if Config.ANTI_SPOOFING_ENABLED and face.get('is_real') is False:
+                cleanup_temp_file(temp_path)
+                return jsonify({
+                    'success': False,
+                    'error': 'Possível tentativa de fraude detectada (foto impressa ou em tela). Use uma captura ao vivo.',
+                    'code': 'spoof_detected'
+                }), 400
 
             # Check face size
             face_region = face['facial_area']
@@ -592,6 +606,9 @@ def recognize():
                 }), 200
 
             # Find matching faces
+            # ALTO-06 (auditoria): anti_spoofing habilitado no reconhecimento ao vivo —
+            # é aqui, não no enroll, que um ataque de apresentação (foto impressa, tela
+            # de celular) contra o ponto facial realmente importa.
             result = DeepFace.find(
                 img_path=temp_path,
                 db_path=scratch_dir,
@@ -600,6 +617,7 @@ def recognize():
                 distance_metric=Config.DISTANCE_METRIC,
                 enforce_detection=Config.ENFORCE_DETECTION,
                 align=Config.ALIGN,
+                anti_spoofing=Config.ANTI_SPOOFING_ENABLED,
                 silent=True,
                 refresh_database=True
             )
@@ -716,7 +734,8 @@ def verify():
                 detector_backend=Config.DETECTOR_BACKEND,
                 distance_metric=Config.DISTANCE_METRIC,
                 enforce_detection=Config.ENFORCE_DETECTION,
-                align=Config.ALIGN
+                align=Config.ALIGN,
+                anti_spoofing=Config.ANTI_SPOOFING_ENABLED
             )
 
             verified = result['verified']

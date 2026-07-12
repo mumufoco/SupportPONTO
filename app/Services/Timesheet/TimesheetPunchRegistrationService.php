@@ -13,6 +13,7 @@ use App\Models\SettingModel;
 use App\Models\TimePunchModel;
 use App\Services\Biometric\DeepFaceService;
 use App\Services\GeolocationService;
+use App\Services\Security\RateLimitService;
 use CodeIgniter\Events\Events;
 
 /**
@@ -32,6 +33,7 @@ class TimesheetPunchRegistrationService
         private readonly AuditModel $auditModel = new AuditModel(),
         private readonly GeolocationService $geolocationService = new GeolocationService(),
         private readonly DeepFaceService $deepFaceService = new DeepFaceService(),
+        private readonly RateLimitService $rateLimitService = new RateLimitService(),
     ) {
     }
 
@@ -223,6 +225,22 @@ class TimesheetPunchRegistrationService
     {
         if (! $command->photo) {
             return $this->failure('Foto é obrigatória para registro facial.', 400, ['photo' => 'required']);
+        }
+
+        // ALTO-06 (auditoria): api/v1/time-punch atende todos os métodos de ponto (código,
+        // QR, facial), então gatear a rota inteira pelo bucket 'biometric' (mais restrito)
+        // penalizaria funcionários usando código/QR no mesmo IP/NAT. Em vez disso,
+        // aplicamos aqui, especificamente no caminho facial, o mesmo bucket 'biometric'
+        // (10 tentativas/min) já existente em RateLimitPolicyService — chaveado por
+        // funcionário, não só por IP, para conter tentativas repetidas de burlar o
+        // reconhecimento com fotos/telas contra um único colaborador.
+        $limitInfo = $this->rateLimitService->attempt(
+            'facial_punch_' . $command->employeeId,
+            'biometric',
+            $this->rateLimitService->getClientIp()
+        );
+        if (! ($limitInfo['allowed'] ?? true)) {
+            return $this->failure('Muitas tentativas de reconhecimento facial. Aguarde antes de tentar novamente.', 429, ['biometric_rate_limited' => true]);
         }
 
         $recognition = $this->deepFaceService->recognizeFace((string) $command->photo);
