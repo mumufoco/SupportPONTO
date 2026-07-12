@@ -8,6 +8,15 @@ use DateTimeImmutable;
 
 class NightShiftPolicy
 {
+    /**
+     * CLT art. 73 §1º: a "hora noturna" urbana equivale a 52min30s de relógio, não 60
+     * minutos — cada hora de relógio trabalhada no período noturno conta como
+     * 60/52,5 ≈ 1,142857 "hora noturna" para fins de adicional (MED-01 na auditoria:
+     * antes, o cálculo somava só os segundos de relógio sobrepostos com a janela
+     * 22h–5h e dividia por 3600, subestimando o adicional devido em ~14%).
+     */
+    private const NIGHT_HOUR_SECONDS = 52.5 * 60;
+
     /** @param list<array<string,mixed>> $workPairs */
     public function calculateNightHours(array $workPairs): float
     {
@@ -46,6 +55,8 @@ class NightShiftPolicy
             }
         }
 
-        return round($seconds / 3600, 2);
+        // Divide pela "hora noturna reduzida" (52min30s), não por 3600 — ver
+        // NIGHT_HOUR_SECONDS acima.
+        return round($seconds / self::NIGHT_HOUR_SECONDS, 2);
     }
 }
