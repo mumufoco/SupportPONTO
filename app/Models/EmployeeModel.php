@@ -47,6 +47,16 @@ class EmployeeModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
+    // CRIT-08 (auditoria): sem isso, delete($id) disparava um DELETE físico real, que
+    // arrastava em cascata (ON DELETE CASCADE) todo o histórico legal do funcionário —
+    // batidas de ponto, justificativas, advertências e templates biométricos — de forma
+    // irrecuperável, violando a obrigação de retenção da Portaria MTE 671/2021. A coluna
+    // deleted_at já existia na tabela desde a migração original, só nunca foi ativada
+    // aqui. EmployeeStatusService::deleteEmployee()/rejectRegistration() chamam
+    // delete($id) sem purge=true, então passam a fazer soft-delete automaticamente.
+    protected $useSoftDeletes = true;
+    protected $deletedField   = 'deleted_at';
+
     protected $validationRules = [
         // O Model precisa aceitar inserts parciais feitos pelo instalador, seeders,
         // autocadastro e rotinas de suporte. A validação completa do cadastro de
