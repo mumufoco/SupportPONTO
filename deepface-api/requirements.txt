@@ -10,6 +10,13 @@ Werkzeug==3.0.1
 # DeepFace and dependencies
 deepface==0.0.89
 tensorflow==2.15.0
+# tf-keras não é pinado por padrão pelo tensorflow==2.15.0 (fica como dependência
+# opcional/transitiva) e pode ser puxado independentemente para uma versão mais
+# recente por outro pacote — encontrado em produção com tf_keras 2.21.0 instalado
+# junto de tensorflow 2.15.0, causando ImportError (tf_keras exigia
+# google.protobuf.runtime_version, ausente na faixa de protobuf que o TF 2.15
+# exige). Fixado na mesma série 2.15.x do tensorflow para não repetir o crash-loop.
+tf-keras==2.15.1
 opencv-python-headless==4.8.1.78
 Pillow==10.1.0
 
