@@ -4,12 +4,14 @@ namespace App\Services\Employees\Management;
 
 use App\Models\EmployeeModel;
 use App\Models\NotificationModel;
+use App\Services\Auth\SessionSecurityService;
 
 class EmployeeStatusService
 {
     public function __construct(
         private readonly EmployeeModel $employeeModel,
         private readonly NotificationModel $notificationModel,
+        private readonly SessionSecurityService $sessionSecurityService = new SessionSecurityService(),
     ) {
     }
 
@@ -24,6 +26,10 @@ class EmployeeStatusService
             return ['success' => false, 'error' => 'Erro ao excluir funcionário.', 'status' => 500];
         }
 
+        // ALTO-02 (auditoria): sem isto, um funcionário excluído continuava com acesso
+        // pleno pela sessão já aberta até ela expirar naturalmente.
+        $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Funcionário excluído');
+
         return ['success' => true, 'employee' => $employee];
     }
 
@@ -35,6 +41,14 @@ class EmployeeStatusService
         }
 
         $this->employeeModel->update($id, ['active' => $active]);
+
+        // ALTO-02 (auditoria): desativar um funcionário (ex.: desligamento) não
+        // revogava a sessão já aberta — quem estivesse logado continuava acessando o
+        // sistema normalmente até a sessão expirar naturalmente (até ~2h, conforme
+        // session.expiration), mesmo após uma ação administrativa explícita de bloqueio.
+        if (!$active) {
+            $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Funcionário desativado');
+        }
 
         return ['success' => true, 'employee' => $employee, 'active' => $active];
     }

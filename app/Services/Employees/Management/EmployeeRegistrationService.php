@@ -4,6 +4,7 @@ namespace App\Services\Employees\Management;
 
 use App\Models\EmployeeModel;
 use App\Services\Auth\RegisterPolicyService;
+use App\Services\Auth\SessionSecurityService;
 
 class EmployeeRegistrationService
 {
@@ -13,6 +14,7 @@ class EmployeeRegistrationService
         private readonly EmployeePayloadBuilder $payloadBuilder,
         private readonly EmployeeFormSupportService $formSupport,
         private readonly RegisterPolicyService $registerPolicyService = new RegisterPolicyService(),
+        private readonly SessionSecurityService $sessionSecurityService = new SessionSecurityService(),
     ) {
     }
 
@@ -85,14 +87,28 @@ class EmployeeRegistrationService
             return ['success' => false, 'error' => 'Erro ao atualizar empregado.'];
         }
 
+        $oldRole = is_array($employee) ? ($employee['role'] ?? null) : ($employee->role ?? null);
+        $oldActive = is_array($employee) ? ($employee['active'] ?? null) : ($employee->active ?? null);
+        $newActive = array_key_exists('active', $payload) ? $payload['active'] : $oldActive;
+
+        // ALTO-02 (auditoria): trocar o papel (role) de um funcionário ou desativá-lo por
+        // esta tela de edição não revogava a sessão já aberta — quem estivesse logado
+        // mantinha os privilégios do papel antigo até a sessão expirar naturalmente.
+        $roleChanged = $oldRole !== null && $payload['role'] !== $oldRole;
+        $becameInactive = $oldActive && !$newActive;
+        if ($roleChanged || $becameInactive) {
+            $reason = $roleChanged ? 'Papel (role) do funcionário alterado' : 'Funcionário desativado';
+            $this->sessionSecurityService->revokeAllSessionsForUser($id, $reason);
+        }
+
         return [
             'success' => true,
             'data' => $payload,
             'old_values' => [
                 'name' => is_array($employee) ? ($employee['name'] ?? null) : ($employee->name ?? null),
                 'email' => is_array($employee) ? ($employee['email'] ?? null) : ($employee->email ?? null),
-                'role' => is_array($employee) ? ($employee['role'] ?? null) : ($employee->role ?? null),
-                'active' => is_array($employee) ? ($employee['active'] ?? null) : ($employee->active ?? null),
+                'role' => $oldRole,
+                'active' => $oldActive,
             ],
         ];
     }

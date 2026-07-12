@@ -40,22 +40,30 @@ class SessionSecurityService
             'recent_password_confirmed_at' => null,
         ]);
 
-        $registry = $this->readRegistry();
         $userId = (int) ($user->id ?? 0);
-        $registry[$userId] ??= [];
-        $registry[$userId][$sessionKey] = [
-            'session_key' => $sessionKey,
-            'started_at' => (string) $session->get('session_started_at'),
-            'last_activity' => date('Y-m-d H:i:s'),
-            'ip' => (string) ($request->getIPAddress() ?? ''),
-            'user_agent' => substr((string) $request->getUserAgent()->getAgentString(), 0, 255),
-            'fingerprint' => (string) ($session->get('session_fingerprint') ?? ''),
-            'role' => (string) ($user->role ?? ''),
-            'active' => true,
-            'remember_me' => (bool) $session->get('remember_me'),
-        ];
+        $startedAt = (string) $session->get('session_started_at');
+        $ip = (string) ($request->getIPAddress() ?? '');
+        $userAgent = substr((string) $request->getUserAgent()->getAgentString(), 0, 255);
+        $fingerprint = (string) ($session->get('session_fingerprint') ?? '');
+        $role = (string) ($user->role ?? '');
+        $rememberMe = (bool) $session->get('remember_me');
 
-        $this->writeRegistry($registry);
+        $this->withRegistryLock(function (array $registry) use ($userId, $sessionKey, $startedAt, $ip, $userAgent, $fingerprint, $role, $rememberMe): array {
+            $registry[$userId] ??= [];
+            $registry[$userId][$sessionKey] = [
+                'session_key' => $sessionKey,
+                'started_at' => $startedAt,
+                'last_activity' => date('Y-m-d H:i:s'),
+                'ip' => $ip,
+                'user_agent' => $userAgent,
+                'fingerprint' => $fingerprint,
+                'role' => $role,
+                'active' => true,
+                'remember_me' => $rememberMe,
+            ];
+
+            return $registry;
+        });
 
         return $sessionKey;
     }
@@ -67,15 +75,20 @@ class SessionSecurityService
             return;
         }
 
-        $registry = $this->readRegistry();
-        if (! isset($registry[$userId][$sessionKey])) {
-            return;
-        }
+        $ip = (string) ($request->getIPAddress() ?? '');
+        $userAgent = substr((string) $request->getUserAgent()->getAgentString(), 0, 255);
 
-        $registry[$userId][$sessionKey]['last_activity'] = date('Y-m-d H:i:s');
-        $registry[$userId][$sessionKey]['ip'] = (string) ($request->getIPAddress() ?? '');
-        $registry[$userId][$sessionKey]['user_agent'] = substr((string) $request->getUserAgent()->getAgentString(), 0, 255);
-        $this->writeRegistry($registry);
+        $this->withRegistryLock(function (array $registry) use ($userId, $sessionKey, $ip, $userAgent): array {
+            if (! isset($registry[$userId][$sessionKey])) {
+                return $registry;
+            }
+
+            $registry[$userId][$sessionKey]['last_activity'] = date('Y-m-d H:i:s');
+            $registry[$userId][$sessionKey]['ip'] = $ip;
+            $registry[$userId][$sessionKey]['user_agent'] = $userAgent;
+
+            return $registry;
+        });
     }
 
     public function isCurrentSessionAllowed(int $userId, Session $session): bool
@@ -85,7 +98,7 @@ class SessionSecurityService
             return false;
         }
 
-        $registry = $this->readRegistry();
+        $registry = $this->readRegistryLocked();
         return (bool) ($registry[$userId][$sessionKey]['active'] ?? false);
     }
 
@@ -96,18 +109,20 @@ class SessionSecurityService
             return;
         }
 
-        $registry = $this->readRegistry();
-        unset($registry[$userId][$sessionKey]);
-        if (($registry[$userId] ?? []) === []) {
-            unset($registry[$userId]);
-        }
-        $this->writeRegistry($registry);
+        $this->withRegistryLock(function (array $registry) use ($userId, $sessionKey): array {
+            unset($registry[$userId][$sessionKey]);
+            if (($registry[$userId] ?? []) === []) {
+                unset($registry[$userId]);
+            }
+
+            return $registry;
+        });
     }
 
     /** @return array<int, array<string, mixed>> */
     public function listSessionsForUser(int $userId, ?string $currentSessionKey = null): array
     {
-        $registry = $this->readRegistry();
+        $registry = $this->readRegistryLocked();
         $sessions = array_values($registry[$userId] ?? []);
         usort($sessions, static fn(array $a, array $b): int => strcmp((string) ($b['last_activity'] ?? ''), (string) ($a['last_activity'] ?? '')));
 
@@ -126,20 +141,21 @@ class SessionSecurityService
             return 0;
         }
 
-        $registry = $this->readRegistry();
         $revoked = 0;
+        $this->withRegistryLock(function (array $registry) use ($userId, $currentSessionKey, &$revoked): array {
+            foreach (($registry[$userId] ?? []) as $sessionKey => $data) {
+                if ($sessionKey === $currentSessionKey) {
+                    continue;
+                }
 
-        foreach (($registry[$userId] ?? []) as $sessionKey => $data) {
-            if ($sessionKey === $currentSessionKey) {
-                continue;
+                unset($registry[$userId][$sessionKey]);
+                $revoked++;
             }
 
-            unset($registry[$userId][$sessionKey]);
-            $revoked++;
-        }
+            return $registry;
+        });
 
         if ($revoked > 0) {
-            $this->writeRegistry($registry);
             $this->auditModel->log($userId, 'SESSIONS_REVOKED', 'employees', $userId, null, ['revoked_count' => $revoked], 'Outras sessões encerradas pelo usuário', 'warning');
         }
 
@@ -152,19 +168,66 @@ class SessionSecurityService
             return false;
         }
 
-        $registry = $this->readRegistry();
-        if (! isset($registry[$userId][$sessionKey])) {
+        $existed = false;
+        $this->withRegistryLock(function (array $registry) use ($userId, $sessionKey, &$existed): array {
+            if (! isset($registry[$userId][$sessionKey])) {
+                return $registry;
+            }
+
+            $existed = true;
+            unset($registry[$userId][$sessionKey]);
+            if (($registry[$userId] ?? []) === []) {
+                unset($registry[$userId]);
+            }
+
+            return $registry;
+        });
+
+        if (! $existed) {
             return false;
         }
 
-        unset($registry[$userId][$sessionKey]);
-        if (($registry[$userId] ?? []) === []) {
-            unset($registry[$userId]);
-        }
-        $this->writeRegistry($registry);
-
         $this->auditModel->log($userId, 'SESSION_REVOKED', 'employees', $userId, null, ['session_key' => $sessionKey, 'acted_by' => $actedBy], 'Sessão específica revogada', 'warning');
         return true;
+    }
+
+    /**
+     * Revoga TODAS as sessões ativas de um usuário (inclusive a atual, se houver) —
+     * diferente de revokeOtherSessions(), que preserva a sessão de quem está chamando.
+     *
+     * ALTO-02 (auditoria): usado quando um funcionário é desativado ou tem o papel
+     * (role) alterado por um admin/RH — sem isso, quem já estivesse logado continuava
+     * com acesso pleno (inclusive privilégios do papel antigo) até a sessão expirar
+     * naturalmente, mesmo após uma ação administrativa explícita de bloqueio.
+     */
+    public function revokeAllSessionsForUser(int $userId, ?string $reason = null, ?string $actedBy = null): int
+    {
+        if ($userId <= 0) {
+            return 0;
+        }
+
+        $revoked = 0;
+        $this->withRegistryLock(function (array $registry) use ($userId, &$revoked): array {
+            $revoked = count($registry[$userId] ?? []);
+            unset($registry[$userId]);
+
+            return $registry;
+        });
+
+        if ($revoked > 0) {
+            $this->auditModel->log(
+                $userId,
+                'SESSIONS_FORCE_REVOKED',
+                'employees',
+                $userId,
+                null,
+                ['revoked_count' => $revoked, 'reason' => $reason, 'acted_by' => $actedBy],
+                $reason ?? 'Todas as sessões do usuário foram encerradas administrativamente',
+                'warning'
+            );
+        }
+
+        return $revoked;
     }
 
     public function confirmPasswordForCriticalAction(object $employee, string $currentPassword, Session $session): array
@@ -219,30 +282,97 @@ class SessionSecurityService
         return $this->confirmPasswordForCriticalAction($employee, $password, $session) + ['requires_confirmation' => true];
     }
 
-    private function readRegistry(): array
+    /**
+     * Executa $mutator sob um lock exclusivo (flock) que cobre TODO o ciclo
+     * leitura -> modificação -> escrita do registro de sessões, não só a escrita final.
+     *
+     * ALTO-03 (auditoria): antes, readRegistry()/writeRegistry() eram chamadas
+     * separadas — o LOCK_EX do file_put_contents só protegia a escrita física do
+     * arquivo, não o intervalo entre ler e decidir o que escrever. Sob concorrência
+     * (ex.: revogar uma sessão exatamente quando uma requisição daquela mesma sessão
+     * está em touchCurrentSession()), o resultado de uma operação podia sobrescrever o
+     * da outra silenciosamente, inclusive "ressuscitando" uma sessão recém-revogada.
+     *
+     * @param callable(array<int,array<string,array<string,mixed>>>):array<int,array<string,array<string,mixed>>> $mutator
+     */
+    private function withRegistryLock(callable $mutator): void
     {
-        $path = self::REGISTRY_FILE;
-        if (! is_file($path)) {
-            return [];
+        $handle = $this->openRegistryHandle();
+        if ($handle === null) {
+            return;
         }
 
-        $content = (string) @file_get_contents($path);
-        if ($content === '') {
-            return [];
-        }
+        try {
+            if (! flock($handle, LOCK_EX)) {
+                return;
+            }
 
-        $decoded = json_decode($content, true);
-        return is_array($decoded) ? $decoded : [];
+            $registry = $this->decodeRegistryHandle($handle);
+            $registry = $mutator($registry);
+
+            rewind($handle);
+            ftruncate($handle, 0);
+            fwrite($handle, json_encode($registry, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            fflush($handle);
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
     }
 
-    private function writeRegistry(array $registry): void
+    /**
+     * Leitura protegida por lock compartilhado (LOCK_SH) — bloqueia até qualquer
+     * escrita em andamento (withRegistryLock) terminar, evitando ler o arquivo no meio
+     * de uma reescrita (torn read).
+     *
+     * @return array<int,array<string,array<string,mixed>>>
+     */
+    private function readRegistryLocked(): array
+    {
+        $handle = $this->openRegistryHandle();
+        if ($handle === null) {
+            return [];
+        }
+
+        try {
+            if (! flock($handle, LOCK_SH)) {
+                return [];
+            }
+
+            return $this->decodeRegistryHandle($handle);
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+    }
+
+    /** @return resource|null */
+    private function openRegistryHandle()
     {
         $path = self::REGISTRY_FILE;
         $dir = dirname($path);
         if (! is_dir($dir)) {
             @mkdir($dir, 0750, true);
         }
-        @file_put_contents($path, json_encode($registry, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+
+        // 'c+' cria o arquivo se não existir, sem truncar um já existente, e permite
+        // leitura+escrita — necessário para o ciclo lock -> ler -> truncar -> escrever.
+        $handle = @fopen($path, 'c+');
+
+        return $handle !== false ? $handle : null;
+    }
+
+    /** @param resource $handle */
+    private function decodeRegistryHandle($handle): array
+    {
+        rewind($handle);
+        $content = stream_get_contents($handle);
+        if ($content === false || $content === '') {
+            return [];
+        }
+
+        $decoded = json_decode($content, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     private function criticalActionRateLimitKey(int $userId): string
