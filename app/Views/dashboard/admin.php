@@ -47,68 +47,11 @@ $missingText                  = lang('DashboardAdmin.common.missingText');
 $missingInitial               = lang('DashboardAdmin.common.missingInitial');
 $defaultPendingStatusLabel    = lang('DashboardAdmin.common.pending');
 
-// ── Punch method stats for the methods KPI ────────────────────────────────────
-$_db = \Config\Database::connect();
-$_methodLabels = [
-    'codigo'    => 'Código único',
-    'cpf'       => 'CPF',
-    'facial'    => 'Reconh. Facial',
-    'biometria' => 'Biometria',
-    'qrcode'    => 'QR Code',
-    'manual'    => 'Manual',
-];
-$_periods = [
-    'hoje' => 'DATE(punch_time) = CURRENT_DATE',
-    '7d'   => "punch_time >= NOW() - INTERVAL '7 days'",
-    '30d'  => "punch_time >= NOW() - INTERVAL '30 days'",
-    'tudo' => '1=1',
-];
-$_punchMethodStats = [];
-foreach ($_periods as $_pKey => $_pWhere) {
-    $rows = $_db->query("SELECT method, COUNT(*) AS cnt FROM time_punches WHERE {$_pWhere} GROUP BY method")->getResultArray();
-    // Index by method key for quick lookup
-    $_rowMap = [];
-    foreach ($rows as $r) { $_rowMap[$r['method']] = (int)$r['cnt']; }
-    // Always emit all known methods, even with count=0
-    $_punchMethodStats[$_pKey] = [];
-    foreach ($_methodLabels as $_mKey => $_mLabel) {
-        $_punchMethodStats[$_pKey][] = ['method' => $_mKey, 'label' => $_mLabel, 'count' => $_rowMap[$_mKey] ?? 0];
-    }
-}
-$_statsJson = json_encode($_punchMethodStats, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
-
-// ── Justificativas resumo ────────────────────────────────────────────────────
-$_justSummary = ['pendente' => 0, 'aprovada' => 0, 'reprovada' => 0];
-foreach ($_db->query("SELECT status, COUNT(*) AS cnt FROM justifications WHERE deleted_at IS NULL GROUP BY status")->getResultArray() as $_r) {
-    if (isset($_justSummary[$_r['status']])) $_justSummary[$_r['status']] = (int)$_r['cnt'];
-}
-
-// ── Pontos pendentes ─────────────────────────────────────────────────────────
-$_situationLabels = [
-    'equipment_failure'  => 'Falha no equipamento',
-    'system_slow'        => 'Sistema lento',
-    'camera_inaccessible'=> 'Câmera inacessível',
-    'biometric_failed'   => 'Biometria falhou',
-    'other'              => 'Outro',
-];
-$_punchTypeLabels = [
-    'entrada'          => 'Entrada',
-    'saida'            => 'Saída',
-    'intervalo_inicio' => 'Início intervalo',
-    'intervalo_fim'    => 'Fim intervalo',
-];
-$_pendingPunches = $_db->query("
-    SELECT pp.id, pp.employee_id, e.name AS employee_name,
-           pp.intended_punch_type, pp.intended_time,
-           pp.situation_type, pp.technical_failures_count,
-           pp.justification_text, pp.status
-    FROM pending_punches pp
-    JOIN employees e ON e.id = pp.employee_id
-    WHERE pp.status = 'pending'
-    ORDER BY pp.intended_time DESC
-    LIMIT 10
-")->getResultArray();
-$_pendingPunchCount = (int)$_db->query("SELECT COUNT(*) AS cnt FROM pending_punches WHERE status = 'pending'")->getRow()->cnt;
+// BAIXO-05 (auditoria): estatísticas de método de ponto, resumo de justificativas e
+// pontos pendentes agora são calculados em DashboardAdminService (query builder
+// parametrizado) e chegam prontos como $_methodLabels, $_statsJson, $_justSummary,
+// $_situationLabels, $_punchTypeLabels, $_pendingPunches, $_pendingPunchCount — antes
+// viviam como SQL bruto interpolado direto nesta view.
 ?>
 
 <?= view('components/page_header', $pageHeader) ?>

@@ -3,6 +3,7 @@
 namespace App\Services\Dashboard;
 
 use App\Models\AuditModel;
+use App\Models\PendingPunchModel;
 use App\Services\Dashboard\Presenters\AdminDashboardViewPresenter;
 use App\Support\Dates\DashboardDateRange;
 use App\Models\EmployeeModel;
@@ -13,12 +14,44 @@ use App\Models\WarningModel;
 
 class DashboardAdminService
 {
+    private const PUNCH_METHOD_LABELS = [
+        'codigo'    => 'Código único',
+        'cpf'       => 'CPF',
+        'facial'    => 'Reconh. Facial',
+        'biometria' => 'Biometria',
+        'qrcode'    => 'QR Code',
+        'manual'    => 'Manual',
+    ];
+
+    private const PENDING_PUNCH_SITUATION_LABELS = [
+        'equipment_failure'   => 'Falha no equipamento',
+        'system_slow'         => 'Sistema lento',
+        'camera_inaccessible' => 'Câmera inacessível',
+        'biometric_failed'    => 'Biometria falhou',
+        'other'                => 'Outro',
+    ];
+
+    private const PENDING_PUNCH_TYPE_LABELS = [
+        'entrada'          => 'Entrada',
+        'saida'            => 'Saída',
+        'intervalo_inicio' => 'Início intervalo',
+        'intervalo_fim'    => 'Fim intervalo',
+    ];
+
+    /** Mapa entre o status canônico (JustificationModel) e a chave em português exibida no dashboard. */
+    private const JUSTIFICATION_STATUS_KEYS = [
+        'pending'  => 'pendente',
+        'approved' => 'aprovada',
+        'rejected' => 'reprovada',
+    ];
+
     private readonly EmployeeModel $employeeModel;
     private readonly TimePunchModel $timePunchModel;
     private readonly JustificationModel $justificationModel;
     private readonly WarningModel $warningModel;
     private readonly NotificationModel $notificationModel;
     private readonly AuditModel $auditModel;
+    private readonly PendingPunchModel $pendingPunchModel;
     private readonly AdminDashboardViewPresenter $dashboardViewPresenter;
 
     public function __construct(
@@ -28,6 +61,7 @@ class DashboardAdminService
         ?WarningModel $warningModel = null,
         ?NotificationModel $notificationModel = null,
         ?AuditModel $auditModel = null,
+        ?PendingPunchModel $pendingPunchModel = null,
         ?AdminDashboardViewPresenter $dashboardViewPresenter = null,
     ) {
         $this->employeeModel = $employeeModel ?? model(EmployeeModel::class);
@@ -36,6 +70,7 @@ class DashboardAdminService
         $this->warningModel = $warningModel ?? model(WarningModel::class);
         $this->notificationModel = $notificationModel ?? model(NotificationModel::class);
         $this->auditModel = $auditModel ?? model(AuditModel::class);
+        $this->pendingPunchModel = $pendingPunchModel ?? model(PendingPunchModel::class);
         $this->dashboardViewPresenter = $dashboardViewPresenter ?? new AdminDashboardViewPresenter();
     }
 
@@ -50,11 +85,84 @@ class DashboardAdminService
             'recentActivities' => $this->recentActivities(),
             'systemAlerts' => $this->systemAlerts(),
             'notifications' => $this->userNotifications($userId),
+            // BAIXO-05 (auditoria): esta seção de dados vivia como SQL bruto interpolado
+            // diretamente na view dashboard/admin.php. Movida para cá (query builder
+            // parametrizado) para não deixar lógica de acesso a dados fora de
+            // Models/Services — o padrão anterior não era explorável hoje (o valor
+            // interpolado vinha de um array de constantes fixas), mas qualquer
+            // manutenção futura que o trocasse por parâmetro de URL sem perceber
+            // herdaria SQL injection imediatamente.
+            '_methodLabels' => self::PUNCH_METHOD_LABELS,
+            '_statsJson' => $this->punchMethodStatsJson(),
+            '_justSummary' => $this->justificationStatusSummary(),
+            '_situationLabels' => self::PENDING_PUNCH_SITUATION_LABELS,
+            '_punchTypeLabels' => self::PENDING_PUNCH_TYPE_LABELS,
+            '_pendingPunches' => $this->pendingPunchesForDashboard(),
+            '_pendingPunchCount' => $this->pendingPunchModel->where('status', 'pending')->countAllResults(),
         ];
 
         $viewData['dashboardPresentation'] = $this->dashboardViewPresenter->present($viewData);
 
         return $viewData;
+    }
+
+    private function punchMethodStatsJson(): string
+    {
+        $periods = [
+            'hoje' => static fn ($q) => $q->where('DATE(punch_time) = CURRENT_DATE', null, false),
+            '7d'   => fn ($q) => $q->where('punch_time >=', date('Y-m-d H:i:s', strtotime('-7 days'))),
+            '30d'  => fn ($q) => $q->where('punch_time >=', date('Y-m-d H:i:s', strtotime('-30 days'))),
+            'tudo' => static fn ($q) => $q,
+        ];
+
+        $stats = [];
+        foreach ($periods as $periodKey => $applyFilter) {
+            $query = $applyFilter($this->timePunchModel->select('method, COUNT(*) AS cnt')->groupBy('method'));
+            $countsByMethod = [];
+            foreach ($query->findAll() as $row) {
+                $countsByMethod[$row->method] = (int) $row->cnt;
+            }
+
+            $stats[$periodKey] = [];
+            foreach (self::PUNCH_METHOD_LABELS as $methodKey => $label) {
+                $stats[$periodKey][] = ['method' => $methodKey, 'label' => $label, 'count' => $countsByMethod[$methodKey] ?? 0];
+            }
+        }
+
+        return json_encode($stats, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?: '{}';
+    }
+
+    /** @return array{pendente:int,aprovada:int,reprovada:int} */
+    private function justificationStatusSummary(): array
+    {
+        $summary = ['pendente' => 0, 'aprovada' => 0, 'reprovada' => 0];
+
+        foreach ($this->justificationModel->select('status, COUNT(*) AS cnt')->groupBy('status')->findAll() as $row) {
+            $key = self::JUSTIFICATION_STATUS_KEYS[$row->status] ?? null;
+            if ($key !== null) {
+                $summary[$key] = (int) $row->cnt;
+            }
+        }
+
+        return $summary;
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function pendingPunchesForDashboard(): array
+    {
+        $rows = $this->pendingPunchModel
+            ->select('pending_punches.id, pending_punches.employee_id, employees.name AS employee_name, '
+                . 'pending_punches.intended_punch_type, pending_punches.intended_time, '
+                . 'pending_punches.situation_type, pending_punches.technical_failures_count, '
+                . 'pending_punches.justification_text, pending_punches.status')
+            ->join('employees', 'employees.id = pending_punches.employee_id')
+            ->where('pending_punches.status', 'pending')
+            ->orderBy('pending_punches.intended_time', 'DESC')
+            ->limit(10)
+            ->asArray()
+            ->findAll();
+
+        return $rows;
     }
 
     private function statistics(): array
