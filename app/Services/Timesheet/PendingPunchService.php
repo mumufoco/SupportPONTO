@@ -187,23 +187,37 @@ class PendingPunchService
             return ['success' => false, 'message' => 'Revisor inválido.', 'status' => 400];
         }
 
+        // ALTO-08 (auditoria): trava este pendingId específico antes de reler seu
+        // status — serializa aprovações/rejeições concorrentes da mesma solicitação
+        // (dois gestores, duplo clique) para que a segunda chamada só prossiga depois
+        // que a primeira já tenha persistido 'approved'/'rejected', e então seja
+        // corretamente barrada pela checagem de status abaixo em vez de duplicar o
+        // ponto efetivo.
+        $db = \Config\Database::connect();
+        $db->transStart();
+        (new PendingPunchConcurrencyService($db))->lockPendingPunch($pendingId);
+
         $pending = $this->pendingModel->find($pendingId);
 
         if (!$pending) {
+            $db->transComplete();
             return ['success' => false, 'message' => 'Registro pendente não encontrado.', 'status' => 404];
         }
 
         if ($pending->status !== 'pending') {
+            $db->transComplete();
             return ['success' => false, 'message' => "Registro já está com status '{$pending->status}'.", 'status' => 409];
         }
 
         $scopeCheck = $this->assertReviewerScope($reviewer, $pending);
         if (!$scopeCheck['success']) {
+            $db->transComplete();
             return $scopeCheck;
         }
 
         if ($pending->expires_at && strtotime($pending->expires_at) < time()) {
             $this->pendingModel->update($pendingId, ['status' => 'expired', 'updated_at' => date('Y-m-d H:i:s')]);
+            $db->transComplete();
             return ['success' => false, 'message' => 'Prazo de aprovação expirado.', 'status' => 410];
         }
 
@@ -243,12 +257,14 @@ class PendingPunchService
 
             if (! ($registration['success'] ?? false)) {
                 log_message('error', 'PendingPunchService::approve canonical registration failed: ' . ($registration['message'] ?? 'unknown'));
+                $db->transRollback();
                 return ['success' => false, 'message' => $registration['message'] ?? 'Falha ao criar registro de ponto.', 'status' => (int) ($registration['status'] ?? 500)];
             }
 
             $finalPunchId = (int) ($registration['data']['punch_id'] ?? $registration['data']['id'] ?? 0);
         } catch (\Throwable $e) {
             log_message('error', 'PendingPunchService::approve failed to create final punch: ' . $e->getMessage());
+            $db->transRollback();
             return ['success' => false, 'message' => 'Falha ao criar registro de ponto.', 'status' => 500];
         }
 
@@ -261,6 +277,12 @@ class PendingPunchService
             'processed_at'   => date('Y-m-d H:i:s'),
             'updated_at'     => date('Y-m-d H:i:s'),
         ]);
+
+        // Só libera o lock consultivo (commit) depois que TANTO o ponto efetivo quanto
+        // a atualização de status da pendência estão persistidos — fecha a janela onde
+        // uma segunda aprovação concorrente poderia ver o ponto já criado mas o status
+        // ainda 'pending'.
+        $db->transComplete();
 
         $this->auditLogger->logEntityEvent(
             $reviewerId,
@@ -291,18 +313,27 @@ class PendingPunchService
             return ['success' => false, 'message' => 'É obrigatório informar o motivo da rejeição.', 'status' => 400];
         }
 
+        // ALTO-08 (auditoria): mesmo lock consultivo usado em approve() — evita que
+        // uma aprovação e uma rejeição concorrentes da mesma pendência corram juntas.
+        $db = \Config\Database::connect();
+        $db->transStart();
+        (new PendingPunchConcurrencyService($db))->lockPendingPunch($pendingId);
+
         $pending = $this->pendingModel->find($pendingId);
 
         if (!$pending) {
+            $db->transComplete();
             return ['success' => false, 'message' => 'Registro pendente não encontrado.', 'status' => 404];
         }
 
         if ($pending->status !== 'pending') {
+            $db->transComplete();
             return ['success' => false, 'message' => "Registro já está com status '{$pending->status}'.", 'status' => 409];
         }
 
         $scopeCheck = $this->assertReviewerScope($reviewer, $pending);
         if (!$scopeCheck['success']) {
+            $db->transComplete();
             return $scopeCheck;
         }
 
@@ -314,6 +345,7 @@ class PendingPunchService
             'processed_at' => date('Y-m-d H:i:s'),
             'updated_at'   => date('Y-m-d H:i:s'),
         ]);
+        $db->transComplete();
 
         $this->auditLogger->logEntityEvent(
             $reviewerId,
