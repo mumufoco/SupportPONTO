@@ -82,7 +82,7 @@ $routes->group('api/v1', ['filter' => 'cors'], static function ($routes) use ($a
         $routes->get('departments', 'API\DashboardController::departments', ['as' => 'api.v1.dashboard.departments']);
     });
 
-    $routes->group('employee', ['filter' => $apiAuthFilters], static function ($routes) {
+    $routes->group('employee', ['filter' => $apiAuthFilters], static function ($routes) use ($apiAuthFilters) {
         $routes->get('profile', 'API\EmployeeController::profile', ['as' => 'api.v1.employee.profile']);
         $routes->get('balance', 'API\EmployeeController::balance', ['as' => 'api.v1.employee.balance']);
         $routes->get('statistics', 'API\EmployeeController::statistics', ['as' => 'api.v1.employee.statistics']);
@@ -198,7 +198,7 @@ $routes->group('api', ['filter' => ['cors', 'api-version']], static function ($r
         $routes->get('departments', 'API\DashboardController::departments', ['as' => 'api.dashboard.departments']);
     });
 
-    $routes->group('employee', ['filter' => $apiAuthFilters], static function ($routes) {
+    $routes->group('employee', ['filter' => $apiAuthFilters], static function ($routes) use ($apiAuthFilters) {
         $routes->get('profile', 'API\EmployeeController::profile', ['as' => 'api.employee.profile']);
         $routes->get('balance', 'API\EmployeeController::balance', ['as' => 'api.employee.balance']);
         $routes->get('statistics', 'API\EmployeeController::statistics', ['as' => 'api.employee.statistics']);
