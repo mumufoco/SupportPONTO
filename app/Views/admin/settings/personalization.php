@@ -261,11 +261,15 @@
 
 <style>
 /* Personalização — grade de tema, cores e imagens (visual alinhado ao padrão de referência) */
-.sp-theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; max-width: 560px; }
+.sp-theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; width: 100%; }
 .sp-theme-card {
-    display: flex; flex-direction: column; align-items: center; gap: .5rem;
-    padding: 1rem .75rem; border: 1.5px solid var(--sp-border, #e4e8ed); border-radius: var(--sp-radius-md, 10px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem;
+    padding: 1.25rem .75rem; border: 1.5px solid var(--sp-border, #e4e8ed); border-radius: var(--sp-radius-md, 10px);
     cursor: pointer; transition: border-color .15s, background .15s; background: var(--sp-bg-surface, #fff);
+    width: 100%;
+}
+@media (max-width: 576px) {
+    .sp-theme-grid { grid-template-columns: 1fr; }
 }
 .sp-theme-card:hover { border-color: var(--sp-primary, #1f9d57); }
 .sp-theme-card--active { border-color: var(--sp-primary, #1f9d57); background: var(--sp-primary-soft, rgba(31,157,87,.06)); }
