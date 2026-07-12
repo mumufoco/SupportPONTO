@@ -53,3 +53,11 @@ desktop.ini
 
 # Build artifacts
 build/dist/
+
+# Cópias de backup manuais (ex.: Arquivo.php.bak, Arquivo.php.bak_pre_algo_20260101) —
+# BAIXO-06 na auditoria: dezenas ficaram versionadas dentro de app/ e ate em public/
+# (diretamente acessível pela web). O historico do git ja preserva versoes antigas;
+# essas copias nao devem ser commitadas.
+*.bak
+*.bak[0-9]
+*.bak_*
