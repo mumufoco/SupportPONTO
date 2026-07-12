@@ -9,7 +9,7 @@ class EmployeeValidationRulesProvider
         return [
             'name' => 'required|min_length[3]|max_length[255]',
             'birth_date' => 'required|valid_date[Y-m-d]',
-            'cpf' => 'required|exact_length[11]|regex_match[/^\d{11}$/]|is_unique[employees.cpf]',
+            'cpf' => 'required|exact_length[11]|regex_match[/^\d{11}$/]|cpf_is_unique',
             'rg' => 'required|min_length[5]|max_length[20]',
             'rg_orgao_emissor' => 'required|min_length[2]|max_length[10]',
             'rg_data_expedicao' => 'required|valid_date[Y-m-d]',
@@ -56,7 +56,7 @@ class EmployeeValidationRulesProvider
         return [
             'name' => 'required|min_length[3]|max_length[255]',
             'birth_date' => 'required|valid_date[Y-m-d]',
-            'cpf' => "required|exact_length[11]|regex_match[/^\\d{11}$/]|is_unique[employees.cpf,id,{$id}]",
+            'cpf' => "required|exact_length[11]|regex_match[/^\\d{11}$/]|cpf_is_unique[{$id}]",
             'rg' => 'required|min_length[5]|max_length[20]',
             'rg_orgao_emissor' => 'required|min_length[2]|max_length[10]',
             'rg_data_expedicao' => 'required|valid_date[Y-m-d]',

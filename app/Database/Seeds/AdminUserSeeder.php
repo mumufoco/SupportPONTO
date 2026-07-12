@@ -66,7 +66,11 @@ class AdminUserSeeder extends Seeder
         $builder = $db->table('employees');
         $employeeModel = model(EmployeeModel::class);
 
-        $existingAdmin = $builder->groupStart()->where('LOWER(email)', $adminEmail)->orWhere('cpf', $adminCpf)->groupEnd()->get()->getRow();
+        // MED-11 (auditoria): cpf agora guarda o valor criptografado, não pesquisável
+        // diretamente — busca por cpf_hash via EmployeeModel::findByCpf() em vez de
+        // comparar o valor de cpf bruto na query builder.
+        $existingAdmin = $builder->where('LOWER(email)', $adminEmail)->get()->getRow()
+            ?? $employeeModel->findByCpf($adminCpf);
 
         if ($existingAdmin) {
             echo "Admin user already exists. Skipping...\n";

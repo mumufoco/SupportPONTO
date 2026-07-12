@@ -56,10 +56,15 @@ trait ReportExecutionGeneratorsTrait
             );
         }
 
+        // MED-11 (auditoria): employees.cpf agora fica criptografado em repouso. Esta
+        // consulta faz JOIN via TimePunchModel (não EmployeeModel), então o callback
+        // afterFind() que decripta automaticamente não se aplica aqui — sem decriptar
+        // explicitamente, o AFD sairia com o CPF cifrado no lugar do CPF real,
+        // invalidando o arquivo perante a fiscalização do MTE.
         return array_map(static function ($punch) {
             return [
                 'nsr' => $punch->nsr ?? null,
-                'cpf' => $punch->cpf ?? '',
+                'cpf' => \App\Models\EmployeeModel::decryptCpfValue($punch->cpf ?? null) ?? '',
                 'punch_time' => $punch->punch_time,
                 'created_at' => $punch->created_at,
                 'method' => $punch->method ?? '',

@@ -235,20 +235,34 @@ class TimePunchReceiptService
 
     private function findPunchById(int $punchId): ?object
     {
-        return $this->timePunchModel
+        return $this->decryptPunchCpf($this->timePunchModel
             ->select('time_punches.*, employees.name, employees.cpf, employees.unique_code')
             ->join('employees', 'employees.id = time_punches.employee_id')
-            ->find($punchId);
+            ->find($punchId));
     }
 
     private function findPunchByIdentity(int $employeeId, int $nsr): ?object
     {
-        return $this->timePunchModel
+        return $this->decryptPunchCpf($this->timePunchModel
             ->select('time_punches.*, employees.name, employees.cpf, employees.unique_code')
             ->join('employees', 'employees.id = time_punches.employee_id')
             ->where('time_punches.employee_id', $employeeId)
             ->where('time_punches.nsr', $nsr)
-            ->first();
+            ->first());
+    }
+
+    /**
+     * MED-11 (auditoria): employees.cpf agora fica criptografado — os JOINs acima
+     * não passam por EmployeeModel::afterFind(), então precisam decriptar aqui antes
+     * do comprovante de ponto (documento com validade legal) ser montado.
+     */
+    private function decryptPunchCpf(?object $punch): ?object
+    {
+        if ($punch !== null && isset($punch->cpf)) {
+            $punch->cpf = \App\Models\EmployeeModel::decryptCpfValue($punch->cpf);
+        }
+
+        return $punch;
     }
 
     private function parseFilename(string $filename): ?array

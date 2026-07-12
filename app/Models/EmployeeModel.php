@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Role;
+use App\Services\Security\EncryptionService;
 use CodeIgniter\Model;
 use Config\Database;
 
@@ -13,7 +14,7 @@ class EmployeeModel extends Model
     protected $returnType = 'object';
     protected $allowedFields = [
         // Campos básicos
-        'name', 'email', 'password', 'cpf', 'unique_code', 'role', 'role_id', 'work_unit', 'work_unit_id', 'department', 'department_id', 'position', 'position_id',
+        'name', 'email', 'password', 'cpf', 'cpf_hash', 'unique_code', 'role', 'role_id', 'work_unit', 'work_unit_id', 'department', 'department_id', 'position', 'position_id',
         'phone', 'admission_date', 'active', 'photo_path', 'face_encoding', 'created_at', 'updated_at',
         'manager_id', 'last_login', 'birth_date',
         
@@ -122,9 +123,9 @@ class EmployeeModel extends Model
 
     protected $skipValidation = false;
 
-    protected $beforeInsert = ['sanitizeData', 'syncWorkScheduleAliases', 'encodeDependentes', 'syncRoleFields'];
-    protected $beforeUpdate = ['sanitizeData', 'syncWorkScheduleAliases', 'encodeDependentes', 'syncRoleFields'];
-    protected $afterFind = ['hydrateWorkScheduleAliases', 'castBooleans'];
+    protected $beforeInsert = ['sanitizeData', 'syncWorkScheduleAliases', 'encodeDependentes', 'syncRoleFields', 'encryptCpf'];
+    protected $beforeUpdate = ['sanitizeData', 'syncWorkScheduleAliases', 'encodeDependentes', 'syncRoleFields', 'encryptCpf'];
+    protected $afterFind = ['hydrateWorkScheduleAliases', 'castBooleans', 'decryptCpf'];
 
     protected function sanitizeData(array $data): array
     {
@@ -141,6 +142,101 @@ class EmployeeModel extends Model
         }
 
         return $data;
+    }
+
+    /**
+     * Criptografa o CPF em repouso (MED-11 na auditoria) — roda depois de
+     * sanitizeData(), então já recebe o valor normalizado (só dígitos). Grava
+     * cpf_hash (SHA-256 dos dígitos) junto, usado para busca exata (ver
+     * findByCpf()/isCpfUnique() e PunchService::findEmployeeByCpf()) sem precisar
+     * decriptar toda a tabela para localizar um funcionário por CPF.
+     */
+    protected function encryptCpf(array $data): array
+    {
+        $payload = $data['data'] ?? [];
+
+        if (isset($payload['cpf']) && $payload['cpf'] !== '') {
+            $digits = (string) $payload['cpf'];
+            $payload['cpf_hash'] = hash('sha256', $digits);
+            $payload['cpf'] = (new EncryptionService())->encrypt($digits);
+        }
+
+        $data['data'] = $payload;
+
+        return $data;
+    }
+
+    /**
+     * Decripta o CPF de volta para texto puro ao ler — transparente para todo o
+     * restante do sistema (relatórios, AFD, telas), que continua lendo
+     * $employee->cpf normalmente. Nunca lança: se a decriptação falhar (dado
+     * corrompido, chave trocada), registra o erro e devolve null em vez de
+     * derrubar a página.
+     */
+    protected function decryptCpf(array $data): array
+    {
+        if (!array_key_exists('data', $data)) {
+            return $data;
+        }
+
+        $payload = $data['data'];
+
+        if (is_array($payload) && $payload !== [] && array_keys($payload) === range(0, count($payload) - 1)) {
+            foreach ($payload as $index => $row) {
+                $payload[$index] = $this->decryptCpfOnRow($row);
+            }
+        } else {
+            $payload = $this->decryptCpfOnRow($payload);
+        }
+
+        $data['data'] = $payload;
+
+        return $data;
+    }
+
+    private function decryptCpfOnRow($row)
+    {
+        if (!is_array($row) && !is_object($row)) {
+            return $row;
+        }
+
+        $cpf = is_array($row) ? ($row['cpf'] ?? null) : ($row->cpf ?? null);
+        if ($cpf === null || $cpf === '') {
+            return $row;
+        }
+
+        $decrypted = self::decryptCpfValue((string) $cpf);
+
+        if (is_array($row)) {
+            $row['cpf'] = $decrypted;
+        } else {
+            $row->cpf = $decrypted;
+        }
+
+        return $row;
+    }
+
+    /**
+     * Decripta um valor de employees.cpf já criptografado (MED-11 na auditoria).
+     *
+     * Uso público para os pontos do sistema que fazem JOIN direto com `employees` via
+     * query builder cru (não passam por EmployeeModel::afterFind(), então precisam
+     * decriptar explicitamente) — ex.: exportação do AFD, comprovante de ponto,
+     * telas de consentimento biométrico/LGPD. Nunca lança: se a decriptação falhar
+     * (dado corrompido, chave trocada), registra o erro e devolve null.
+     */
+    public static function decryptCpfValue(?string $encryptedCpf): ?string
+    {
+        if ($encryptedCpf === null || $encryptedCpf === '') {
+            return null;
+        }
+
+        try {
+            return (new EncryptionService())->decrypt($encryptedCpf);
+        } catch (\Throwable $e) {
+            log_message('error', 'EmployeeModel::decryptCpfValue: falha ao decriptar CPF: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -398,7 +494,11 @@ class EmployeeModel extends Model
 
     public function isCpfUnique(string $cpf, ?int $excludeId = null): bool
     {
-        return $this->buildUniquenessQuery('cpf', $this->normalizeDigits($cpf), $excludeId)->countAllResults() === 0;
+        // MED-11 (auditoria): cpf agora guarda o valor criptografado (nonce
+        // aleatório, nunca repete o mesmo texto cifrado) — a busca de unicidade
+        // precisa usar cpf_hash (determinístico) em vez do valor de cpf em si.
+        $hash = hash('sha256', $this->normalizeDigits($cpf));
+        return $this->buildUniquenessQuery('cpf_hash', $hash, $excludeId)->countAllResults() === 0;
     }
 
     public function getActive(): array
@@ -570,7 +670,9 @@ class EmployeeModel extends Model
 
     public function findByCpf(string $cpf): ?object
     {
-        return $this->where('cpf', $this->normalizeDigits($cpf))->first();
+        // MED-11 (auditoria): busca por cpf_hash (determinístico) em vez de cpf
+        // (agora criptografado com nonce aleatório, não pesquisável diretamente).
+        return $this->where('cpf_hash', hash('sha256', $this->normalizeDigits($cpf)))->first();
     }
 
     protected function buildUniquenessQuery(string $field, string $value, ?int $excludeId = null)

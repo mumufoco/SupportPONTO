@@ -50,9 +50,10 @@ class PunchService
 
     public function findEmployeeByCpf(string $cpfDigits): ?object
     {
-        return $this->employeeModel
-            ->where('REPLACE(REPLACE(REPLACE(cpf, ".", ""), "-", ""), " ", "")', $cpfDigits)
-            ->first();
+        // MED-11 (auditoria): cpf agora guarda o valor criptografado (nonce aleatório),
+        // não pesquisável diretamente por REPLACE/comparação de string. Usa o
+        // cpf_hash determinístico via EmployeeModel::findByCpf().
+        return $this->employeeModel->findByCpf($cpfDigits);
     }
 
     public function validateQrToken(string $qrData): array

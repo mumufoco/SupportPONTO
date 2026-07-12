@@ -105,7 +105,9 @@ class InstallationProvisioningService
         $passwordState = InitialAdminPolicy::initialPasswordState();
         $existing = $employeeModel->findByEmail($email);
         if ($existing === null) {
-            $existing = $employeeModel->where('cpf', $cpf)->first();
+            // MED-11 (auditoria): cpf agora guarda o valor criptografado, não
+            // pesquisável diretamente — busca por cpf_hash via findByCpf().
+            $existing = $employeeModel->findByCpf($cpf);
         }
         $uniqueCode = $existing->unique_code ?? strtoupper(bin2hex(random_bytes(4)));
 

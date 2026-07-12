@@ -214,6 +214,26 @@ class CustomRules
     }
 
     /**
+     * Verifica unicidade de CPF (MED-11 na auditoria).
+     *
+     * employees.cpf agora guarda o valor criptografado (nonce aleatório, nunca repete
+     * o mesmo texto cifrado mesmo para o mesmo CPF) — a regra nativa
+     * is_unique[employees.cpf] pararia de detectar duplicatas silenciosamente, pois
+     * compara o CPF em claro enviado no formulário contra um valor cifrado que nunca
+     * vai bater. Delega para EmployeeModel::isCpfUnique(), que compara por
+     * employees.cpf_hash (determinístico).
+     *
+     * Uso: cpf_is_unique (criação) ou cpf_is_unique[{$id}] (edição, excluindo o
+     * próprio registro), mesma convenção de is_unique[employees.cpf,id,{$id}].
+     */
+    public function cpf_is_unique(string $value, ?string $params = null, array $data = []): bool
+    {
+        $excludeId = ($params !== null && ctype_digit($params)) ? (int) $params : null;
+
+        return (new \App\Models\EmployeeModel())->isCpfUnique($value, $excludeId);
+    }
+
+    /**
      * Valida CNPJ brasileiro
      */
     public function valid_cnpj(string $value, ?string $params = null, array $data = []): bool

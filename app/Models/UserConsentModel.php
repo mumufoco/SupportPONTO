@@ -73,9 +73,12 @@ class UserConsentModel extends Model
         }
 
         // Snapshot employee identity for LGPD compliance (preserved even after anonymization)
+        // MED-11 (auditoria): employees.cpf agora fica criptografado em repouso — usa
+        // EmployeeModel (que decripta automaticamente em afterFind) em vez de query
+        // builder crua, senão este snapshot de compliance guardaria o texto cifrado no
+        // lugar do CPF que estava vigente no momento do consentimento.
         try {
-            $empRow = \Config\Database::connect()->table('employees')
-                ->select('name, cpf')->where('id', $employeeId)->get()->getRow();
+            $empRow = (new \App\Models\EmployeeModel())->select('name, cpf')->find($employeeId);
         } catch (\Throwable $ignored) {
             $empRow = null;
         }

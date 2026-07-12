@@ -138,6 +138,11 @@ class BiometricDashboardController extends BaseController
             ->limit($limit)
             ->findAll();
 
+        // MED-11 (auditoria): JOIN cru — decripta o CPF explicitamente.
+        foreach ($templates as $template) {
+            $template->cpf = \App\Models\EmployeeModel::decryptCpfValue($template->cpf ?? null);
+        }
+
         return $templates;
     }
 
@@ -156,6 +161,13 @@ class BiometricDashboardController extends BaseController
             ->limit($limit)
             ->get()
             ->getResult();
+
+        // MED-11 (auditoria): JOIN cru — decripta o CPF explicitamente.
+        foreach ($logs as $log) {
+            if (isset($log->cpf)) {
+                $log->cpf = \App\Models\EmployeeModel::decryptCpfValue($log->cpf);
+            }
+        }
 
         return $logs;
     }
@@ -297,6 +309,11 @@ class BiometricDashboardController extends BaseController
             ->where('biometric_templates.biometric_type', 'fingerprint')
             ->orderBy('biometric_templates.enrolled_at', 'DESC')
             ->findAll();
+
+        // MED-11 (auditoria): JOIN cru — decripta o CPF explicitamente antes do CSV.
+        foreach ($templates as $template) {
+            $template->cpf = \App\Models\EmployeeModel::decryptCpfValue($template->cpf ?? null);
+        }
 
         $filename = 'biometric_stats_' . date('Y-m-d_His') . '.csv';
 

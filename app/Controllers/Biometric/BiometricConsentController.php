@@ -185,6 +185,12 @@ class BiometricConsentController extends BaseController
 
         $records = $db->query($recordSql, $recordParams)->getResultObject();
 
+        // MED-11 (auditoria): employees.cpf agora fica criptografado — este JOIN cru
+        // não passa por EmployeeModel::afterFind(), então precisa decriptar aqui.
+        foreach ($records as $record) {
+            $record->employee_cpf = \App\Models\EmployeeModel::decryptCpfValue($record->employee_cpf ?? null);
+        }
+
         return view('biometric/consent_list', [
             'records'      => $records,
             'page'         => $page,
@@ -214,6 +220,10 @@ class BiometricConsentController extends BaseController
             $this->setError('Registro nao encontrado.');
             return redirect()->to(site_url('biometric/consent-terms/list'));
         }
+
+        // MED-11 (auditoria): idem — JOIN cru precisa decriptar o CPF explicitamente
+        // antes de compor o PDF juridicamente válido do termo.
+        $consent->employee_cpf = \App\Models\EmployeeModel::decryptCpfValue($consent->employee_cpf ?? null);
 
         $pdf      = $this->buildConsentPdf($consent);
         $filename = 'termo-biometrico-' . $consentId . '-' . date('Ymd') . '.pdf';

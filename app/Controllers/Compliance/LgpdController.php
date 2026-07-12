@@ -20,6 +20,12 @@ class LgpdController extends BaseController
                 ->get()->getResult()
             : [];
 
+        // MED-11 (auditoria): employees.cpf agora fica criptografado — este JOIN cru
+        // não passa por EmployeeModel::afterFind(), então precisa decriptar aqui.
+        foreach ($requests as $request) {
+            $request->employee_cpf = \App\Models\EmployeeModel::decryptCpfValue($request->employee_cpf ?? null);
+        }
+
         return view('compliance/lgpd', [
             'cards'      => $service->getCards(),
             'guidelines' => $service->getGuidelines(),

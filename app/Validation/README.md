@@ -337,7 +337,7 @@ $this->validate($rules);
 $rules = [
     'name' => 'required|min_length[3]|max_length[255]',
     'email' => 'required|valid_email|is_unique[employees.email]',
-    'cpf' => 'required|valid_cpf|is_unique[employees.cpf]',
+    'cpf' => 'required|valid_cpf|cpf_is_unique',
     'password' => 'required|strong_password',
     'password_confirm' => 'required|matches[password]',
     'role' => 'required|valid_employee_role',
