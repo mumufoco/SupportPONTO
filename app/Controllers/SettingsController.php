@@ -10,18 +10,6 @@ use App\Models\WorkUnitModel;
 
 class SettingsController extends BaseController
 {
-    private const SETTINGS_GROUPS = [
-        'general',
-        'workday',
-        'geolocation',
-        'notifications',
-        'biometry',
-        'apis',
-        'icp',
-        'lgpd',
-        'backup',
-    ];
-
     protected WorkUnitModel $workUnitModel;
     protected DepartmentModel $departmentModel;
     protected PositionModel $positionModel;
@@ -38,42 +26,14 @@ class SettingsController extends BaseController
     }
 
     /**
-     * Canonical settings dashboard (orchestration only).
+     * Canonical settings entry point. A tela de visão geral (tile grid) foi
+     * removida por ser redundante com os links diretos do menu lateral —
+     * aponta direto para a primeira página real de configurações.
      */
     public function index()
     {
         $this->requireRole('admin');
 
         return redirect()->to(route_to('admin.settings'));
-    }
-
-    /**
-     * Modern admin settings portal — tile grid linking to specialized settings areas.
-     */
-    public function adminIndex()
-    {
-        $this->requireRole('admin');
-
-        $grouped = $this->settingModel->getAllGrouped();
-
-        return view('admin/settings/index', [
-            'stats' => [
-                'appearance'     => count($grouped['appearance'] ?? []),
-                'authentication' => count($grouped['authentication'] ?? []),
-                'security'       => count($grouped['security'] ?? []),
-                'system'         => count($grouped['system'] ?? []),
-            ],
-        ]);
-    }
-
-    private function getSettingsDashboardGroups(): array
-    {
-        $grouped = $this->settingModel->getAllGrouped();
-
-        foreach (self::SETTINGS_GROUPS as $group) {
-            $grouped[$group] = $grouped[$group] ?? [];
-        }
-
-        return $grouped;
     }
 }

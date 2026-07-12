@@ -105,11 +105,10 @@ $menuStructure = [
         [
             'label' => 'Configurações',
             'icon' => 'bi bi-gear-fill',
-            'url' => route_to('admin.settings'),
+            'url' => route_to('admin.settings.information'),
             'match'   => ['settings', 'admin/settings', 'configuracoes', 'admin/health', 'admin/metrics', 'settings/roles', 'settings/consent-terms'],
             'exclude' => ['settings/work-units', 'settings/departments', 'settings/positions'],
             'submenu' => [
-                ['label' => 'Visão geral',       'url' => route_to('admin.settings')],
                 ['label' => 'Informações',        'url' => route_to('admin.settings.information')],
                 ['label' => 'Personalização',     'url' => route_to('admin.settings.personalization')],
                 ['label' => 'E-mail',             'url' => route_to('admin.settings.email')],

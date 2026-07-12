@@ -83,7 +83,10 @@ $routes->group('settings', ['filter' => ['auth', 'admin']], static function ($ro
 });
 
 $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static function ($routes) {
-    $routes->get('/', 'SettingsController::adminIndex', ['as' => 'admin.settings']);
+    // Tela de visão geral (tile grid) removida por ser redundante com os links
+    // diretos do submenu "Configurações" no sidebar. O nome de rota 'admin.settings'
+    // segue existindo (aponta para Informações) para não quebrar links legados.
+    $routes->get('/', 'Admin\InformationController::index', ['as' => 'admin.settings']);
     $routes->post('clear-cache', 'Settings\SystemMaintenanceController::clearCache', ['as' => 'admin.settings.clear-cache']);
     $routes->get('export', 'Settings\SystemMaintenanceController::export', ['as' => 'admin.settings.export', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->post('import', 'Settings\SystemMaintenanceController::import', ['as' => 'admin.settings.import', 'filter' => ['auth', 'admin', 'stepup:back']]);
