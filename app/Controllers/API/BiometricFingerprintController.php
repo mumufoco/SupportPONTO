@@ -63,6 +63,11 @@ class BiometricFingerprintController extends BaseApiController
     public function verify(): ResponseInterface
     {
         try {
+            $currentEmployee = $this->getAuthenticatedEmployee();
+            if (!$currentEmployee) {
+                return $this->failStandard('unauthorized', 'Não autenticado.', 401);
+            }
+
             $rules = [
                 'employee_id' => 'required|integer',
                 'fingerprint_data' => 'required',
@@ -73,6 +78,7 @@ class BiometricFingerprintController extends BaseApiController
             }
 
             $result = $this->apiFingerprintBiometricService->verify(
+                $currentEmployee,
                 (int) $this->requestValue('employee_id'),
                 (string) $this->requestValue('fingerprint_data')
             );

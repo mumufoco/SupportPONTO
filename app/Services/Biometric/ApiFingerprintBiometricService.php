@@ -60,8 +60,16 @@ class ApiFingerprintBiometricService
         return ['success' => true, 'status' => 201, 'message' => 'Biometria cadastrada com sucesso.', 'data' => $result];
     }
 
-    public function verify(int $employeeId, string $fingerprintData): array
+    public function verify(object $currentEmployee, int $employeeId, string $fingerprintData): array
     {
+        // ALTO-05 (auditoria): verify() era a única rota do módulo de digital sem checagem
+        // de posse do employee_id — permitia testar a digital de qualquer employee_id
+        // arbitrário, usando o endpoint como oráculo de identificação biométrica sem o
+        // consentimento específico do titular para esse uso.
+        if ($employeeId !== (int) $currentEmployee->id && !$this->canManageOtherEmployeesBiometrics($currentEmployee)) {
+            return ['success' => false, 'status' => 403, 'code' => 'forbidden', 'message' => 'Acesso negado.'];
+        }
+
         $result = $this->fingerprintService->verify($employeeId, $fingerprintData);
         if (!$result['success']) {
             return ['success' => false, 'status' => 400, 'code' => 'biometric_verify_failed', 'message' => $result['message']];
