@@ -7,6 +7,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\SettingModel;
 use App\Services\Pwa\ManifestGeneratorService;
+use App\Services\Upload\SafeUploadService;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -89,13 +90,41 @@ class PwaController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Tipo inválido']);
         }
         $file = $this->request->getFile('image');
-        if (!$file || !$file->isValid()) {
+        if (!$file) {
             return $this->response->setJSON(['success' => false, 'message' => 'Arquivo inválido']);
         }
+
+        // MED-08 (auditoria): antes só checava isValid() — sem blocklist de extensão nem
+        // checagem de MIME real, diferente de todo o resto do sistema (SafeUploadService).
+        // Um SVG com <script> embutido, por exemplo, passava sem problema e ficava
+        // hospedado em URL pública direta.
+        $safeUpload = new SafeUploadService();
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'ico'];
+        $allowedMimes = $safeUpload->allowedMimesForGroups(['image_public']);
+        $validation = $safeUpload->validateUploadedFile($file, $allowedExtensions, $allowedMimes);
+        if (!$validation['success']) {
+            return $this->response->setJSON(['success' => false, 'message' => $validation['message']]);
+        }
+
         $dir = FCPATH . 'assets/uploads/pwa/';
         if (!is_dir($dir)) { mkdir($dir, 0755, true); }
-        $name = date('Ymd_His') . '_' . $type . '.' . strtolower($file->getExtension());
-        $file->move($dir, $name);
+        $name = $type . '_' . bin2hex(random_bytes(8)) . '.' . $validation['extension'];
+
+        try {
+            $file->move($dir, $name);
+        } catch (\Throwable $e) {
+            log_message('error', 'PwaController::uploadPwaImage move failed: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Erro ao salvar o arquivo.']);
+        }
+
+        $targetPath = $dir . $name;
+        $realMime = $safeUpload->detectRealMime($targetPath);
+        if ($realMime === null || !in_array($realMime, $allowedMimes, true)) {
+            @unlink($targetPath);
+            $safeUpload->audit('pwa_post_move_mime_blocked', ['mime_type' => $realMime, 'type' => $type]);
+            return $this->response->setJSON(['success' => false, 'message' => 'Tipo de arquivo não permitido.']);
+        }
+
         $path = 'assets/uploads/pwa/' . $name;
         $sm = model(\App\Models\SettingModel::class);
         $sm->setSetting($type, $path, 'string', 'pwa');
