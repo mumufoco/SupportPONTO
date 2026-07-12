@@ -83,8 +83,13 @@ $routes->group('api/v1', ['filter' => 'cors'], static function ($routes) use ($a
         $routes->get('balance', 'API\EmployeeController::balance', ['as' => 'api.v1.employee.balance']);
         $routes->get('statistics', 'API\EmployeeController::statistics', ['as' => 'api.v1.employee.statistics']);
         $routes->post('profile', 'API\EmployeeController::updateProfile', ['as' => 'api.v1.employee.profile.update']);
-        $routes->get('team', 'API\EmployeeController::team', ['as' => 'api.v1.employee.team', 'filter' => 'api-role:admin,rh,gestor']);
-        $routes->get('by-code/(:segment)', 'API\EmployeeController::byCode/$1', ['as' => 'api.v1.employee.by-code', 'filter' => 'api-role:admin,rh,gestor']);
+        // MED-05 (auditoria): 'filter' na rota SUBSTITUI o da rota-mãe, não soma — repetir
+        // a lista completa de $apiAuthFilters é obrigatório aqui (mesma convenção já usada
+        // em 40_settings_admin.php), senão a rota perde oauth2/ratelimit/cors/api-json e
+        // fica dependendo só de api-role, que hoje falha fechado (401 sempre) por não ter
+        // contexto de autenticação, mas é uma lacuna latente de defesa em profundidade.
+        $routes->get('team', 'API\EmployeeController::team', ['as' => 'api.v1.employee.team', 'filter' => [...$apiAuthFilters, 'api-role:admin,rh,gestor']]);
+        $routes->get('by-code/(:segment)', 'API\EmployeeController::byCode/$1', ['as' => 'api.v1.employee.by-code', 'filter' => [...$apiAuthFilters, 'api-role:admin,rh,gestor']]);
     });
 
     $routes->group('time-punch', ['filter' => $apiAuthFilters], static function ($routes) {
@@ -194,8 +199,9 @@ $routes->group('api', ['filter' => ['cors', 'api-version']], static function ($r
         $routes->get('balance', 'API\EmployeeController::balance', ['as' => 'api.employee.balance']);
         $routes->get('statistics', 'API\EmployeeController::statistics', ['as' => 'api.employee.statistics']);
         $routes->post('profile', 'API\EmployeeController::updateProfile', ['as' => 'api.employee.profile.update']);
-        $routes->get('team', 'API\EmployeeController::team', ['as' => 'api.employee.team', 'filter' => 'api-role:admin,rh,gestor']);
-        $routes->get('by-code/(:segment)', 'API\EmployeeController::byCode/$1', ['as' => 'api.employee.by-code', 'filter' => 'api-role:admin,rh,gestor']);
+        // MED-05 (auditoria): ver nota equivalente no grupo api/v1 acima.
+        $routes->get('team', 'API\EmployeeController::team', ['as' => 'api.employee.team', 'filter' => [...$apiAuthFilters, 'api-role:admin,rh,gestor']]);
+        $routes->get('by-code/(:segment)', 'API\EmployeeController::byCode/$1', ['as' => 'api.employee.by-code', 'filter' => [...$apiAuthFilters, 'api-role:admin,rh,gestor']]);
     });
 
     $routes->group('time-punch', ['filter' => $apiAuthFilters], static function ($routes) {
