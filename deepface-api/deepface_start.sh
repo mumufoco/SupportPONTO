@@ -128,7 +128,12 @@ source .env
 set +a
 
 # Get configuration
-HOST=${HOST:-0.0.0.0}
+# MED-07 (auditoria): o padrão era 0.0.0.0 (todas as interfaces de rede). O serviço
+# systemd (deepface-api.service) já força --bind 127.0.0.1, mas quem sobe a API via
+# este script (setup manual/rápido) ficava exposto em toda a rede sem perceber, caso
+# não configurasse HOST explicitamente no .env. Padrão agora é loopback, como no
+# systemd; produção exige opt-in explícito para 0.0.0.0 (ver checagem abaixo).
+HOST=${HOST:-127.0.0.1}
 PORT=${PORT:-5000}
 WORKERS=${GUNICORN_WORKERS:-2}
 TIMEOUT=${GUNICORN_TIMEOUT:-120}
@@ -157,6 +162,22 @@ if [ "${FLASK_ENV:-development}" = "production" ]; then
 
     if [ -z "${CORS_ORIGINS:-}" ]; then
         echo -e "${RED}ERROR: CORS_ORIGINS deve ser definido explicitamente em produção${NC}"
+        exit 1
+    fi
+
+    # MED-07 (auditoria): esta checagem só existia dentro do Config.validate_runtime()
+    # em Python, mas HOST nunca era exportado para o ambiente do processo Python quando
+    # vinha só do default deste script (não do .env) — gunicorn se ligava em 0.0.0.0 de
+    # verdade via --bind, mas o validador Python via os.getenv('HOST', '127.0.0.1') não
+    # enxergava isso e nunca disparava. A checagem precisa estar aqui, no shell, que é
+    # quem de fato controla o endereço de bind do gunicorn.
+    if [ "$HOST" = "0.0.0.0" ] && [ "${ALLOW_INSECURE_PRODUCTION_DEFAULTS:-False}" != "True" ]; then
+        echo -e "${RED}ERROR: HOST=0.0.0.0 exige ALLOW_INSECURE_PRODUCTION_DEFAULTS=true para produção${NC}"
+        exit 1
+    fi
+
+    if [ -z "${FACE_STORAGE_ENCRYPTION_KEY:-}" ]; then
+        echo -e "${RED}ERROR: FACE_STORAGE_ENCRYPTION_KEY é obrigatório em produção (criptografia das fotos faciais em repouso)${NC}"
         exit 1
     fi
 fi
