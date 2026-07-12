@@ -187,7 +187,8 @@ class TimesheetPunchRegistrationService
         }
 
         if ($hasLatitude && $hasLongitude) {
-            $geofenceResult = $this->geolocationService->validateGeofence((float) $command->latitude, (float) $command->longitude);
+            $accuracyMeters = ($command->accuracy !== null && $command->accuracy !== '') ? (float) $command->accuracy : null;
+            $geofenceResult = $this->geolocationService->validateGeofence((float) $command->latitude, (float) $command->longitude, $accuracyMeters);
             $isValid = $geofenceResult['valid'] ?? ($geofenceResult['geofence_matched'] ?? true);
 
             if (! $isValid) {

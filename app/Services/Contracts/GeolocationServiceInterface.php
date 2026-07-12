@@ -12,7 +12,7 @@ interface GeolocationServiceInterface
      *
      * @return array{valid:bool, error?:string, geofence_id?:int, geofence_name?:string, nearest_geofence?:array}
      */
-    public function validateGeofence(float $latitude, float $longitude): array;
+    public function validateGeofence(float $latitude, float $longitude, ?float $accuracyMeters = null): array;
 
     /**
      * Valida se as coordenadas são geográficamente plausíveis.

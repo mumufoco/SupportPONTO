@@ -32,10 +32,10 @@ class GeolocationService
         return $this->coordinateValidationService->validate($latitude, $longitude);
     }
 
-    public function validateGeofence(float $latitude, float $longitude): array
+    public function validateGeofence(float $latitude, float $longitude, ?float $accuracyMeters = null): array
     {
         $validation = $this->validateCoordinates($latitude, $longitude);
-        return $this->geofenceValidationService->validateGeofence($latitude, $longitude, $validation);
+        return $this->geofenceValidationService->validateGeofence($latitude, $longitude, $validation, $accuracyMeters);
     }
 
     public function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float

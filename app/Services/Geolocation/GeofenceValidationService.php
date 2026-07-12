@@ -18,7 +18,7 @@ class GeofenceValidationService
         $this->distanceService = new DistanceService();
     }
 
-    public function validateGeofence(float $latitude, float $longitude, array $coordinateValidation): array
+    public function validateGeofence(float $latitude, float $longitude, array $coordinateValidation, ?float $accuracyMeters = null): array
     {
         if (!($coordinateValidation['valid'] ?? false)) {
             return $coordinateValidation;
@@ -27,6 +27,23 @@ class GeofenceValidationService
         $requireGeofence = $this->settingModel->get('require_geofence', false);
         if (!$requireGeofence) {
             return ['valid' => true, 'message' => 'Geofencing não é obrigatório.', 'geofence_required' => false];
+        }
+
+        // MED-02 (auditoria): sem isto, location_accuracy era aceita e gravada mas nunca
+        // validada — bastava enviar latitude/longitude idênticas ao centro da cerca (ex.:
+        // via "fake GPS") para passar, mesmo com uma precisão declarada grosseiramente
+        // incompatível com um GPS real. Uma precisão pior que o limite configurado
+        // significa que a posição informada não é confiável o suficiente para confirmar
+        // presença dentro de uma cerca — geralmente bem menor que a margem de erro.
+        $maxAccuracy = (float) $this->settingModel->get('geofence_max_accuracy_meters', 150);
+        if ($accuracyMeters !== null && $maxAccuracy > 0 && $accuracyMeters > $maxAccuracy) {
+            return [
+                'valid' => false,
+                'geofence_matched' => false,
+                'error' => 'Precisão da localização insuficiente para confirmar presença na área permitida. Aproxime-se de uma janela ou área aberta e tente novamente.',
+                'accuracy_meters' => $accuracyMeters,
+                'max_accuracy_meters' => $maxAccuracy,
+            ];
         }
 
         $geofences = $this->geofenceModel->where('active', true)->findAll();
