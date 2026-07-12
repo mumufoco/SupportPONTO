@@ -42,6 +42,7 @@ class OAuth2Controller extends BaseApiController
 
         return match ((string) $this->requestValue('grant_type', '')) {
             'password' => $this->passwordGrant(),
+            'mfa_code' => $this->mfaCodeGrant(),
             'refresh_token' => $this->refreshTokenGrant(),
             default => $this->failValidationError('Unsupported grant_type'),
         };
@@ -62,6 +63,45 @@ class OAuth2Controller extends BaseApiController
 
         if (! ($result['success'] ?? false)) {
             return $this->failStandard($result['code'] ?? 'authentication_failed', $result['message'] ?? 'Authentication failed', (int) ($result['status'] ?? ResponseInterface::HTTP_UNAUTHORIZED));
+        }
+
+        // CRIT-05 (auditoria): grant_type=password nao pode mais emitir token completo
+        // direto quando a conta tem 2FA habilitado — o cliente precisa completar o
+        // desafio via grant_type=mfa_code antes de receber access_token/refresh_token.
+        if ($result['requires_2fa'] ?? false) {
+            return $this->failStandard(
+                'mfa_required',
+                'Verificação de dois fatores necessária.',
+                ResponseInterface::HTTP_UNAUTHORIZED,
+                [
+                    'two_factor_token' => $result['two_factor_token'],
+                    'two_factor_expires_in' => $result['two_factor_expires_in'],
+                ]
+            );
+        }
+
+        return $this->respondStandard($this->formatTokenResponse($result['tokens']), 'Token emitido com sucesso.', 200, 'oauth_token_issued');
+    }
+
+    /**
+     * grant_type=mfa_code — segunda etapa do password grant quando a conta tem 2FA
+     * habilitado (ver CRIT-05 na auditoria). Troca o two_factor_token devolvido por
+     * passwordGrant() + um código TOTP/backup code válido pelos tokens de acesso.
+     */
+    protected function mfaCodeGrant()
+    {
+        $twoFactorToken = (string) $this->requestValue('two_factor_token', '');
+        $code = (string) $this->requestValue('code', '');
+        $useBackupCode = in_array((string) $this->requestValue('use_backup_code', ''), ['1', 'true', 'on', 'yes'], true);
+
+        if ($twoFactorToken === '' || $code === '') {
+            return $this->failValidationError('Missing two_factor_token or code');
+        }
+
+        $result = $this->apiAuthService->verifyTwoFactor($twoFactorToken, $code, $useBackupCode);
+
+        if (! ($result['success'] ?? false)) {
+            return $this->failStandard($result['code'] ?? 'invalid_two_factor_code', $result['message'] ?? 'Invalid verification code', (int) ($result['status'] ?? ResponseInterface::HTTP_UNAUTHORIZED));
         }
 
         return $this->respondStandard($this->formatTokenResponse($result['tokens']), 'Token emitido com sucesso.', 200, 'oauth_token_issued');

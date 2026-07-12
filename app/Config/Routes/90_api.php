@@ -30,6 +30,7 @@ $routes->group('api', ['filter' => $apiPublicFilters], static function ($routes)
 $routes->group('api/v1', ['filter' => 'cors'], static function ($routes) use ($apiAuthFilters, $apiManagerFilters, $apiAdminFilters, $apiBiometricFilters) {
     $routes->group('auth', ['filter' => ['ratelimit', 'api-json']], static function ($routes) {
         $routes->post('login', 'API\AuthController::login', ['as' => 'api.v1.auth.login']);
+        $routes->post('2fa/verify', 'API\AuthController::verifyTwoFactor', ['as' => 'api.v1.auth.2fa.verify']);
         $routes->post('refresh', 'API\AuthController::refresh', ['as' => 'api.v1.auth.refresh']);
         $routes->post('logout', 'API\AuthController::logout', ['as' => 'api.v1.auth.logout', 'filter' => 'oauth2']);
         $routes->get('me', 'API\AuthController::me', ['as' => 'api.v1.auth.me', 'filter' => 'oauth2']);
@@ -140,6 +141,7 @@ $routes->group('api/v1', ['filter' => 'cors'], static function ($routes) use ($a
 $routes->group('api', ['filter' => ['cors', 'api-version']], static function ($routes) use ($apiAuthFilters, $apiManagerFilters, $apiAdminFilters, $apiBiometricFilters) {
     $routes->group('auth', ['filter' => ['ratelimit', 'api-json']], static function ($routes) {
         $routes->post('login', 'API\AuthController::login', ['as' => 'api.auth.login']);
+        $routes->post('2fa/verify', 'API\AuthController::verifyTwoFactor', ['as' => 'api.auth.2fa.verify']);
         $routes->post('refresh', 'API\AuthController::refresh', ['as' => 'api.auth.refresh']);
         $routes->post('logout', 'API\AuthController::logout', ['as' => 'api.auth.logout', 'filter' => 'oauth2']);
         $routes->get('me', 'API\AuthController::me', ['as' => 'api.auth.me', 'filter' => 'oauth2']);

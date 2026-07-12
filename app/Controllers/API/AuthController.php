@@ -50,6 +50,66 @@ class AuthController extends BaseApiController
             return $this->failStandard($result['code'] ?? 'invalid_credentials', $result['message'] ?? 'Credenciais inválidas.', (int) ($result['status'] ?? 401));
         }
 
+        if ($result['requires_2fa'] ?? false) {
+            return $this->respondStandard([
+                    'requires_2fa' => true,
+                    'two_factor_token' => $result['two_factor_token'],
+                    'two_factor_expires_in' => $result['two_factor_expires_in'],
+                ],
+                'Verificação de dois fatores necessária.',
+                200,
+                'auth_login_2fa_required'
+            );
+        }
+
+        $employee = $result['employee'];
+        $tokens = $result['tokens'];
+
+        return $this->respondStandard(array_merge($tokens, [
+                'employee' => [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                    'email' => $employee->email,
+                    'role' => $employee->role,
+                    'department' => $employee->department,
+                    'position' => $employee->position,
+                    'unique_code' => $employee->unique_code,
+                    'has_face_biometric' => $employee->has_face_biometric,
+                    'has_fingerprint_biometric' => $employee->has_fingerprint_biometric,
+                ],
+            ]),
+            'Login realizado com sucesso.',
+            200,
+            'auth_login_success'
+        );
+    }
+
+    /**
+     * Segunda etapa do login quando a conta tem 2FA habilitado (ver CRIT-05 na auditoria).
+     * Recebe o two_factor_token emitido por login() + o código TOTP (ou backup code) e,
+     * se válido, emite os tokens de acesso definitivos.
+     */
+    public function verifyTwoFactor()
+    {
+        $rules = [
+            'two_factor_token' => 'required|string',
+            'code' => 'required|string',
+        ];
+
+        if (! $this->validate($rules)) {
+            return $this->failStandard('validation_error', 'Dados inválidos.', 400, $this->validator->getErrors());
+        }
+
+        $token = (string) $this->requestValue('two_factor_token', '');
+        $code = (string) $this->requestValue('code', '');
+        $useBackupCode = in_array((string) $this->requestValue('use_backup_code', ''), ['1', 'true', 'on', 'yes'], true);
+
+        $result = $this->apiAuthService->verifyTwoFactor($token, $code, $useBackupCode);
+
+        if (! ($result['success'] ?? false)) {
+            return $this->failStandard($result['code'] ?? 'invalid_two_factor_code', $result['message'] ?? 'Código de verificação inválido.', (int) ($result['status'] ?? 401));
+        }
+
         $employee = $result['employee'];
         $tokens = $result['tokens'];
 

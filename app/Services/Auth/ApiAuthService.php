@@ -11,21 +11,27 @@ class ApiAuthService
 {
     private const DEFAULT_API_SCOPES = ['api.read', 'api.write'];
 
+    /** Validade do desafio de 2FA pendente (token opaco emitido após senha correta). */
+    private const PENDING_2FA_TTL_SECONDS = 300;
+
     protected EmployeeModel $employeeModel;
     protected AuditModel $auditModel;
     protected RateLimitService $rateLimitService;
     protected OAuth2Service $oauth2Service;
+    protected TwoFactorManagerService $twoFactorManagerService;
 
     public function __construct(
         ?EmployeeModel $employeeModel = null,
         ?AuditModel $auditModel = null,
         ?RateLimitService $rateLimitService = null,
-        ?OAuth2Service $oauth2Service = null
+        ?OAuth2Service $oauth2Service = null,
+        ?TwoFactorManagerService $twoFactorManagerService = null
     ) {
         $this->employeeModel = $employeeModel ?? Services::employeeModel();
         $this->auditModel = $auditModel ?? Services::auditModel();
         $this->rateLimitService = $rateLimitService ?? Services::rateLimitService();
         $this->oauth2Service = $oauth2Service ?? Services::oauth2Service();
+        $this->twoFactorManagerService = $twoFactorManagerService ?? Services::twoFactorManagerService();
     }
 
     public function login(string $email, string $password, array $scopes = []): array
@@ -55,6 +61,103 @@ class ApiAuthService
         $this->rehashPasswordIfNeeded($employee, $password);
         $this->clearLoginRateLimits($email);
 
+        // CRIT-05 (auditoria): antes, o login via API/OAuth2 nunca checava
+        // two_factor_enabled e emitia tokens completos só com e-mail+senha, contornando
+        // por completo o 2FA para quem usa o app mobile. Agora, quando 2FA está ativo,
+        // devolvemos apenas um token de desafio de curta duração — os tokens de acesso só
+        // são emitidos depois de verifyTwoFactor() confirmar o TOTP/backup code.
+        if ((bool) ($employee->two_factor_enabled ?? false)) {
+            return $this->beginTwoFactorChallenge($employee, $scopes);
+        }
+
+        return $this->completeLogin($employee, $scopes, 'API_LOGIN_SUCCESS', "Login via API: {$employee->name}");
+    }
+
+    /**
+     * Segunda etapa do login quando a conta tem 2FA habilitado: troca o token de desafio
+     * emitido por login() + um código TOTP (ou backup code) válido pelos tokens de acesso
+     * definitivos. O token de desafio é de uso único e expira em PENDING_2FA_TTL_SECONDS.
+     */
+    public function verifyTwoFactor(string $twoFactorToken, string $code, bool $useBackupCode = false): array
+    {
+        $twoFactorToken = trim($twoFactorToken);
+        $code = trim($code);
+
+        if ($twoFactorToken === '' || $code === '') {
+            return [
+                'success' => false,
+                'code' => 'validation_error',
+                'status' => 400,
+                'message' => 'two_factor_token e code são obrigatórios.',
+            ];
+        }
+
+        $ip = $this->rateLimitService->getClientIp();
+        $limitInfo = $this->rateLimitService->attempt('api_2fa_verify_' . hash('sha256', $twoFactorToken), '2fa_verify', $ip);
+        if (! $limitInfo['allowed']) {
+            return [
+                'success' => false,
+                'code' => 'rate_limited',
+                'status' => 429,
+                'message' => $this->rateLimitService->getErrorMessage($limitInfo),
+            ];
+        }
+
+        $pending = $this->getPendingTwoFactorChallenge($twoFactorToken);
+        if ($pending === null) {
+            return [
+                'success' => false,
+                'code' => 'invalid_or_expired_challenge',
+                'status' => 401,
+                'message' => 'Desafio de 2FA inválido ou expirado. Faça login novamente.',
+            ];
+        }
+
+        $employee = $this->employeeModel->find((int) $pending['employee_id']);
+        if (! $employee || ! ($employee->active ?? false) || ! (bool) ($employee->two_factor_enabled ?? false)) {
+            $this->forgetPendingTwoFactorChallenge($twoFactorToken);
+            return [
+                'success' => false,
+                'code' => 'invalid_or_expired_challenge',
+                'status' => 401,
+                'message' => 'Desafio de 2FA inválido ou expirado. Faça login novamente.',
+            ];
+        }
+
+        $verified = $useBackupCode
+            ? $this->twoFactorManagerService->verifyAndConsumeBackupCode($employee, $code)
+            : $this->twoFactorManagerService->verifyTotpCode($employee, $code);
+
+        if (! $verified) {
+            $this->auditModel->log(
+                (int) $employee->id,
+                'API_LOGIN_2FA_FAILED',
+                'employees',
+                (int) $employee->id,
+                null,
+                null,
+                "Código 2FA inválido via API: {$employee->name}",
+                'warning'
+            );
+
+            return [
+                'success' => false,
+                'code' => 'invalid_two_factor_code',
+                'status' => 401,
+                'message' => 'Código de verificação inválido.',
+            ];
+        }
+
+        // Uso único: o token de desafio não pode ser reaproveitado após sucesso ou falha
+        // definitiva de outra sessão.
+        $this->forgetPendingTwoFactorChallenge($twoFactorToken);
+        $this->rateLimitService->reset('api_2fa_verify_' . hash('sha256', $twoFactorToken), '2fa_verify');
+
+        return $this->completeLogin($employee, $pending['scopes'], 'API_LOGIN_2FA_SUCCESS', "2FA verificado via API: {$employee->name}");
+    }
+
+    private function completeLogin(object $employee, array $scopes, string $auditAction, string $auditDescription): array
+    {
         $deviceFingerprint = OAuth2Service::generateDeviceFingerprint();
         $tokens = $this->oauth2Service->generateTokens((int) $employee->id, $deviceFingerprint, $scopes);
 
@@ -66,12 +169,12 @@ class ApiAuthService
 
         $this->auditModel->log(
             (int) $employee->id,
-            'API_LOGIN_SUCCESS',
+            $auditAction,
             'employees',
             (int) $employee->id,
             null,
             null,
-            "Login via API: {$employee->name}",
+            $auditDescription,
             'info'
         );
 
@@ -80,6 +183,58 @@ class ApiAuthService
             'employee' => $employee,
             'tokens' => $tokens,
         ];
+    }
+
+    private function beginTwoFactorChallenge(object $employee, array $scopes): array
+    {
+        $token = bin2hex(random_bytes(32));
+
+        \Config\Services::cache()->save(
+            $this->pendingTwoFactorKey($token),
+            [
+                'employee_id' => (int) $employee->id,
+                'scopes' => $scopes,
+                'created_at' => time(),
+            ],
+            self::PENDING_2FA_TTL_SECONDS
+        );
+
+        $this->auditModel->log(
+            (int) $employee->id,
+            'API_LOGIN_2FA_PENDING',
+            'employees',
+            (int) $employee->id,
+            null,
+            null,
+            "Login via API aguardando verificação 2FA: {$employee->name}",
+            'info'
+        );
+
+        return [
+            'success' => true,
+            'requires_2fa' => true,
+            'two_factor_token' => $token,
+            'two_factor_expires_in' => self::PENDING_2FA_TTL_SECONDS,
+        ];
+    }
+
+    private function getPendingTwoFactorChallenge(string $token): ?array
+    {
+        $data = \Config\Services::cache()->get($this->pendingTwoFactorKey($token));
+
+        return is_array($data) ? $data : null;
+    }
+
+    private function forgetPendingTwoFactorChallenge(string $token): void
+    {
+        \Config\Services::cache()->delete($this->pendingTwoFactorKey($token));
+    }
+
+    private function pendingTwoFactorKey(string $token): string
+    {
+        // A chave de cache guarda o hash do token, nunca o valor em claro — mesmo padrão
+        // usado para os tokens OAuth2 persistidos (OAuth2TokenCrypto).
+        return 'api_2fa_pending_' . hash('sha256', $token);
     }
 
     public function logout(int $employeeId, int $accessTokenId, string $employeeName): void

@@ -289,7 +289,8 @@ class Services extends BaseService
             static::employeeModel(),
             static::auditModel(),
             static::rateLimitService(),
-            static::oauth2Service()
+            static::oauth2Service(),
+            static::twoFactorManagerService()
         );
     }
 
