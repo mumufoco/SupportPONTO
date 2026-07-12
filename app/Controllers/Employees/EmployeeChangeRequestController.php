@@ -51,10 +51,13 @@ class EmployeeChangeRequestController extends BaseController
             return redirect()->to(site_url('dashboard'))->with('error', 'Colaborador não encontrado.');
         }
 
-        $isSelf    = (int)($this->currentUser->id ?? 0) === $employeeId;
-        $isManager = $this->isManager();
+        $isSelf = (int)($this->currentUser->id ?? 0) === $employeeId;
 
-        if (!$isSelf && !$isManager) {
+        // MED-04 (auditoria): isManager() checava só o papel, não o escopo — um gestor
+        // do Departamento A conseguia abrir/criar solicitações de qualquer funcionário,
+        // fora do seu time, diferente do resto do módulo de funcionários (que restringe
+        // gestor ao próprio departamento via canAccessEmployeeRecord()).
+        if (!$this->canAccessEmployeeRecord($employee)) {
             return redirect()->to(site_url('dashboard'))->with('error', 'Sem permissão.');
         }
 
@@ -85,9 +88,8 @@ class EmployeeChangeRequestController extends BaseController
             return redirect()->back()->with('error', 'Colaborador não encontrado.');
         }
 
-        $isSelf    = (int)($this->currentUser->id ?? 0) === $employeeId;
-        $isManager = $this->isManager();
-        if (!$isSelf && !$isManager) {
+        // MED-04 (auditoria): mesma correção de escopo de create()/status() — ver nota lá.
+        if (!$this->canAccessEmployeeRecord($employee)) {
             return redirect()->to(site_url('dashboard'))->with('error', 'Sem permissão.');
         }
 
@@ -144,16 +146,17 @@ class EmployeeChangeRequestController extends BaseController
     {
         $this->requireAuth();
 
-        $isSelf    = (int)($this->currentUser->id ?? 0) === $employeeId;
-        $isManager = $this->isManager();
-        if (!$isSelf && !$isManager) {
-            return redirect()->to(site_url('dashboard'))->with('error', 'Sem permissão.');
-        }
-
         $employee = $this->employeeModel->find($employeeId);
         if (!$employee) {
             return redirect()->to(site_url('dashboard'))->with('error', 'Colaborador não encontrado.');
         }
+
+        // MED-04 (auditoria): mesma correção de escopo de create()/store() — ver nota lá.
+        if (!$this->canAccessEmployeeRecord($employee)) {
+            return redirect()->to(site_url('dashboard'))->with('error', 'Sem permissão.');
+        }
+
+        $isSelf = (int)($this->currentUser->id ?? 0) === $employeeId;
 
         return view('employees/change_request_status', [
             'employee'    => $employee,
