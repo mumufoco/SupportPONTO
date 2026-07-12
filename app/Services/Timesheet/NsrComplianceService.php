@@ -58,9 +58,13 @@ class NsrComplianceService
     {
         $from = date('Y-m-d H:i:s', strtotime('-' . max(1, $days) . ' days'));
 
-        // O NSR e compartilhado entre time_punches, employee_record_events, clock_adjustments
-        // e rep_availability_events. A query de gaps precisa considerar todas as tabelas para
-        // nao classificar como lacuna um NSR legitimamente consumido por outro tipo de evento.
+        // O NSR e compartilhado entre time_punches, employee_record_events, clock_adjustments,
+        // rep_availability_events e company_record_events (mesma sequencia atomica — ver
+        // migracao 2026-06-07-000489). A query de gaps precisa considerar TODAS as tabelas
+        // para nao classificar como lacuna um NSR legitimamente consumido por outro tipo de
+        // evento (ALTO-04 na auditoria: company_record_events ficou de fora aqui, gerando
+        // falsos positivos de "gap" sempre que uma alteracao cadastral da empresa consumia
+        // um NSR entre duas batidas de ponto).
         $sql = "
             SELECT nsr, LAG(nsr) OVER (ORDER BY nsr) AS prev_nsr, recorded_at AS event_time, source_table
             FROM (
@@ -75,11 +79,14 @@ class NsrComplianceService
                 UNION ALL
                 SELECT CAST(nsr AS BIGINT), recorded_at, 'rep_availability_events'
                 FROM rep_availability_events WHERE nsr IS NOT NULL AND recorded_at >= ?
+                UNION ALL
+                SELECT CAST(nsr AS BIGINT), recorded_at, 'company_record_events'
+                FROM company_record_events WHERE nsr IS NOT NULL AND recorded_at >= ?
             ) all_events
             ORDER BY nsr ASC
         ";
 
-        $rows = $this->db->query($sql, [$from, $from, $from, $from])->getResult();
+        $rows = $this->db->query($sql, [$from, $from, $from, $from, $from])->getResult();
 
         $issues = [];
         foreach ($rows as $row) {
@@ -124,9 +131,26 @@ class NsrComplianceService
     {
         try {
             $counterRow = $this->db->table('nsr_counter')->select('value')->where('id', 1)->get()->getRowArray();
-            $maxRow = $this->db->table('time_punches')->selectMax('nsr')->get()->getRowArray();
             $counterValue = isset($counterRow['value']) ? (int) $counterRow['value'] : null;
-            $maxValue = isset($maxRow['nsr']) ? (int) $maxRow['nsr'] : 0;
+
+            // ALTO-04 (auditoria): usar so MAX(time_punches.nsr) subestimava o maior NSR
+            // persistido sempre que a marcacao mais recente da sequencia era, na verdade,
+            // um evento de outra tabela (alteracao cadastral, ajuste de relogio etc.) — o
+            // que fazia counterHealth() acusar "drift" positivo indevido (contador
+            // supostamente "avancado demais") mesmo com o contador perfeitamente coerente.
+            $maxValue = (int) ($this->db->query(
+                "SELECT MAX(nsr) AS max_nsr FROM (
+                    SELECT MAX(CAST(nsr AS BIGINT)) AS nsr FROM time_punches WHERE nsr IS NOT NULL
+                    UNION ALL
+                    SELECT MAX(CAST(nsr AS BIGINT)) FROM employee_record_events WHERE nsr IS NOT NULL
+                    UNION ALL
+                    SELECT MAX(CAST(nsr AS BIGINT)) FROM clock_adjustments WHERE nsr IS NOT NULL
+                    UNION ALL
+                    SELECT MAX(CAST(nsr AS BIGINT)) FROM rep_availability_events WHERE nsr IS NOT NULL
+                    UNION ALL
+                    SELECT MAX(CAST(nsr AS BIGINT)) FROM company_record_events WHERE nsr IS NOT NULL
+                ) all_max"
+            )->getRow()->max_nsr ?? 0);
 
             $drift = $counterValue === null ? null : ($counterValue - $maxValue);
             $status = 'ok';
