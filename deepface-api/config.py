@@ -4,9 +4,31 @@ DeepFace API Configuration
 
 import os
 import secrets
+import hashlib
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _load_face_encryption_key():
+    """
+    Chave AES-256 usada para criptografar em repouso as fotos faciais cadastradas
+    (ver auditoria CRIT-07). Aceita FACE_STORAGE_ENCRYPTION_KEY como 64 caracteres hex
+    (32 bytes); qualquer outro valor não vazio é normalizado via SHA-256 para 32 bytes.
+    Sem a variável definida, gera uma chave efêmera por processo — aceitável apenas em
+    desenvolvimento, pois Config.validate_runtime() bloqueia o boot em produção sem ela
+    (mesmo padrão já usado para SECRET_KEY/API_KEY neste arquivo).
+    """
+    raw = os.getenv('FACE_STORAGE_ENCRYPTION_KEY', '').strip()
+    if not raw:
+        return secrets.token_bytes(32)
+
+    try:
+        key = bytes.fromhex(raw)
+    except ValueError:
+        key = raw.encode('utf-8')
+
+    return key if len(key) == 32 else hashlib.sha256(key).digest()
 
 
 def _get_bool(name, default=False):
@@ -55,6 +77,7 @@ class Config:
     }
 
     FACES_DB_PATH = os.getenv('FACES_DB_PATH', '../storage/faces')
+    FACE_ENCRYPTION_KEY = _load_face_encryption_key()
 
     MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', os.getenv('BIOMETRIC_FACE_MAX_BYTES', 3 * 1024 * 1024)))
     ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
@@ -119,6 +142,9 @@ class Config:
 
             if host == '0.0.0.0' and not Config.ALLOW_INSECURE_PRODUCTION_DEFAULTS:
                 issues.append('HOST=0.0.0.0 exige ALLOW_INSECURE_PRODUCTION_DEFAULTS=true para produção')
+
+            if not os.getenv('FACE_STORAGE_ENCRYPTION_KEY', '').strip():
+                issues.append('FACE_STORAGE_ENCRYPTION_KEY é obrigatório em produção (criptografia das fotos faciais em repouso)')
 
         return issues
 

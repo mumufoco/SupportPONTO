@@ -11,6 +11,7 @@ use App\Models\NotificationModel;
 use App\Models\UserConsentModel;
 use App\Models\WarningModel;
 use App\Services\Audit\AuditMutationService;
+use App\Services\Biometric\FaceRecognitionService;
 
 class EmployeeDataAnonymizationProcessor
 {
@@ -23,6 +24,7 @@ class EmployeeDataAnonymizationProcessor
     private AuditModel $auditModel;
     private NotificationModel $notificationModel;
     private AuditMutationService $auditMutationService;
+    private FaceRecognitionService $faceRecognitionService;
 
     public function __construct(
         ?EmployeeModel $employeeModel = null,
@@ -34,6 +36,7 @@ class EmployeeDataAnonymizationProcessor
         ?AuditModel $auditModel = null,
         ?NotificationModel $notificationModel = null,
         ?AuditMutationService $auditMutationService = null,
+        ?FaceRecognitionService $faceRecognitionService = null,
     ) {
         $this->employeeModel = $employeeModel ?? new EmployeeModel();
         $this->biometricModel = $biometricModel ?? new BiometricTemplateModel();
@@ -44,6 +47,7 @@ class EmployeeDataAnonymizationProcessor
         $this->auditModel = $auditModel ?? new AuditModel();
         $this->notificationModel = $notificationModel ?? new NotificationModel();
         $this->auditMutationService = $auditMutationService ?? AuditMutationService::createDefault();
+        $this->faceRecognitionService = $faceRecognitionService ?? new FaceRecognitionService();
     }
 
     /**
@@ -116,10 +120,15 @@ class EmployeeDataAnonymizationProcessor
     {
         $count = 0;
         $templates = $this->biometricModel->where('employee_id', $employeeId)->findAll();
+        $hasFaceTemplate = false;
 
         foreach ($templates as $template) {
-            if ($template->biometric_type === 'face' && !empty($template->file_path)) {
-                $this->deleteWritableFile($template->file_path);
+            if ($template->biometric_type === 'face') {
+                $hasFaceTemplate = true;
+
+                if (!empty($template->file_path)) {
+                    $this->deleteWritableFile($template->file_path);
+                }
             }
 
             $this->biometricModel->update($template->id, [
@@ -129,6 +138,17 @@ class EmployeeDataAnonymizationProcessor
                 'deleted_at' => date('Y-m-d H:i:s'),
             ]);
             $count++;
+        }
+
+        // CRIT-06 (auditoria): antes, a anonimização LGPD nunca avisava a API de
+        // reconhecimento facial — o registro local virava inativo, mas a foto usada para
+        // o matching continuava cadastrada em FACES_DB_PATH, plenamente reconhecível.
+        if ($hasFaceTemplate) {
+            try {
+                $this->faceRecognitionService->deleteFaceEnrollment($employeeId);
+            } catch (\Throwable $e) {
+                log_message('error', "Falha ao sincronizar exclusão facial externa durante anonimização LGPD do funcionário {$employeeId}: " . $e->getMessage());
+            }
         }
 
         return $count;

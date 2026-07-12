@@ -85,6 +85,10 @@ Defina obrigatoriamente em produção:
 - `CORS_ORIGINS` explícito
 - `HEALTH_DETAILS_ENABLED=False`
 - `HOST` restrito (preferencialmente `127.0.0.1` atrás de proxy reverso)
+- `FACE_STORAGE_ENCRYPTION_KEY` — 64 caracteres hex (32 bytes) usados para criptografar
+  (AES-256-GCM) as fotos faciais cadastradas em repouso. Gere com
+  `python -c "import secrets; print(secrets.token_hex(32))"` e guarde num cofre de
+  segredos — perder essa chave torna todos os rostos cadastrados irrecuperáveis.
 
 
 ```bash
@@ -188,6 +192,7 @@ Regras mínimas:
 - `RATELIMIT_STORAGE_URL` não pode permanecer em `memory://`
 - `CORS_ORIGINS` deve ser definido explicitamente
 - `HOST=0.0.0.0` só é aceito com `ALLOW_INSECURE_PRODUCTION_DEFAULTS=True`, destinado apenas a laboratório isolado
+- `FACE_STORAGE_ENCRYPTION_KEY` é obrigatória — sem ela o boot falha em produção
 
 Recomendação operacional:
 - publicar o serviço apenas atrás de Nginx/Apache
@@ -312,7 +317,39 @@ Verifica se duas fotos são da mesma pessoa.
 }
 ```
 
-### 5. Analyze (Analisar Atributos)
+### 5. Delete (Excluir Cadastro)
+
+**POST** `/delete`
+
+Remove o rosto cadastrado de um funcionário (por `employee_id` ou `image_hash`) e purga
+qualquer cache de representações remanescente. Necessário para consentimento LGPD
+revogado, exclusão do titular e desligamento de funcionário.
+
+**Request:**
+```json
+{
+  "employee_id": "123"
+}
+```
+ou
+```json
+{
+  "image_hash": "abc123..."
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "deleted": true,
+  "deleted_files": 1,
+  "removed_cache_files": 0,
+  "message": "Face deleted successfully"
+}
+```
+
+### 6. Analyze (Analisar Atributos)
 
 **POST** `/analyze`
 
@@ -353,6 +390,7 @@ Analisa atributos faciais (idade, gênero, emoção, raça).
 | `MAX_FILE_SIZE` | 5242880 | Tamanho máximo (5MB) |
 | `ANTI_SPOOFING_ENABLED` | True | Anti-spoofing |
 | `RATELIMIT_DEFAULT` | 100 per minute | Rate limit |
+| `FACE_STORAGE_ENCRYPTION_KEY` | (gerada em runtime) | Chave AES-256 (64 hex) para criptografar fotos faciais em repouso — obrigatória em produção |
 
 ### Modelos Disponíveis
 
@@ -503,3 +541,5 @@ MIT License - Sistema de Ponto Eletrônico Brasileiro
 - `GET /health/details` exige autenticação de serviço e deve ficar restrito à rede interna.
 - A comunicação entre SupportPONTO e DeepFace pode usar `X-API-Key`, `X-Internal-Token` ou ambos.
 - Arquivos temporários do DeepFace são limpos automaticamente na inicialização conforme `TEMP_FILE_MAX_AGE_SECONDS`.
+- Fotos faciais cadastradas ficam sempre criptografadas em repouso (AES-256-GCM, chave `FACE_STORAGE_ENCRYPTION_KEY`) em `FACES_DB_PATH`, com sufixo `.enc`. `/recognize` e `/admin/rebuild-db` descriptografam para um diretório temporário exclusivo da chamada e o apagam logo em seguida — texto puro nunca fica persistido em disco. Fotos antigas em texto puro (de antes desta criptografia) são migradas automaticamente para `.enc` na primeira vez que forem tocadas por `/recognize` ou `/admin/rebuild-db`.
+- `/delete` remove definitivamente o cadastro facial de um funcionário (por `employee_id` ou `image_hash`) — é o endpoint chamado pelo SupportPONTO ao revogar consentimento biométrico, expurgar dados por LGPD ou desligar um funcionário.

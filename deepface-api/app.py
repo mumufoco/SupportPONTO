@@ -7,6 +7,8 @@ import os
 import base64
 import hashlib
 import logging
+import shutil
+import tempfile
 from datetime import datetime
 from io import BytesIO
 from functools import wraps
@@ -17,9 +19,18 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from PIL import Image
 from deepface import DeepFace
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import numpy as np
 
 from config import config, Config
+
+# Fotos faciais cadastradas ficam sempre criptografadas em repouso (AES-256-GCM) sob
+# este sufixo — nunca gravamos JPEG em claro em FACES_DB_PATH a partir desta versão
+# (ver auditoria CRIT-07). AES-GCM foi escolhido por já vir com autenticação (evita
+# adulteração silenciosa do arquivo cifrado) e por ser suportado nativamente pelo
+# pacote `cryptography` sem dependências extras de sistema.
+FACE_FILE_SUFFIX = '.enc'
+FACE_NONCE_SIZE = 12
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -226,6 +237,97 @@ def calculate_image_hash(filepath):
         return None
 
 
+def encrypt_face_bytes(plaintext):
+    """AES-256-GCM: retorna nonce (12 bytes) || ciphertext+tag."""
+    aesgcm = AESGCM(Config.FACE_ENCRYPTION_KEY)
+    nonce = os.urandom(FACE_NONCE_SIZE)
+    return nonce + aesgcm.encrypt(nonce, plaintext, None)
+
+
+def decrypt_face_bytes(blob):
+    aesgcm = AESGCM(Config.FACE_ENCRYPTION_KEY)
+    nonce, ciphertext = blob[:FACE_NONCE_SIZE], blob[FACE_NONCE_SIZE:]
+    return aesgcm.decrypt(nonce, ciphertext, None)
+
+
+def calculate_encrypted_image_hash(encrypted_filepath):
+    """Hash SHA-256 do conteúdo em claro de um arquivo .enc (decripta em memória)."""
+    try:
+        with open(encrypted_filepath, 'rb') as f:
+            plaintext = decrypt_face_bytes(f.read())
+        return hashlib.sha256(plaintext).hexdigest()
+    except Exception as e:
+        logger.error(f'Error calculating encrypted image hash: {str(e)}')
+        return None
+
+
+def materialize_decrypted_faces_db():
+    """
+    Descriptografa cada rosto cadastrado em um diretório temporário exclusivo desta
+    chamada, para que o DeepFace possa operar sobre arquivos JPEG reais. O texto puro
+    nunca é persistido fora dessa janela: o chamador é responsável por apagar o
+    diretório retornado (shutil.rmtree) assim que terminar — é exatamente esse
+    apagamento que garante que FACES_DB_PATH permanece só com arquivos .enc em repouso.
+
+    Compatibilidade retroativa: se encontrar uma foto antiga ainda em texto puro
+    (.jpg/.jpeg/.png, de antes desta correção), ela é criptografada em
+    FACES_DB_PATH nesse mesmo momento e o arquivo original é removido — migração
+    automática e transparente, sem exigir script separado nem interromper o
+    reconhecimento em andamento (ver auditoria CRIT-07).
+
+    Returns:
+        tuple[str, int]: (diretório temporário, quantidade de rostos materializados)
+    """
+    scratch_dir = tempfile.mkdtemp(dir=Config.TEMP_DIR, prefix='decrypted_faces_')
+    temp_dir_abs = os.path.abspath(Config.TEMP_DIR)
+    count = 0
+
+    for current_root, dirnames, filenames in os.walk(Config.FACES_DB_PATH):
+        current_root_abs = os.path.abspath(current_root)
+        # TEMP_DIR normalmente vive dentro de FACES_DB_PATH (padrão: FACES_DB_PATH/temp)
+        # — nunca deve ser tratado como rosto cadastrado, tanto para não vazar imagens
+        # de processamento em trânsito quanto para não entrar no próprio scratch_dir.
+        if current_root_abs == temp_dir_abs or current_root_abs.startswith(temp_dir_abs + os.sep):
+            dirnames[:] = []
+            continue
+
+        for filename in filenames:
+            lower = filename.lower()
+            is_encrypted = lower.endswith(FACE_FILE_SUFFIX)
+            is_legacy_plain = (not is_encrypted) and os.path.splitext(lower)[1] in {'.jpg', '.jpeg', '.png'}
+            if not is_encrypted and not is_legacy_plain:
+                continue
+
+            source_path = os.path.join(current_root, filename)
+            relative_dir = os.path.relpath(current_root, Config.FACES_DB_PATH)
+            target_dir = os.path.join(scratch_dir, relative_dir) if relative_dir != '.' else scratch_dir
+            os.makedirs(target_dir, exist_ok=True)
+
+            try:
+                if is_encrypted:
+                    with open(source_path, 'rb') as f:
+                        plaintext = decrypt_face_bytes(f.read())
+                    target_name = filename[: -len(FACE_FILE_SUFFIX)]
+                else:
+                    with open(source_path, 'rb') as f:
+                        plaintext = f.read()
+                    target_name = filename
+
+                    encrypted_target = source_path + FACE_FILE_SUFFIX
+                    with open(encrypted_target, 'wb') as f:
+                        f.write(encrypt_face_bytes(plaintext))
+                    os.remove(source_path)
+                    logger.info('Migrated legacy plaintext face to encrypted storage: %s', source_path)
+
+                with open(os.path.join(target_dir, target_name), 'wb') as f:
+                    f.write(plaintext)
+                count += 1
+            except Exception as e:
+                logger.error('Failed to materialize enrolled face %s: %s', source_path, str(e))
+
+    return scratch_dir, count
+
+
 @app.route('/health', methods=['GET'])
 def health():
     """Public liveness probe without sensitive details."""
@@ -340,11 +442,20 @@ def enroll():
             employee_dir = os.path.join(Config.FACES_DB_PATH, employee_id)
             os.makedirs(employee_dir, exist_ok=True)
 
-            # Save face image
-            face_filename = f'{employee_id}_face.jpg'
+            # Save face image — sempre criptografada em repouso (ver auditoria CRIT-07).
+            # Aceita tanto o layout legado (.jpg em claro, de antes desta correção) quanto
+            # o atual (.jpg.enc) ao decidir se já existe cadastro para este funcionário.
+            face_filename = f'{employee_id}_face.jpg{FACE_FILE_SUFFIX}'
             face_path = os.path.join(employee_dir, face_filename)
-            already_enrolled = os.path.exists(face_path)
-            previous_image_hash = calculate_image_hash(face_path) if already_enrolled else None
+            legacy_face_path = os.path.join(employee_dir, f'{employee_id}_face.jpg')
+
+            already_enrolled = os.path.exists(face_path) or os.path.exists(legacy_face_path)
+            previous_image_hash = None
+            if os.path.exists(face_path):
+                previous_image_hash = calculate_encrypted_image_hash(face_path)
+            elif os.path.exists(legacy_face_path):
+                previous_image_hash = calculate_image_hash(legacy_face_path)
+
             if already_enrolled and not force:
                 cleanup_temp_file(temp_path)
                 return jsonify({
@@ -366,12 +477,22 @@ def enroll():
                         'timestamp': datetime.now().isoformat(),
                     },
                 )
+                if os.path.exists(legacy_face_path):
+                    os.remove(legacy_face_path)
 
-            # Copy temp file to employee directory
-            image.save(face_path, 'JPEG', quality=95)
+            # Serializa o JPEG em memória, calcula o hash sobre o conteúdo em claro
+            # (mesma semântica de antes, usada por deleteFaceByHash no lado PHP) e só
+            # então grava a versão criptografada em disco — o texto puro nunca chega a
+            # tocar o disco.
+            rgb_image = image.convert('RGB') if image.mode != 'RGB' else image
+            buffer = BytesIO()
+            rgb_image.save(buffer, 'JPEG', quality=95)
+            plaintext_bytes = buffer.getvalue()
 
-            # Calculate hash
-            image_hash = calculate_image_hash(face_path)
+            image_hash = hashlib.sha256(plaintext_bytes).hexdigest()
+
+            with open(face_path, 'wb') as f:
+                f.write(encrypt_face_bytes(plaintext_bytes))
 
             if already_enrolled and force:
                 logger.info(
@@ -454,18 +575,33 @@ def recognize():
         # Save temporary image
         temp_path = save_temp_image(image, 'recognize')
 
+        scratch_dir = None
         try:
+            # Rostos cadastrados ficam criptografados em repouso (ver auditoria CRIT-07) —
+            # materializa um diretório temporário exclusivo desta chamada com os arquivos
+            # decifrados para o DeepFace poder buscar, e apaga tudo no finally, esteja lá
+            # embaixo qual for o resultado.
+            scratch_dir, enrolled_count = materialize_decrypted_faces_db()
+
+            if enrolled_count == 0:
+                logger.info('No enrolled faces available for recognition')
+                return jsonify({
+                    'success': True,
+                    'recognized': False,
+                    'message': 'No matching face found'
+                }), 200
+
             # Find matching faces
             result = DeepFace.find(
                 img_path=temp_path,
-                db_path=Config.FACES_DB_PATH,
+                db_path=scratch_dir,
                 model_name=Config.MODEL_NAME,
                 detector_backend=Config.DETECTOR_BACKEND,
                 distance_metric=Config.DISTANCE_METRIC,
                 enforce_detection=Config.ENFORCE_DETECTION,
                 align=Config.ALIGN,
                 silent=True,
-                refresh_database=False
+                refresh_database=True
             )
 
             # Check if any matches found
@@ -496,7 +632,7 @@ def recognize():
                 }), 200
 
             # Extract employee_id from identity path
-            # Format: ../storage/faces/employee_id/employee_id_face.jpg
+            # Format: {scratch_dir}/employee_id/employee_id_face.jpg
             employee_id = os.path.basename(os.path.dirname(identity))
 
             # Calculate similarity percentage (inverse of distance)
@@ -518,6 +654,8 @@ def recognize():
 
         finally:
             cleanup_temp_file(temp_path)
+            if scratch_dir:
+                shutil.rmtree(scratch_dir, ignore_errors=True)
 
     except ValueError as e:
         logger.error(f'Validation error in recognize: {str(e)}')
@@ -620,45 +758,157 @@ def verify():
 
 
 
-@app.route('/admin/rebuild-db', methods=['POST'])
+@app.route('/delete', methods=['POST'])
 @require_api_key
-def rebuild_db():
-    """Rebuild DeepFace representations cache after enroll/delete operations."""
+def delete():
+    """
+    Delete an enrolled face by employee_id or by image_hash (ver auditoria CRIT-06 — este
+    endpoint não existia antes, então nenhum fluxo de exclusão/revogação de consentimento/
+    LGPD do lado PHP conseguia de fato apagar a foto cadastrada aqui).
+
+    Expected JSON (um dos dois):
+    { "employee_id": "123" }
+    { "image_hash": "sha256hex" }
+    """
     try:
-        cleanup_stale_temp_files()
-        removed = purge_representation_cache(Config.FACES_DB_PATH)
-        images = list_face_images(Config.FACES_DB_PATH)
+        data = request.get_json(silent=True) or {}
+        employee_id = data.get('employee_id')
+        image_hash = data.get('image_hash')
 
-        if not images:
+        if not employee_id and not image_hash:
             return jsonify({
-                'success': True,
-                'rebuilt': False,
-                'message': 'No enrolled faces available to build representations',
-                'removed_cache_files': removed
-            }), 200
+                'success': False,
+                'error': 'Missing required field: employee_id or image_hash'
+            }), 400
 
-        sample_image = images[0]
-        DeepFace.find(
-            img_path=sample_image,
-            db_path=Config.FACES_DB_PATH,
-            model_name=Config.MODEL_NAME,
-            detector_backend=Config.DETECTOR_BACKEND,
-            distance_metric=Config.DISTANCE_METRIC,
-            enforce_detection=Config.ENFORCE_DETECTION,
-            align=Config.ALIGN,
-            silent=True,
-            refresh_database=True
+        deleted_paths = []
+
+        if employee_id:
+            employee_id = str(employee_id)
+            employee_dir = os.path.join(Config.FACES_DB_PATH, employee_id)
+            if os.path.isdir(employee_dir):
+                for filename in os.listdir(employee_dir):
+                    file_path = os.path.join(employee_dir, filename)
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                        deleted_paths.append(file_path)
+                try:
+                    os.rmdir(employee_dir)
+                except OSError:
+                    pass
+
+        if image_hash and not deleted_paths:
+            temp_dir_abs = os.path.abspath(Config.TEMP_DIR)
+            for current_root, dirnames, filenames in os.walk(Config.FACES_DB_PATH):
+                current_root_abs = os.path.abspath(current_root)
+                if current_root_abs == temp_dir_abs or current_root_abs.startswith(temp_dir_abs + os.sep):
+                    dirnames[:] = []
+                    continue
+
+                for filename in filenames:
+                    lower = filename.lower()
+                    candidate_path = os.path.join(current_root, filename)
+
+                    if lower.endswith(FACE_FILE_SUFFIX):
+                        candidate_hash = calculate_encrypted_image_hash(candidate_path)
+                    elif os.path.splitext(lower)[1] in {'.jpg', '.jpeg', '.png'}:
+                        candidate_hash = calculate_image_hash(candidate_path)
+                    else:
+                        continue
+
+                    if candidate_hash and candidate_hash == image_hash:
+                        os.remove(candidate_path)
+                        deleted_paths.append(candidate_path)
+                        if not os.listdir(current_root):
+                            try:
+                                os.rmdir(current_root)
+                            except OSError:
+                                pass
+                        break
+                if deleted_paths:
+                    break
+
+        removed_cache = purge_representation_cache(Config.FACES_DB_PATH)
+
+        logger.info(
+            'Face deleted',
+            extra={
+                'action': 'FACE_DELETED',
+                'employee_id': employee_id,
+                'image_hash': image_hash,
+                'deleted_paths': deleted_paths,
+                'removed_cache_files': removed_cache,
+                'timestamp': datetime.now().isoformat(),
+            },
         )
 
         return jsonify({
             'success': True,
-            'rebuilt': True,
-            'indexed_faces': len(images),
-            'removed_cache_files': removed,
-            'model': Config.MODEL_NAME,
-            'distance_metric': Config.DISTANCE_METRIC,
-            'message': 'DeepFace database rebuilt successfully'
+            'deleted': len(deleted_paths) > 0,
+            'deleted_files': len(deleted_paths),
+            'removed_cache_files': removed_cache,
+            'message': 'Face deleted successfully' if deleted_paths else 'No matching enrolled face found'
         }), 200
+
+    except Exception as e:
+        logger.error(f'Error in delete: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': 'Internal server error'
+        }), 500
+
+
+@app.route('/admin/rebuild-db', methods=['POST'])
+@require_api_key
+def rebuild_db():
+    """
+    Não há mais cache de representações persistido em FACES_DB_PATH — cada /recognize
+    materializa e descarta seu próprio diretório temporário decifrado (ver
+    materialize_decrypted_faces_db, auditoria CRIT-07). Este endpoint agora serve para
+    validar que todos os rostos cadastrados ainda podem ser descriptografados com a
+    chave atual (útil após rotação de FACE_STORAGE_ENCRYPTION_KEY ou para diagnosticar
+    corrupção), além de limpar qualquer cache de representações remanescente de
+    instalações anteriores a esta correção.
+    """
+    try:
+        cleanup_stale_temp_files()
+        removed = purge_representation_cache(Config.FACES_DB_PATH)
+
+        scratch_dir, enrolled_count = materialize_decrypted_faces_db()
+        try:
+            if enrolled_count == 0:
+                return jsonify({
+                    'success': True,
+                    'rebuilt': False,
+                    'message': 'No enrolled faces available to build representations',
+                    'removed_cache_files': removed
+                }), 200
+
+            images = list_face_images(scratch_dir)
+            sample_image = images[0]
+            DeepFace.find(
+                img_path=sample_image,
+                db_path=scratch_dir,
+                model_name=Config.MODEL_NAME,
+                detector_backend=Config.DETECTOR_BACKEND,
+                distance_metric=Config.DISTANCE_METRIC,
+                enforce_detection=Config.ENFORCE_DETECTION,
+                align=Config.ALIGN,
+                silent=True,
+                refresh_database=True
+            )
+
+            return jsonify({
+                'success': True,
+                'rebuilt': True,
+                'indexed_faces': enrolled_count,
+                'removed_cache_files': removed,
+                'model': Config.MODEL_NAME,
+                'distance_metric': Config.DISTANCE_METRIC,
+                'message': 'Todos os rostos cadastrados foram descriptografados e validados com sucesso'
+            }), 200
+        finally:
+            shutil.rmtree(scratch_dir, ignore_errors=True)
     except Exception as e:
         logger.error(f'Error rebuilding DeepFace database: {str(e)}')
         return jsonify({
