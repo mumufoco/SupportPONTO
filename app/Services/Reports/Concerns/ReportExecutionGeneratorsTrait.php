@@ -44,9 +44,17 @@ trait ReportExecutionGeneratorsTrait
         }
 
         $this->applyEmployeeIdFilter($query, $filters, 'time_punches.employee_id');
-        $this->applyResultLimit($query, $filters);
+        $this->applyAfdResultLimit($query, $filters);
 
         $punches = $query->findAll();
+
+        if (isset($filters['limit']) && count($punches) === max(1, min(50000, (int) $filters['limit']))) {
+            log_message(
+                'warning',
+                'AFD pode estar truncado: limite explícito de {limit} registros foi atingido para o período {start} a {end}.',
+                ['limit' => $filters['limit'], 'start' => $startDate, 'end' => $endDate]
+            );
+        }
 
         return array_map(static function ($punch) {
             return [
