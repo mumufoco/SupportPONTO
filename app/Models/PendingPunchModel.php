@@ -28,7 +28,7 @@ class PendingPunchModel extends Model
         'intended_time'        => 'required',
         'justification_text'   => 'required|min_length[20]|max_length[1000]',
         'situation_type'       => 'required|in_list[equipment_failure,system_slow,camera_inaccessible,biometric_failed,other]',
-        'status'               => 'required|in_list[pending,approved,rejected,expired]',
+        'status'               => 'required|in_list[pending,approved,rejected,expired,cancelled]',
     ];
 
     /** Retorna pendências aguardando aprovação, opcionalmente por departamento */
@@ -56,6 +56,24 @@ class PendingPunchModel extends Model
         $cutoff = date('Y-m-d H:i:s', strtotime("-{$hoursThreshold} hours"));
         $this->where('status', 'pending')->where('created_at <', $cutoff)
             ->set(['status' => 'expired', 'updated_at' => date('Y-m-d H:i:s'), 'processed_at' => date('Y-m-d H:i:s')])->update();
+        return $this->db->affectedRows();
+    }
+
+    /**
+     * Cancela todas as pendências abertas de um colaborador — usado ao desligar/
+     * desativar (MED-10 na auditoria): antes, pendências continuavam nas filas de
+     * aprovação de gestores mesmo após o desligamento, e podiam ser aprovadas para
+     * alguém que já não estava mais na folha.
+     */
+    public function cancelAllForEmployee(int $employeeId, string $reason): int
+    {
+        $this->where('employee_id', $employeeId)->where('status', 'pending')->set([
+            'status'       => 'cancelled',
+            'review_notes' => $reason,
+            'processed_at' => date('Y-m-d H:i:s'),
+            'updated_at'   => date('Y-m-d H:i:s'),
+        ])->update();
+
         return $this->db->affectedRows();
     }
 

@@ -280,6 +280,24 @@ class JustificationModel extends Model
     }
 
     /**
+     * Cancela (marca como rejeitada, com motivo explícito) todas as justificativas
+     * pendentes de um colaborador — usado ao desligar/desativar (MED-10 na auditoria).
+     * Reaproveita o status 'rejected' em vez de um status novo para não exigir mudanças
+     * em toda a UI/relatórios que já tratam justifications.status como
+     * pending/approved/rejected.
+     */
+    public function cancelAllPendingForEmployee(int $employeeId, string $reason): int
+    {
+        $this->where('employee_id', $employeeId)->where('status', 'pending')->set([
+            'status'           => 'rejected',
+            'rejection_reason' => $reason,
+            'approved_at'      => date('Y-m-d H:i:s'),
+        ])->update();
+
+        return $this->db->affectedRows();
+    }
+
+    /**
      * Check if date has approved justification
      */
     public function hasApprovedJustification(int $employeeId, string $date): bool

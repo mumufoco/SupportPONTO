@@ -3,7 +3,9 @@
 namespace App\Services\Employees\Management;
 
 use App\Models\EmployeeModel;
+use App\Models\JustificationModel;
 use App\Models\NotificationModel;
+use App\Models\PendingPunchModel;
 use App\Services\Auth\SessionSecurityService;
 
 class EmployeeStatusService
@@ -12,6 +14,8 @@ class EmployeeStatusService
         private readonly EmployeeModel $employeeModel,
         private readonly NotificationModel $notificationModel,
         private readonly SessionSecurityService $sessionSecurityService = new SessionSecurityService(),
+        private readonly PendingPunchModel $pendingPunchModel = new PendingPunchModel(),
+        private readonly JustificationModel $justificationModel = new JustificationModel(),
     ) {
     }
 
@@ -29,6 +33,11 @@ class EmployeeStatusService
         // ALTO-02 (auditoria): sem isto, um funcionário excluído continuava com acesso
         // pleno pela sessão já aberta até ela expirar naturalmente.
         $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Funcionário excluído');
+
+        // MED-10 (auditoria): sem isto, pendências de ponto e justificativas
+        // continuavam nas filas de aprovação de gestores mesmo após o desligamento, e
+        // podiam ser aprovadas para alguém que já não estava mais na folha.
+        $this->cancelOpenPendencies($id, 'Funcionário excluído do sistema.');
 
         return ['success' => true, 'employee' => $employee];
     }
@@ -48,9 +57,18 @@ class EmployeeStatusService
         // session.expiration), mesmo após uma ação administrativa explícita de bloqueio.
         if (!$active) {
             $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Funcionário desativado');
+
+            // MED-10 (auditoria): ver nota em deleteEmployee() acima.
+            $this->cancelOpenPendencies($id, 'Funcionário desativado/desligado.');
         }
 
         return ['success' => true, 'employee' => $employee, 'active' => $active];
+    }
+
+    private function cancelOpenPendencies(int $employeeId, string $reason): void
+    {
+        $this->pendingPunchModel->cancelAllForEmployee($employeeId, $reason);
+        $this->justificationModel->cancelAllPendingForEmployee($employeeId, $reason);
     }
 
     public function getPendingRegistrations(): array
