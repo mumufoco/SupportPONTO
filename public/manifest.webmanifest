@@ -1,0 +1,111 @@
+{
+  "name": "SupportPONTO",
+  "short_name": "SupportPONTO",
+  "description": "Sistema de Ponto Eletrônico",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#4fa14f",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/assets/img/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/uploads/pwa/20260606_190637_pwa_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/uploads/pwa/20260606_190637_pwa_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/uploads/pwa/20260606_190637_pwa_icon.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/uploads/pwa/20260606_190637_pwa_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/uploads/pwa/20260606_190637_pwa_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar Ponto",
+      "short_name": "Registro",
+      "description": "Registrar ponto rapidamente",
+      "url": "/registro-rapido",
+      "icons": [
+        {
+          "src": "/assets/uploads/pwa/20260606_190657_pwa_shortcut_icon.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ver Registros",
+      "short_name": "Histórico",
+      "description": "Visualizar histórico de registros",
+      "url": "/registro",
+      "icons": [
+        {
+          "src": "/assets/uploads/pwa/20260606_190657_pwa_shortcut_icon.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

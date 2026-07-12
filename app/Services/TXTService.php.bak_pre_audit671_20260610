@@ -1,0 +1,224 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\ClockAdjustmentModel;
+use App\Models\CompanyRecordEventModel;
+use App\Models\EmployeeRecordEventModel;
+use App\Models\RepAvailabilityEventModel;
+use App\Services\TXT\TXTAFDBuilder;
+use App\Services\TXT\TXTFileWriter;
+use App\Services\TXT\TXTReportContentBuilder;
+use App\Services\TXT\TXTSettingsProvider;
+
+class TXTService
+{
+    private array $companyProfile;
+    private TXTReportContentBuilder $reportContentBuilder;
+    private TXTAFDBuilder $afdBuilder;
+    private TXTFileWriter $fileWriter;
+
+    public function __construct(
+        ?TXTSettingsProvider $settingsProvider = null,
+        ?TXTReportContentBuilder $reportContentBuilder = null,
+        ?TXTAFDBuilder $afdBuilder = null,
+        ?TXTFileWriter $fileWriter = null,
+    ) {
+        $settingsProvider = $settingsProvider ?? new TXTSettingsProvider();
+        $this->companyProfile = $settingsProvider->getCompanyProfile();
+        $this->reportContentBuilder = $reportContentBuilder ?? new TXTReportContentBuilder();
+        $this->afdBuilder = $afdBuilder ?? new TXTAFDBuilder();
+        $this->fileWriter = $fileWriter ?? new TXTFileWriter();
+    }
+
+    /**
+     * @return array{success:bool,filename?:string,filepath?:string,size?:int,error?:string,details?:string}
+     */
+    public function generateReport(string $type, array $data, array $filters = []): array
+    {
+        try {
+            if ($type === 'afd') {
+                $clockAdjustments = $this->fetchClockAdjustmentsForAfd($filters);
+                $companyEvents = $this->fetchCompanyRecordEventsForAfd($filters);
+                $availabilityEvents = $this->fetchAvailabilityEventsForAfd($filters);
+                $employeeEvents = $this->fetchEmployeeRecordEventsForAfd($filters);
+                $lines = $this->afdBuilder->buildLines($data, $this->companyProfile, $clockAdjustments, $companyEvents, $availabilityEvents, $employeeEvents);
+                return $this->fileWriter->saveAfdLines($lines);
+            }
+
+            $lines = $this->reportContentBuilder->build($type, $data, $filters, $this->companyProfile);
+            return $this->fileWriter->saveReportLines($lines, $this->mapFileType($type));
+        } catch (\InvalidArgumentException $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        } catch (\Throwable $e) {
+            log_message('error', 'TXT generation error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Erro ao gerar TXT',
+                'details' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Busca declarações de ajuste de relógio do REP (registro tipo "4" do AFD) cujo
+     * `adjusted_datetime` cai dentro do mesmo período coberto pelo arquivo, já ordenadas
+     * por NSR — prontas para serem intercaladas com os registros de marcação de ponto.
+     *
+     * Usa os mesmos limites de período (`start_date`/`end_date`) com que as marcações
+     * foram filtradas (ver ReportExecutionGeneratorsTrait::buildAfdData /
+     * ReportExecutionHelperTrait::resolveDateRange), garantindo que o AFD reflita
+     * exatamente os eventos do intervalo solicitado — incluindo ajustes de relógio
+     * declarados manualmente por um administrador (ver ClockAdjustmentController).
+     *
+     * @return object[]
+     */
+    private function fetchClockAdjustmentsForAfd(array $filters): array
+    {
+        $startDate = (string) ($filters['start_date'] ?? date('Y-m-01'));
+        $endDate   = (string) ($filters['end_date'] ?? date('Y-m-t'));
+
+        // `start_date`/`end_date` normalmente chegam como datas "puras" (AAAA-MM-DD). Comparar
+        // diretamente uma timestamp como '2026-06-07 12:00:05' com '<= 2026-06-07' a excluiria
+        // (pois o Postgres trata a data como meia-noite) — por isso ancoramos os limites no
+        // início e no fim do dia quando nenhum horário foi informado explicitamente.
+        if (strlen($startDate) <= 10) {
+            $startDate .= ' 00:00:00';
+        }
+        if (strlen($endDate) <= 10) {
+            $endDate .= ' 23:59:59';
+        }
+
+        try {
+            return (new ClockAdjustmentModel())->findInPeriod($startDate, $endDate);
+        } catch (\Throwable $e) {
+            log_message('error', 'Falha ao buscar ajustes de relógio para o AFD: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Busca declarações de alteração cadastral da empresa no REP (registro tipo "2" do AFD)
+     * cujo `recorded_at` cai dentro do mesmo período coberto pelo arquivo, já ordenadas por
+     * NSR — prontas para serem intercaladas com os demais registros do AFD.
+     *
+     * Mesma lógica de normalização de limites de período que `fetchClockAdjustmentsForAfd`
+     * (ver docblock acima): ancoramos `start_date`/`end_date` no início/fim do dia quando
+     * vierem como datas "puras" (AAAA-MM-DD), para não excluir registros com horário.
+     *
+     * @return object[]
+     */
+    private function fetchCompanyRecordEventsForAfd(array $filters): array
+    {
+        $startDate = (string) ($filters['start_date'] ?? date('Y-m-01'));
+        $endDate   = (string) ($filters['end_date'] ?? date('Y-m-t'));
+
+        if (strlen($startDate) <= 10) {
+            $startDate .= ' 00:00:00';
+        }
+        if (strlen($endDate) <= 10) {
+            $endDate .= ' 23:59:59';
+        }
+
+        try {
+            return (new CompanyRecordEventModel())->findInPeriod($startDate, $endDate);
+        } catch (\Throwable $e) {
+            log_message('error', 'Falha ao buscar alterações cadastrais da empresa para o AFD: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Busca eventos sensíveis do REP (registro tipo "6" do AFD, códigos "07"/"08")
+     * detectados pelo heartbeat dentro do período coberto pelo arquivo, já ordenados por
+     * NSR — prontos para serem intercalados com os demais registros do AFD.
+     *
+     * Diferente de `fetchClockAdjustmentsForAfd`/`fetchCompanyRecordEventsForAfd` (que
+     * buscam DECLARAÇÕES conscientes), estes eventos são DETECTADOS automaticamente por
+     * RepAvailabilityMonitorService/RepHeartbeatCommand — ver docblock da migração
+     * 2026-06-07-000490_CreateRepAvailabilityEventsTable para o racional completo.
+     *
+     * Mesma lógica de normalização de limites de período (ver docblocks acima): ancoramos
+     * `start_date`/`end_date` no início/fim do dia quando vierem como datas "puras".
+     *
+     * @return object[]
+     */
+    private function fetchAvailabilityEventsForAfd(array $filters): array
+    {
+        $startDate = (string) ($filters['start_date'] ?? date('Y-m-01'));
+        $endDate   = (string) ($filters['end_date'] ?? date('Y-m-t'));
+
+        if (strlen($startDate) <= 10) {
+            $startDate .= ' 00:00:00';
+        }
+        if (strlen($endDate) <= 10) {
+            $endDate .= ' 23:59:59';
+        }
+
+        try {
+            return (new RepAvailabilityEventModel())->findInPeriod($startDate, $endDate);
+        } catch (\Throwable $e) {
+            log_message('error', 'Falha ao buscar eventos sensíveis do REP para o AFD: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Busca eventos de inclusão/alteração/exclusão de empregado no REP (registro tipo
+     * "5" do AFD, operações "I"/"A"/"E") cujo `recorded_at` cai dentro do período coberto
+     * pelo arquivo, já ordenados por NSR — prontos para serem intercalados com os demais
+     * registros do AFD.
+     *
+     * Diferente do tipo "6" (DETECTADO por heartbeat), estes eventos são DECLARADOS
+     * automaticamente pelo próprio sistema, no instante em que cada operação de ciclo de
+     * vida do empregado é executada — ver EmployeeAfdEventRecorderService e os pontos de
+     * injeção em EmployeeController/EmployeeControllerActionService/
+     * EmployeeChangeRequestController.
+     *
+     * Mesma lógica de normalização de limites de período (ver docblocks acima): ancoramos
+     * `start_date`/`end_date` no início/fim do dia quando vierem como datas "puras".
+     *
+     * @return object[]
+     */
+    private function fetchEmployeeRecordEventsForAfd(array $filters): array
+    {
+        $startDate = (string) ($filters['start_date'] ?? date('Y-m-01'));
+        $endDate   = (string) ($filters['end_date'] ?? date('Y-m-t'));
+
+        if (strlen($startDate) <= 10) {
+            $startDate .= ' 00:00:00';
+        }
+        if (strlen($endDate) <= 10) {
+            $endDate .= ' 23:59:59';
+        }
+
+        try {
+            return (new EmployeeRecordEventModel())->findInPeriod($startDate, $endDate);
+        } catch (\Throwable $e) {
+            log_message('error', 'Falha ao buscar eventos de inclusão/alteração/exclusão de empregado para o AFD: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    private function mapFileType(string $type): string
+    {
+        return match ($type) {
+            'folha-ponto' => 'folha_ponto',
+            'horas-extras' => 'horas_extras',
+            'faltas-atrasos' => 'faltas_atrasos',
+            'banco-horas' => 'banco_horas',
+            'consolidado-mensal' => 'consolidado_mensal',
+            'justificativas' => 'justificativas',
+            'advertencias' => 'advertencias',
+            'personalizado' => 'personalizado',
+            default => throw new \InvalidArgumentException('Tipo de relatório inválido'),
+        };
+    }
+}

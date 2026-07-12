@@ -1,0 +1,4 @@
+# SupportPONTO — Private corporate application
+# Disallow all indexing to protect employee PII and business data
+User-agent: *
+Disallow: /

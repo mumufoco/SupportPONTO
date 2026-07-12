@@ -1,0 +1,31 @@
+# CodeIgniter 4 - Root .htaccess
+# Simple and safe configuration
+
+# Disable directory browsing
+Options -Indexes
+
+# Redirect all requests to public folder
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect to public folder if not already there
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Protect sensitive files
+<FilesMatch "(^\.env|^\.git|^composer\.|^phpunit\.|^\.user\.ini|^php\.ini)">
+    Require all denied
+</FilesMatch>
+
+# Production hardening: block direct HTTP access to internal application folders
+# when the virtual host is accidentally pointed to the project root.
+<IfModule mod_rewrite.c>
+    RewriteRule ^(app|system|writable|vendor|tests|tools|build|storage|docker|docs|deepface-api)(/|$) - [F,L]
+    RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|spark|release\.json|artifact-manifest\.json|openapi\.yaml)$ - [F,L]
+</IfModule>
+
+<FilesMatch "(^\.env|^\.git|^composer\.|^package(-lock)?\.json$|^phpunit\.xml$|^spark$|^release\.json$|^artifact-manifest\.json$|^openapi\.yaml$|^\.user\.ini|^php\.ini)">
+    Require all denied
+</FilesMatch>
+

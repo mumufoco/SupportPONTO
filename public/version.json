@@ -1,0 +1,400 @@
+{
+    "version": "1.1.498",
+    "release": "v1.1.498",
+    "package": 498,
+    "name": "SupportPONTO",
+    "environment": "production",
+    "generated_at": "2026-05-22T03:50:00+00:00",
+    "artifact_type": "complete-source-package",
+    "deployable": true,
+    "installer": "complete-guided-zero-installer",
+    "package_focus": "version-normalization",
+    "integrity_gate": {
+        "script": "tools/release/audit-package-integrity.php",
+        "blocking": true,
+        "validates_root_application": true,
+        "validates_no_nested_source_package": true,
+        "validates_metadata_consistency": true
+    },
+    "version_consistency_gate": {
+        "script": "tools/release/audit-version-consistency.php",
+        "sync_script": "tools/release/sync-version.php",
+        "blocking": true,
+        "validates_metadata_files": true,
+        "validates_runtime_fallbacks": true,
+        "validates_frontend_assets": true,
+        "validates_docker_and_api_metadata": true
+    },
+    "route_integrity_gate": {
+        "script": "tools/release/audit-route-integrity.php",
+        "wrapper": "scripts/testing/route-integrity-gate.sh",
+        "blocking": true,
+        "validates_modular_routes": true,
+        "validates_controller_classes": true,
+        "validates_controller_methods": true,
+        "validates_route_views": true,
+        "validates_filter_aliases": true,
+        "validates_essential_route_names": true
+    },
+    "service_integrity_gate": {
+        "script": "tools/release/audit-service-integrity.php",
+        "wrapper": "scripts/testing/service-integrity-gate.sh",
+        "blocking": true,
+        "validates_service_modules": true,
+        "validates_service_namespaces": true,
+        "validates_app_config_dependencies": true,
+        "validates_service_helper_references": true
+    },
+    "mvc_integrity_gate": {
+        "script": "tools/release/audit-mvc-integrity.php",
+        "wrapper": "scripts/testing/mvc-integrity-gate.sh",
+        "blocking": true,
+        "validates_controllers": true,
+        "validates_controller_views": true,
+        "validates_controller_dependencies": true,
+        "validates_service_helper_references": true
+    },
+    "view_integrity_gate": {
+        "script": "tools/release/audit-view-integrity.php",
+        "wrapper": "scripts/testing/view-integrity-gate.sh",
+        "blocking": true,
+        "validates_layouts": true,
+        "validates_partials": true,
+        "validates_component_views": true,
+        "validates_local_assets": true,
+        "validates_pwa_assets": true
+    },
+    "model_schema_integrity_gate": {
+        "script": "tools/release/audit-model-schema-integrity.php",
+        "wrapper": "scripts/testing/model-schema-integrity-gate.sh",
+        "blocking": true,
+        "validates_model_allowed_fields": true,
+        "validates_validation_rules": true,
+        "validates_migration_columns": true,
+        "validates_soft_deletes": true,
+        "validates_critical_schema_contracts": true
+    },
+    "employee_module_integrity_gate": {
+        "script": "tools/release/audit-employee-module-integrity.php",
+        "wrapper": "scripts/testing/employee-module-integrity-gate.sh",
+        "blocking": true,
+        "validates_employee_routes": true,
+        "validates_employee_controller_methods": true,
+        "validates_employee_forms": true,
+        "validates_payload_builder_aliases": true,
+        "validates_catalog_id_schema": true,
+        "validates_installer_safe_model_validation": true
+    },
+    "title": "Pacote 498 — Auditoria pós-refatoração do instalador",
+    "description": "Valida a refatoração real do instalador, bloqueia regressões em Core/Diagnostics/Steps, garante JSON parseável nos comandos principais e preserva o fluxo fonte sem vendor.",
+    "timesheet_module_integrity_gate": {
+        "script": "tools/release/audit-timesheet-module-integrity.php",
+        "wrapper": "scripts/testing/timesheet-module-integrity-gate.sh",
+        "blocking": true,
+        "validates_timesheet_routes": true,
+        "validates_punch_flow_events": true,
+        "validates_daily_consolidation": true,
+        "validates_timesheet_schema": true,
+        "validates_timesheet_views": true,
+        "validates_consolidation_command": true
+    },
+    "report_module_integrity_gate": {
+        "script": "tools/release/audit-report-module-integrity.php",
+        "wrapper": "scripts/testing/report-module-integrity-gate.sh",
+        "blocking": true,
+        "validates_report_routes": true,
+        "validates_report_controller_flow": true,
+        "validates_request_policy": true,
+        "validates_department_scope": true,
+        "validates_result_limits": true,
+        "validates_exporters": true,
+        "validates_async_report_jobs": true,
+        "validates_timesheet_mirror_views": true
+    },
+    "audit_log_integrity_gate": {
+        "script": "tools/release/audit-audit-log-integrity.php",
+        "wrapper": "scripts/testing/audit-log-integrity-gate.sh",
+        "blocking": true,
+        "validates_audit_model_contract": true,
+        "validates_immutable_checksum_chain": true,
+        "validates_request_context_fields": true,
+        "validates_critical_event_catalog": true,
+        "validates_no_parallel_legacy_audit_table": true,
+        "validates_audit_routes_security": true
+    },
+    "clean_code_solid_gate": {
+        "blocking": true,
+        "script": "tools/quality/clean-code-audit.php",
+        "composer_script": "test:clean-code",
+        "validates_dto_contracts": true,
+        "validates_queue_catalog": true,
+        "validates_no_raw_debug_calls": true,
+        "validates_documented_architecture_rules": true
+    },
+    "documentation_gate": {
+        "blocking": true,
+        "script": "tools/quality/documentation-audit.php",
+        "wrapper": "scripts/testing/documentation-gate.sh",
+        "composer_script": "test:documentation",
+        "validates_installation_docs": true,
+        "validates_operations_docs": true,
+        "validates_backup_update_rollback_docs": true
+    },
+    "final_security_gate": {
+        "blocking": true,
+        "script": "tools/quality/security-final-audit.php",
+        "wrapper": "scripts/testing/security-final-gate.sh",
+        "composer_script": "test:security-final",
+        "validates_owasp_top_10": true,
+        "validates_authentication": true,
+        "validates_authorization": true,
+        "validates_csrf_xss": true,
+        "validates_sql_upload_headers_logs_secrets": true,
+        "validates_lgpd_biometrics": true
+    },
+    "release_channel": "stable",
+    "release_candidate": false,
+    "homologation_ready": true,
+    "production_ready_requires_external_clean_install": true,
+    "release_candidate_gate": {
+        "blocking": true,
+        "script": "tools/quality/release-candidate-audit.php",
+        "wrapper": "scripts/testing/release-candidate-gate.sh",
+        "validates_package_metadata": true,
+        "validates_release_gates": true,
+        "validates_clean_install_assets": true,
+        "validates_smoke_test_assets": true,
+        "validates_installer_lockout_controls": true,
+        "validates_final_report": true
+    },
+    "production_stable": true,
+    "homologation_required_before_go_live": true,
+    "final_stable_gate": {
+        "script": "tools/quality/final-stable-production-audit.php",
+        "wrapper": "scripts/testing/final-stable-production-gate.sh",
+        "blocking": true,
+        "validates_complete_root_package": true,
+        "validates_installer": true,
+        "validates_database_migrations": true,
+        "validates_routes_controllers_services_views": true,
+        "validates_security_hardening": true,
+        "validates_documentation_and_minimum_tests": true
+    },
+    "dependency_catalog_gate": {
+        "blocking": true,
+        "script": "tools/quality/dependency-catalog-audit.php",
+        "wrapper": "scripts/testing/dependency-catalog-gate.sh",
+        "composer_script": "test:dependency-catalog",
+        "validates_catalog_profiles": true,
+        "validates_webserver_selection": true,
+        "validates_root_userland_policy": true,
+        "validates_services_script": true,
+        "validates_web_installer_no_deepface_node_install": true
+    },
+    "installer_wizard_gate": {
+        "blocking": true,
+        "script": "tools/quality/installer-wizard-audit.php",
+        "wrapper": "scripts/testing/installer-wizard-gate.sh",
+        "validates_wizard_steps": true,
+        "validates_web_no_heavy_dependency_install": true,
+        "validates_csrf_and_safe_actions": true,
+        "validates_summary_and_diagnostic_links": true
+    },
+    "installer_phase1_safety": {
+        "clean_install_never_drops_existing_schema": true,
+        "update_preserves_database_schema": true,
+        "destructive_reinstall_requires_strong_confirmation": true,
+        "production_requires_real_pg_dump_backup": true,
+        "install_journal": "writable/installer/install-journal.json",
+        "bootstrap_token_for_first_web_install": "writable/installer/bootstrap.token"
+    },
+    "installer_phase4_biometric_dependencies": {
+        "deepface_external_recommended_profile": "production_deepface_external_recommended",
+        "biometric_doctor": "install/runtime/biometric-doctor.sh",
+        "installer_cli_bridge": "php tools/installer/install_cli.php --biometric-doctor --json",
+        "last_report": "writable/installer/biometric-doctor-last.json",
+        "secrets_are_sanitized": true,
+        "web_installer_still_does_not_install_deepface": true
+    },
+    "installer_phase5_professional_ux": {
+        "separated_assets": [
+            "tools/installer/assets/installer.css",
+            "tools/installer/assets/installer.js"
+        ],
+        "visual_identity": "SupportPONTO/Support Solo Sondagens",
+        "accessible_progress": true,
+        "helper_modes": [
+            "basic",
+            "technical"
+        ],
+        "public_pages_unchanged": true,
+        "web_installer_still_does_not_install_deepface": true
+    },
+    "installer_phase6_support_observability": {
+        "install_id": "correlacionado em relatórios, logs e eventos",
+        "structured_events": "writable/installer/events-YYYY-MM-DD.ndjson",
+        "installer_doctor": "php tools/installer/install_cli.php --installer-doctor --json",
+        "support_bundle": "php tools/installer/install_cli.php --support-bundle --json",
+        "support_bundle_last_manifest": "writable/installer/support-bundle-last.json",
+        "support_bundle_sanitized": true,
+        "ziparchive_or_zip_binary_fallback": true,
+        "public_pages_unchanged": true
+    },
+    "phase8_time_punch_integrity": {
+        "nsr_single_source": true,
+        "employee_advisory_lock": true,
+        "hmac_chain_hash": true,
+        "fingerprint_text_match_disabled": true
+    },
+    "phase9_canonical_time_punch_registration": {
+        "command": "app/DTO/Timesheet/PunchRegistrationCommand.php",
+        "canonical_service": "app/Services/Timesheet/TimesheetPunchRegistrationService.php",
+        "web_flow_delegates": true,
+        "api_flow_delegates": true,
+        "qrcode_flow_delegates": true,
+        "pending_approval_delegates": true,
+        "direct_time_punch_inserts_removed_from_entrypoints": true
+    },
+    "phase10_timesheet_calculation_engine": {
+        "engine": "app/Services/Timesheet/Calculation/TimesheetCalculationEngine.php",
+        "policies": [
+            "WorkPairingPolicy",
+            "JornadaPolicy",
+            "IntervalPolicy",
+            "TolerancePolicy",
+            "OvertimePolicy",
+            "NightShiftPolicy"
+        ],
+        "daily_consolidation_delegates": true,
+        "model_calculate_hours_delegates": true,
+        "supports_multiple_intervals": true,
+        "supports_night_hours": true,
+        "supports_tolerance_and_interval_violation": true
+    },
+    "phase11_biometric_public_endpoint_security": {
+        "terminal_device_registry": "punch_terminal_devices",
+        "anti_replay_nonce_table": "punch_terminal_nonces",
+        "terminal_security_filter": "terminal-security",
+        "token_version": "v2",
+        "short_ttl_seconds": 300,
+        "hmac_signed_tokens": true,
+        "legacy_tokens_blocked_in_production": true,
+        "fingerprint_engine": "SourceAFIS/FingerprintMatchingService",
+        "textual_fingerprint_matching_removed": true
+    },
+    "phase12_operational_observability": {
+        "telemetry_service": "app/Services/Observability/OperationalTelemetryService.php",
+        "alert_service": "app/Services/Observability/OperationalAlertService.php",
+        "support_bundle_service": "app/Services/Support/ApplicationSupportBundleService.php",
+        "cli_command": "php spark support:bundle --json",
+        "admin_endpoint": "admin/health/support-bundle",
+        "health_checks": [
+            "database",
+            "queue",
+            "storage",
+            "logs",
+            "deepface",
+            "websocket",
+            "migrations",
+            "observability"
+        ],
+        "correlation_headers": [
+            "X-Request-ID",
+            "X-Correlation-ID"
+        ],
+        "sanitized_support_bundle": true
+    },
+    "installer_phase19_vendor_step": {
+        "explicit_vendor_step": true,
+        "recommended_production_package_with_vendor": true,
+        "web_vendor_requires_explicit_confirmation": "INSTALAR VENDOR",
+        "ssh_command_shown": true,
+        "composer_sha384_validation": true,
+        "php_cli_validated": true,
+        "last_report": "writable/installer/composer-install-last.json"
+    },
+    "installer_phase20_production_with_vendor": {
+        "build_script": "tools/release/build-production-with-vendor.php",
+        "expected_artifact": "SupportPONTO-v1.1.498-production-with-vendor.zip",
+        "manifest": "release-manifest.json",
+        "checksums": "release-checksums.sha256",
+        "requires_vendor_autoload": true,
+        "source_fallback_package": true,
+        "composer_flags": [
+            "--no-dev",
+            "--prefer-dist",
+            "--no-interaction",
+            "--no-progress",
+            "--optimize-autoloader",
+            "--classmap-authoritative"
+        ]
+    },
+    "installer_phase21_diagnostic_ux_separation": {
+        "core_blocking": true,
+        "mode_blocking": true,
+        "recommended": true,
+        "optional": true,
+        "legacy_blocking_maps_to_core_blocking": true,
+        "pg_dump_contextual_mode_message": true,
+        "psql_recommended_not_blocking": true,
+        "wizard_four_bucket_overview": true,
+        "simple_mode_hides_raw_warnings": true,
+        "technical_mode_keeps_raw_warnings": true
+    },
+    "clean_install_homologation_gate": {
+        "script": "tools/release/run-clean-install-smoke.php",
+        "runtime_audit": "tools/release/audit-clean-install-runtime.php",
+        "compose": "docker-compose.installer-test.yml",
+        "blocking_for_release_when_docker_available": true,
+        "supports_dry_run": true,
+        "validates_empty_postgresql": true,
+        "validates_migrations_seeders_lock_and_health": true
+    },
+    "installer_final_stable_package": {
+        "consolidates_packages": "481-493",
+        "php_cli_detector": true,
+        "process_runner_timeout": true,
+        "advanced_diagnostics_safe": true,
+        "explicit_vendor_step": true,
+        "production_with_vendor_build_pipeline": true,
+        "diagnostic_bucket_separation": true,
+        "app_vs_server_provisioning_separated": true,
+        "offline_composer_ready": true,
+        "initial_installer_refactor": true,
+        "clean_install_homologation_assets": true,
+        "final_ux_flow": true,
+        "source_package_contains_vendor": false,
+        "production_with_vendor_artifact_requires_build_environment": true
+    },
+    "production_deployable_requires_vendor_artifact": true,
+    "phase493_production_with_vendor_real": {
+        "build_script": "tools/release/build-production-with-vendor.php",
+        "artifact_audit": "tools/release/audit-production-with-vendor-artifact.php",
+        "expected_artifact": "SupportPONTO-v1.1.498-production-with-vendor.zip",
+        "source_package_contains_vendor": false,
+        "production_artifact_must_contain_vendor_autoload": true,
+        "source_fallback_clearly_marked": true,
+        "manifest_and_checksums_required": true,
+        "build_environment_requires_composer_or_existing_vendor": true
+    },
+    "phase494_advanced_diagnostics_json_safe": {
+        "dependency_diagnose_stdout_json_only": true,
+        "biometric_doctor_stdout_json_only": true,
+        "provision_server_stdout_json_only": true,
+        "logs_go_to_stderr_and_files": true,
+        "disk_free_unknown_instead_of_zero": true,
+        "diagnose_full_returns_parseable_json": true,
+        "runtime_scripts_contract": "stdout_json_stderr_logs"
+    },
+    "installer_phase33_post_refactor_audit": {
+        "audit_script": "tools/release/audit-installer-refactor-runtime.php",
+        "validates_extracted_components": true,
+        "validates_main_installer_delegation": true,
+        "validates_diagnose_core_json": true,
+        "validates_diagnose_full_json": true,
+        "validates_server_provision_plan_json": true,
+        "validates_offline_resources_json": true,
+        "keeps_source_package_without_vendor": true,
+        "production_with_vendor_requires_build_environment": true
+    }
+}

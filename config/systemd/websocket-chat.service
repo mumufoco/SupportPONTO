@@ -1,0 +1,28 @@
+[Unit]
+Description=WebSocket Chat Server - Ponto Eletrônico
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=forking
+User=www-data
+Group=www-data
+WorkingDirectory=/home/user/Support-Solo-Sondagens---El-tronico-Registro-de-Ponto
+ExecStart=/usr/bin/php /home/user/Support-Solo-Sondagens---El-tronico-Registro-de-Ponto/scripts/websocket_server.php start -d
+ExecReload=/usr/bin/php /home/user/Support-Solo-Sondagens---El-tronico-Registro-de-Ponto/scripts/websocket_server.php restart
+ExecStop=/usr/bin/php /home/user/Support-Solo-Sondagens---El-tronico-Registro-de-Ponto/scripts/websocket_server.php stop
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=websocket-chat
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/user/Support-Solo-Sondagens---El-tronico-Registro-de-Ponto/writable
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,198 @@
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class UserConsentModel extends Model
+{
+    protected $table            = 'user_consents';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'object';
+    protected $useSoftDeletes   = false;
+    protected $protectFields    = true;
+    protected $allowedFields    = [
+        'employee_id',
+        'consent_type',
+        'purpose',
+        'legal_basis',
+        'granted',
+        'granted_at',
+        'revoked_at',
+        'ip_address',
+        'user_agent',
+        'consent_text',
+        'version',
+        'revocation_reason',
+        'evidence_hash',
+        'processing_context',
+        'employee_name_snapshot',
+        'employee_cpf_snapshot',
+    ];
+
+    // Dates
+    protected $useTimestamps = true;
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
+    // Validation
+    protected $validationRules = [
+        'employee_id'  => 'required|integer',
+        'consent_type' => 'required|in_list[biometric_data,biometric_face,biometric_fingerprint,geolocation,data_processing,marketing,data_sharing]',
+        'purpose'      => 'required',
+        'consent_text' => 'required',
+    ];
+
+    protected $validationMessages = [];
+    protected $skipValidation       = false;
+    protected $cleanValidationRules = true;
+
+    /**
+     * Grant consent
+     */
+    public function grant(
+        int $employeeId,
+        string $consentType,
+        string $purpose,
+        string $consentText,
+        ?string $legalBasis = null,
+        string $version = '1.0'
+    ): bool {
+        // Check if consent already exists
+        $existing = $this->getActiveConsent($employeeId, $consentType);
+
+        if ($existing) {
+            return $this->update($existing->id, [
+                'granted'    => true,
+                'granted_at' => date('Y-m-d H:i:s'),
+                'revoked_at' => null,
+            ]);
+        }
+
+        // Snapshot employee identity for LGPD compliance (preserved even after anonymization)
+        try {
+            $empRow = \Config\Database::connect()->table('employees')
+                ->select('name, cpf')->where('id', $employeeId)->get()->getRow();
+        } catch (\Throwable $ignored) {
+            $empRow = null;
+        }
+
+        $data = [
+            'employee_id'  => $employeeId,
+            'employee_name_snapshot' => $empRow->name ?? null,
+            'employee_cpf_snapshot'  => $empRow->cpf ?? null,
+            'consent_type' => $consentType,
+            'purpose'      => $purpose,
+            'legal_basis'  => $legalBasis,
+            'granted'      => true,
+            'granted_at'   => date('Y-m-d H:i:s'),
+            'ip_address'   => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_agent'   => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            'consent_text' => $consentText,
+            'version'      => $version,
+            'evidence_hash' => hash('sha256', $employeeId . '|' . $consentType . '|' . $purpose . '|' . $consentText . '|' . $version),
+            'processing_context' => 'web_portal',
+        ];
+
+        return $this->insert($data) !== false;
+    }
+
+    /**
+     * Revoke consent
+     */
+    public function revoke(int $employeeId, string $consentType, ?string $reason = null): bool
+    {
+        $consent = $this->getActiveConsent($employeeId, $consentType);
+
+        if (!$consent) {
+            return false;
+        }
+
+        return $this->update($consent->id, [
+            'granted'    => false,
+            'revoked_at' => date('Y-m-d H:i:s'),
+            'revocation_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Get active consent
+     */
+    public function getActiveConsent(int $employeeId, string $consentType): ?object
+    {
+        return $this->where('employee_id', $employeeId)
+            ->where('consent_type', $consentType)
+            ->where('granted', true)
+            ->where('revoked_at', null)
+            ->orderBy('granted_at', 'DESC')
+            ->first();
+    }
+
+    /**
+     * Check if employee has granted consent
+     */
+    public function hasConsent(int $employeeId, string $consentType): bool
+    {
+        return $this->getActiveConsent($employeeId, $consentType) !== null;
+    }
+
+    /**
+     * Get all consents for employee
+     */
+    public function getByEmployee(int $employeeId): array
+    {
+        return $this->where('employee_id', $employeeId)
+            ->orderBy('granted_at', 'DESC')
+            ->findAll();
+    }
+
+    /**
+     * Get pending consents (not granted yet)
+     */
+    public function getPending(int $employeeId): array
+    {
+        $allTypes = ['biometric_face', 'biometric_fingerprint', 'geolocation', 'data_processing'];
+        $granted = $this->where('employee_id', $employeeId)
+            ->where('granted', true)
+            ->where('revoked_at', null)
+            ->findAll();
+
+        $grantedTypes = array_column($granted, 'consent_type');
+        $pending = [];
+
+        foreach ($allTypes as $type) {
+            if (!in_array($type, $grantedTypes)) {
+                $pending[] = $type;
+            }
+        }
+
+        return $pending;
+    }
+
+    /**
+     * Export consents for LGPD compliance
+     */
+    public function exportForEmployee(int $employeeId): array
+    {
+        $consents = $this->getByEmployee($employeeId);
+        $export = [];
+
+        foreach ($consents as $consent) {
+            $export[] = [
+                'type'         => $consent->consent_type,
+                'purpose'      => $consent->purpose,
+                'legal_basis'  => $consent->legal_basis,
+                'granted'      => $consent->granted,
+                'granted_at'   => $consent->granted_at,
+                'revoked_at'   => $consent->revoked_at,
+                'version'      => $consent->version,
+                'evidence_hash' => $consent->evidence_hash ?? null,
+                'processing_context' => $consent->processing_context ?? null,
+            ];
+        }
+
+        return $export;
+    }
+}

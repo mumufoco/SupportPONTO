@@ -1,0 +1,82 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation
+README.md
+DEPLOY.md
+CHANGELOG.md
+*.md
+
+# Tests
+tests/
+.phpunit.result.cache
+phpunit.xml
+
+# Development files
+.env.example
+.env.development
+docker-compose.override.yml
+
+# Logs
+writable/logs/*
+!writable/logs/.gitkeep
+
+# Cache
+writable/cache/*
+!writable/cache/.gitkeep
+
+# Sessions
+writable/session/*
+!writable/session/.gitkeep
+
+# Uploads
+writable/uploads/*
+!writable/uploads/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Backups
+writable/backups/*
+!writable/backups/.gitkeep
+
+# Node modules (if using frontend build tools)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Composer
+vendor/composer/installers/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.sql
+*.sql.gz
+
+# Secrets and local environments
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Composer vendor is built inside the image
+vendor/
+
+# CI/CD and local artifacts
+coverage/
+*.coverage
+artifacts/

@@ -1,0 +1,55 @@
+# SupportPONTO — .gitignore
+
+# Environment configuration (contains secrets)
+.env
+.env.*
+!.env.example
+
+# Composer dependencies
+vendor/
+composer.lock
+
+# CodeIgniter writable directory — never commit runtime data
+writable/cache/*
+writable/composer/*
+writable/logs/*
+writable/session/*
+writable/uploads/*
+writable/exports/*
+writable/biometric/*
+writable/secrets/*
+writable/installer/installed.lock
+
+# Keep directory structure for deployment
+!writable/cache/.gitkeep
+!writable/composer/.gitkeep
+!writable/logs/.gitkeep
+!writable/session/.gitkeep
+!writable/uploads/.gitkeep
+!writable/exports/.gitkeep
+!writable/biometric/.gitkeep
+!writable/secrets/.gitkeep
+!writable/installer/.gitkeep
+
+# Node / npm (if any frontend build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE artifacts
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# PHP artifacts
+*.cache
+*.log
+
+# Build artifacts
+build/dist/

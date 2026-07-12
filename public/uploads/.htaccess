@@ -1,0 +1,30 @@
+# SupportPONTO Pacote 447 - public/uploads somente para assets públicos não sensíveis.
+Options -Indexes -ExecCGI
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pl .py .cgi .sh .asp .aspx .jsp .exe .dll
+RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pl .py .cgi .sh .asp .aspx .jsp .exe .dll
+AddType text/plain .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pl .py .cgi .sh .asp .aspx .jsp .exe .dll .html .htm .svg .xml
+
+<FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml|phar|pl|py|cgi|sh|asp|aspx|jsp|exe|dll|com|bat|cmd|ps1|html|htm|svg|xml|shtml|swf)$">
+    <IfModule authz_core_module>
+        Require all denied
+    </IfModule>
+    <IfModule !authz_core_module>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<FilesMatch "(^\.ht|composer\.|package\.|webpack\.|vite\.|\.env|\.ini|\.log|\.sql|\.bak|\.old|\.tmp)">
+    <IfModule authz_core_module>
+        Require all denied
+    </IfModule>
+    <IfModule !authz_core_module>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+Header set X-Content-Type-Options "nosniff"

@@ -1,0 +1,32 @@
+# DeepFace API Requirements
+# Python 3.10–3.11 recomendado para TensorFlow 2.15/DeepFace fixados
+
+# Web Framework
+Flask==3.0.0
+flask-cors==4.0.0
+flask-limiter==3.5.0
+Werkzeug==3.0.1
+
+# DeepFace and dependencies
+deepface==0.0.89
+tensorflow==2.15.0
+opencv-python-headless==4.8.1.78
+Pillow==10.1.0
+
+# Additional ML libraries
+numpy==1.24.3
+pandas==2.1.3
+
+# Utilities
+python-dotenv==1.0.0
+gunicorn==21.2.0
+
+# Image processing
+mtcnn==0.1.1
+retina-face==0.0.13
+
+# Validation
+jsonschema==4.20.0
+
+# Logging
+colorlog==6.8.0

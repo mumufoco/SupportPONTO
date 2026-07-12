@@ -1,0 +1,300 @@
+[sudo] password for mumufoco: <?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class JustificationModel extends Model
+{
+    protected $table            = 'justifications';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'object';
+    protected $useSoftDeletes   = true;
+    protected $protectFields    = true;
+    protected $allowedFields    = [
+        'employee_id',
+        // Campos canônicos usados por relatórios e fluxos históricos.
+        'justification_date',
+        'justification_type',
+        'attachments',
+        // Aliases mantidos para telas/serviços que já usam nomenclatura curta.
+        'date',
+        'type',
+        'attachment_path',
+        'category',
+        'reason',
+        'status',
+        'approved_by',
+        'approved_at',
+        'reviewed_by',
+        'reviewed_at',
+        'review_notes',
+        'rejection_reason',
+        'submitted_by',
+    ];
+
+    // Dates
+    protected $useTimestamps = true;
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+    protected $deletedField  = 'deleted_at';
+
+    // Validation
+    protected $validationRules = [
+        'employee_id' => 'required|integer',
+        'category'    => 'required|in_list[doenca,compromisso-pessoal,emergencia-familiar,outro]',
+        'reason'      => 'required|min_length[50]|max_length[500]',
+    ];
+
+    protected $validationMessages = [
+        'date' => [  // ALTERAÇÃO: De 'justification_date' para 'date'
+            'required'   => 'A data da justificativa é obrigatória.',
+            'valid_date' => 'Formato de data inválido.',
+        ],
+        'type' => [  // ALTERAÇÃO: De 'justification_type' para 'type'
+            'required' => 'O tipo de justificativa é obrigatório.',
+            'in_list'  => 'Tipo de justificativa inválido.',
+        ],
+        'category' => [
+            'required' => 'A categoria é obrigatória.',
+            'in_list'  => 'Categoria inválida.',
+        ],
+        'reason' => [
+            'required'   => 'O motivo é obrigatório.',
+            'min_length' => 'O motivo deve ter pelo menos 50 caracteres.',
+            'max_length' => 'O motivo deve ter no máximo 500 caracteres.',
+        ],
+    ];
+
+    protected $skipValidation       = false;
+    protected $cleanValidationRules = true;
+
+    // Callbacks
+    protected $allowCallbacks = true;
+    protected $beforeInsert   = ['syncCanonicalAliases', 'sanitizeReason', 'encodeAttachments'];
+    protected $beforeUpdate   = ['syncCanonicalAliases', 'sanitizeReason', 'encodeAttachments'];
+    protected $afterFind      = ['decodeAttachments'];
+
+    /**
+     * Mantém compatibilidade entre os nomes canônicos do banco
+     * (justification_date/justification_type/attachments) e aliases curtos
+     * usados por telas e relatórios (date/type/attachment_path).
+     */
+    protected function syncCanonicalAliases(array $data): array
+    {
+        $payload = $data['data'] ?? [];
+
+        $pairs = [
+            'justification_date' => 'date',
+            'justification_type' => 'type',
+            'attachments' => 'attachment_path',
+        ];
+
+        foreach ($pairs as $canonical => $alias) {
+            $hasCanonical = array_key_exists($canonical, $payload) && $payload[$canonical] !== null && $payload[$canonical] !== '';
+            $hasAlias = array_key_exists($alias, $payload) && $payload[$alias] !== null && $payload[$alias] !== '';
+
+            if ($hasCanonical && ! $hasAlias) {
+                $payload[$alias] = $payload[$canonical];
+            }
+
+            if ($hasAlias && ! $hasCanonical) {
+                $payload[$canonical] = $payload[$alias];
+            }
+        }
+
+        $data['data'] = $payload;
+
+        return $data;
+    }
+
+    /**
+     * Sanitize reason field to prevent HTML injection without reducing length
+     */
+    protected function sanitizeReason(array $data): array
+    {
+        if (isset($data['data']['reason'])) {
+            $originalLength = strlen($data['data']['reason']);
+            $data['data']['reason'] = htmlspecialchars($data['data']['reason'], ENT_QUOTES, 'UTF-8');
+            $newLength = strlen($data['data']['reason']);
+            
+            if ($newLength != $originalLength) {
+                log_message('info', 'Sanitização alterou tamanho da razão: ' . $originalLength . ' -> ' . $newLength);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Encode attachments array to JSON
+     */
+    protected function encodeAttachments(array $data): array
+    {
+        // Ambos os campos precisam ser JSON-encoded antes de ir ao PostgreSQL.
+        // 'attachments' é a coluna json canônica; 'attachment_path' é o alias text.
+        foreach (['attachments', 'attachment_path'] as $key) {
+            if (isset($data['data'][$key]) && is_array($data['data'][$key])) {
+                $data['data'][$key] = json_encode($data['data'][$key]);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Decode attachments JSON to array
+     */
+    protected function decodeAttachments(array $data): array
+    {
+        if (isset($data['data'])) {
+            if (is_array($data['data'])) {
+                foreach ($data['data'] as &$row) {
+                    foreach (['attachments', 'attachment_path'] as $key) {
+                        if (isset($row->$key) && is_string($row->$key)) {
+                            $row->$key = json_decode($row->$key, true);
+                        }
+                    }
+                }
+            } else {
+                foreach (['attachments', 'attachment_path'] as $key) {
+                    if (isset($data['data']->$key) && is_string($data['data']->$key)) {
+                        $data['data']->$key = json_decode($data['data']->$key, true);
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get counts by status, with caching and SQL optimization
+     * @param int|null $employeeId If null, global counts (for admin/gestor)
+     */
+    public function getCounts(?int $employeeId): array
+    {
+        // Cache key: 'justification_counts_' . ($employeeId ?? 'global')
+        $cacheKey = 'justification_counts_' . ($employeeId ?? 'global');
+        $cache = \Config\Services::cache();
+        
+        // Check cache first
+        if ($cached = $cache->get($cacheKey)) {
+            return $cached;
+        }
+
+        try {
+            // Build query
+            $builder = $this->builder();
+            if ($employeeId !== null) {
+                $builder->where('employee_id', $employeeId);
+            }
+            
+            // Single query with GROUP BY for optimization
+            $results = $builder->select('status, COUNT(*) as count')
+                               ->groupBy('status')
+                               ->get()
+                               ->getResultArray();
+
+            // Initialize counts
+            $counts = [
+                'all' => 0,
+                'pending' => 0,
+                'approved' => 0,
+                'rejected' => 0,
+            ];
+
+            // Sum from results
+            foreach ($results as $row) {
+                $counts[$row['status']] = (int) $row['count'];
+                $counts['all'] += (int) $row['count'];
+            }
+
+            // Cache for 5 minutes
+            $cache->save($cacheKey, $counts, 300); // 300 seconds = 5 minutes
+
+            return $counts;
+        } catch (\Exception $e) {
+            log_message('error', 'Erro em getCounts: ' . $e->getMessage());
+            // Fallback: sempre retorna array com 0s para evitar erros
+            return [
+                'all' => 0,
+                'pending' => 0,
+                'approved' => 0,
+                'rejected' => 0,
+            ];
+        }
+    }
+
+    /**
+     * Get pending justifications
+     */
+    public function getPending(?int $employeeId = null): array
+    {
+        $builder = $this->where('status', 'pending');  // ALTERAÇÃO: Padronizado para 'pending'
+
+        if ($employeeId) {
+            $builder->where('employee_id', $employeeId);
+        }
+
+        return $builder->orderBy('date', 'DESC')->findAll();  // ALTERAÇÃO: De 'justification_date' para 'date'
+    }
+
+    /**
+     * Get justifications by employee and date range
+     */
+    public function getByDateRange(int $employeeId, string $startDate, string $endDate): array
+    {
+        return $this->where('employee_id', $employeeId)
+            ->where('date >=', $startDate)  // ALTERAÇÃO: De 'justification_date' para 'date'
+            ->where('date <=', $endDate)    // ALTERAÇÃO: De 'justification_date' para 'date'
+            ->orderBy('date', 'DESC')       // ALTERAÇÃO: De 'justification_date' para 'date'
+            ->findAll();
+    }
+
+    /**
+     * Approve justification
+     */
+    public function approve(int $justificationId, int $approvedBy): bool
+    {
+        return $this->update($justificationId, [
+            'status'      => 'approved',  // ALTERAÇÃO: Padronizado
+            'approved_by' => $approvedBy,
+            'approved_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    /**
+     * Reject justification
+     */
+    public function reject(int $justificationId, int $approvedBy, string $reason): bool
+    {
+        return $this->update($justificationId, [
+            'status'           => 'rejected',  // ALTERAÇÃO: Padronizado
+            'approved_by'      => $approvedBy,
+            'approved_at'      => date('Y-m-d H:i:s'),
+            'rejection_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Check if date has approved justification
+     */
+    public function hasApprovedJustification(int $employeeId, string $date): bool
+    {
+        return $this->where('employee_id', $employeeId)
+            ->where('date', $date)  // ALTERAÇÃO: De 'justification_date' para 'date'
+            ->where('status', 'approved')  // ALTERAÇÃO: Padronizado
+            ->countAllResults() > 0;
+    }
+
+    /**
+     * Get total pending count
+     */
+    public function getPendingCount(): int
+    {
+        return $this->where('status', 'pending')->countAllResults();  // ALTERAÇÃO: Padronizado
+    }
+}

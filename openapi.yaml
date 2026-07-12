@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  title: SupportPONTO — API de Auditoria e Compliance
+  description: >
+    Contrato mínimo da API do SupportPONTO, com foco no subsistema de auditoria
+    e nas respostas de compliance legal (LGPD, Portaria MTE 671/2021). Não é um
+    contrato exaustivo de toda a aplicação: documenta as rotas operacionais do
+    módulo de auditoria/compliance e os comportamentos transversais relevantes
+    para a trilha de governança (ver `docs/operations/QA_RELEASE_GATE_CURRENT.md`).
+  version: "1.1.500"
+  contact:
+    name: Support Solo Sondagens
+    url: https://ponto.supportsondagens.com.br
+
+servers:
+  - url: https://ponto.supportsondagens.com.br
+    description: Produção (aaPanel / host único)
+
+tags:
+  - name: Auditoria
+    description: Consulta, exportação e manutenção controlada da trilha de auditoria.
+  - name: Compliance
+    description: Endpoints e respostas relacionados a obrigações legais (LGPD, MTE 671/2021).
+
+paths:
+  /audit:
+    get:
+      tags: [Auditoria]
+      summary: Lista a trilha de auditoria (visão paginada/filtrada)
+      operationId: auditIndex
+      responses:
+        "200":
+          description: Página HTML ou dados da trilha de auditoria.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /audit/data:
+    post:
+      tags: [Auditoria]
+      summary: Retorna dados paginados da trilha de auditoria (uso interno via AJAX)
+      operationId: auditData
+      responses:
+        "200":
+          description: Conjunto de registros de auditoria em formato JSON/tabela.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /audit/{id}:
+    get:
+      tags: [Auditoria]
+      summary: Exibe um registro de auditoria específico
+      operationId: auditShow
+      parameters:
+        - $ref: "#/components/parameters/AuditId"
+      responses:
+        "200":
+          description: Registro de auditoria encontrado.
+        "404":
+          description: Registro não encontrado.
+
+  /audit/details/{id}:
+    get:
+      tags: [Auditoria]
+      summary: Exibe detalhes estendidos de um registro de auditoria (diff/contexto)
+      operationId: auditDetails
+      parameters:
+        - $ref: "#/components/parameters/AuditId"
+      responses:
+        "200":
+          description: Detalhes do registro de auditoria.
+        "404":
+          description: Registro não encontrado.
+
+  /audit/export:
+    get:
+      tags: [Auditoria, Compliance]
+      summary: Exporta a trilha de auditoria em CSV
+      description: >
+        Restrito aos papéis `admin`, `dpo` e `auditor`. Usado para atender
+        solicitações de portabilidade/transparência (LGPD Art. 18) e auditorias
+        externas.
+      operationId: auditExport
+      responses:
+        "200":
+          description: Arquivo CSV com os registros de auditoria do período solicitado.
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /audit/clear:
+    post:
+      tags: [Auditoria, Compliance]
+      summary: Executa a limpeza/retenção controlada da trilha de auditoria
+      description: >
+        Operação restrita a `admin`, com confirmação step-up (`stepup:back`).
+        Respeita o piso legal de retenção definido em
+        `AuditMaintenanceService::LEGAL_MINIMUM_RETENTION_DAYS` (1825 dias / 5 anos,
+        Portaria MTE 671/2021). Tentativas de retenção abaixo do piso legal —
+        ou de anonimização/exclusão fora da janela de manutenção controlada
+        (`app.audit_maintenance_mode`) — são bloqueadas com **423 Locked**
+        (`App\Exceptions\ComplianceException`), preservando a imutabilidade e a
+        cadeia de integridade (`previousChecksum`) da auditoria.
+      operationId: auditClear
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                days:
+                  type: integer
+                  minimum: 1825
+                  description: >
+                    Janela de retenção em dias. Valores abaixo do piso legal
+                    (1825) são rejeitados.
+      responses:
+        "200":
+          description: Limpeza concluída; retorna a quantidade de registros excluídos.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "423":
+          $ref: "#/components/responses/ComplianceLocked"
+
+  /audit/afd:
+    get:
+      tags: [Auditoria, Compliance]
+      summary: Gera arquivo AFD (Arquivo Fonte de Dados) para fiscalização do MTE
+      operationId: auditGenerateAfd
+      responses:
+        "200":
+          description: Arquivo texto AFD no formato exigido pela Portaria MTE 671/2021.
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /audit/compliance:
+    get:
+      tags: [Auditoria, Compliance]
+      summary: Painel/relatório de conformidade legal da trilha de auditoria
+      operationId: auditCompliance
+      responses:
+        "200":
+          description: Indicadores de conformidade (retenção, integridade da cadeia, anonimização controlada).
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  parameters:
+    AuditId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Identificador numérico do registro de auditoria.
+
+  responses:
+    Unauthorized:
+      description: Sessão ausente ou expirada.
+    Forbidden:
+      description: Usuário autenticado, mas sem permissão para o recurso (403 Forbidden).
+    ComplianceLocked:
+      description: >
+        **423 Locked — Bloqueio de Compliance.** O recurso está temporariamente
+        indisponível porque a operação solicitada violaria uma obrigação legal
+        vigente (LGPD e/ou Portaria MTE 671/2021) — por exemplo, exclusão ou
+        anonimização de registros de auditoria antes do piso mínimo de retenção
+        (1825 dias) ou fora da janela de manutenção controlada
+        (`app.audit_maintenance_mode`). Lançado via
+        `App\Exceptions\ComplianceException` (HTTP 423, código `COMPLIANCE`),
+        preservando a imutabilidade e a cadeia de integridade da auditoria.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                example: 423
+              code:
+                type: string
+                example: COMPLIANCE
+              message:
+                type: string
+                example: "Operação bloqueada: viola o piso legal de retenção da auditoria (1825 dias)."

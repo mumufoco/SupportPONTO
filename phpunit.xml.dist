@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/codeigniter4/framework/phpunit.xsd"
+    bootstrap="vendor/codeigniter4/framework/system/Test/bootstrap.php"
+    backupGlobals="false"
+    colors="true"
+    columns="max"
+    cacheDirectory="build/.phpunit.cache">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>./tests/unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>./tests/feature</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>./tests/integration</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">./app/Views</directory>
+            <file>./app/Config/Routes.php</file>
+        </exclude>
+    </source>
+    <php>
+        <server name="app.baseURL" value="http://localhost/"/>
+        <server name="CODEIGNITER_SCREAM_DEPRECATIONS" value="0"/>
+        <!-- Diretório que contém este arquivo phpunit.xml -->
+        <const name="HOMEPATH" value="./"/>
+        <!-- Diretório que contém o arquivo de configuração Paths -->
+        <const name="CONFIGPATH" value="./app/Config/"/>
+        <!-- Diretório que contém o front controller (index.php) -->
+        <const name="PUBLICPATH" value="./public/"/>
+        <!--
+            Banco de testes dedicado (recomendado: schema/usuário isolados do banco de produção).
+            Sem esta configuração, testes que usam DatabaseTestTrait usam a conexão "tests"
+            do app/Config/Database.php (driver SQLite3 em memória, quando disponível).
+        -->
+        <!--
+        <env name="database.tests.hostname" value="127.0.0.1"/>
+        <env name="database.tests.database" value="supportponto_tests"/>
+        <env name="database.tests.username" value="tests_user"/>
+        <env name="database.tests.password" value=""/>
+        <env name="database.tests.DBDriver" value="Postgre"/>
+        <env name="database.tests.DBPrefix" value=""/>
+        -->
+    </php>
+</phpunit>

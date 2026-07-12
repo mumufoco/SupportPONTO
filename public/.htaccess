@@ -1,0 +1,178 @@
+# CodeIgniter 4 - Public Folder .htaccess
+
+# Disable directory browsing
+Options -Indexes
+
+# Set default index file
+DirectoryIndex index.php index.html
+
+# Enable rewrite engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # ============================================================================
+    # HTTPS Redirect (commented by default - uncomment in production)
+    # ============================================================================
+    # Descomente as linhas abaixo em produção com certificado SSL
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Redirect trailing slashes
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # Rewrite requests to index.php - CodeIgniter 4 routing
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>
+
+# ============================================================================
+# Security Headers
+# ============================================================================
+# A política principal é aplicada pelo filtro App\Filters\SecurityHeaders.
+# Estes headers funcionam como fallback para arquivos estáticos servidos direto
+# pelo Apache/aaPanel, mantendo compatibilidade com as telas de biometria/PWA.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), camera=(self), microphone=(), payment=(), usb=(), fullscreen=(self)"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    Header unset X-Powered-By
+
+    # X-XSS-Protection é legado. Mantido em modo desativado para evitar bugs de
+    # auditoria/reflection XSS antigos em navegadores obsoletos.
+    Header always set X-XSS-Protection "0"
+
+    # HSTS deve ser ativado somente após HTTPS estar validado no domínio final.
+    # Preferir SECURITY_HSTS_ENABLED=true no .env para respostas do CodeIgniter.
+    # Para arquivos estáticos, habilite no vhost Apache depois de confirmar
+    # Cloudflare/aaPanel sem mixed content ou redirect loop:
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ============================================================================
+# Cache Control Headers
+# ============================================================================
+<IfModule mod_headers.c>
+    # No-cache for Service Worker and Manifest (always check for updates)
+    <FilesMatch "\.(webmanifest|json)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+    
+    <FilesMatch "^sw\.js$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+    
+    # Long cache for static assets (30 days)
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|woff|woff2|ttf|eot|otf)$">
+        Header set Cache-Control "public, max-age=2592000, immutable"
+    </FilesMatch>
+    
+    # Medium cache for CSS and JavaScript (7 days)
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+    
+    # No cache for HTML pages
+    <FilesMatch "\.(html|htm|php)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+</IfModule>
+
+# ============================================================================
+# Compression (Gzip/Deflate)
+# ============================================================================
+<IfModule mod_deflate.c>
+    # Compress HTML, CSS, JavaScript, Text, XML and fonts
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/ld+json
+    AddOutputFilterByType DEFLATE application/manifest+json
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/vnd.geo+json
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/x-web-app-manifest+json
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE font/opentype
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE image/x-icon
+    AddOutputFilterByType DEFLATE text/cache-manifest
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/vcard
+    AddOutputFilterByType DEFLATE text/vnd.rim.location.xloc
+    AddOutputFilterByType DEFLATE text/vtt
+    AddOutputFilterByType DEFLATE text/x-component
+    AddOutputFilterByType DEFLATE text/x-cross-domain-policy
+    AddOutputFilterByType DEFLATE text/xml
+</IfModule>
+
+# ============================================================================
+# Deny access to sensitive files
+# ============================================================================
+# Production hardening: never serve internal metadata or source artifacts from public.
+<FilesMatch "(^\.env|^\.git|^composer\.|^package(-lock)?\.json$|^phpunit\.xml$|^spark$|^release\.json$|^artifact-manifest\.json$|^openapi\.yaml$|^\.user\.ini|^php\.ini|\.(sql|bak|old|orig|swp|dist)$)">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteRule ^(app|system|writable|vendor|tests|tools|build|storage|docker|docs|deepface-api)(/|$) - [F,L]
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "(^composer\.|^phpunit\.|\.env$)">
+    Require all denied
+</FilesMatch>
+
+
+# Block direct access to installer and SQL artifacts if they are accidentally deployed
+<FilesMatch "^(install_helpers\.php|install_steps\.php|.*\.sql)$">
+    Require all denied
+</FilesMatch>
+
+# The protected web installer launcher (install.php) may be published temporarily
+# by tools/installer/publish-web-installer.php. Access control is enforced inside
+# tools/installer/install_web.php using token/IP allowlist + install lock.
+<FilesMatch "^install\.php$">
+    Require all granted
+</FilesMatch>
+
+# ============================================================================
+# PHP settings for mod_php (Apache Module)
+# ============================================================================
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_value upload_max_filesize 64M
+    php_value post_max_size 64M
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+
+    # Session configuration moved to .user.ini to prevent conflicts with CodeIgniter
+    # CodeIgniter manages session configuration through its Session Handler
+    # Using .user.ini allows PHP-FPM to load settings without blocking ini_set()
+</IfModule>
+
+# ============================================================================
+# cPanel PHP Handler (automatically managed)
+# ============================================================================
+# cPanel/hosting PHP handler
+# Do not force a repository-wide PHP handler here. Configure the target PHP version
+# in the hosting panel or vhost/pool so CLI and web stay aligned during install.

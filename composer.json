@@ -1,0 +1,65 @@
+{
+  "name": "mumufoco/ponto-eletronico",
+  "description": "Sistema de Ponto Eletrônico Brasileiro - Conformidade MTE 671/2021, CLT, LGPD",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": "^8.3",
+    "chillerlan/php-qrcode": "^6.0",
+    "codeigniter4/framework": "^4.6.4",
+    "codeigniter4/shield": "^1.2",
+    "doctrine/dbal": "^3.0",
+    "firebase/php-jwt": "^7.0",
+    "guzzlehttp/guzzle": "^7.8",
+    "minishlink/web-push": "^9.0",
+    "phpoffice/phpspreadsheet": "^1.30.1",
+    "tecnickcom/tcpdf": "^6.6",
+    "workerman/workerman": "^5.0"
+  },
+  "require-dev": {
+    "fakerphp/faker": "^1.23",
+    "mikey179/vfsstream": "^1.6",
+    "php-webdriver/webdriver": "^1.15",
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^10.5"
+  },
+  "autoload": {
+    "psr-4": {
+        "App\\": "app/",
+        "Config\\": "app/Config/"
+    },
+    "exclude-from-classmap": [
+        "**/Database/Migrations/**"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\Support\\": "tests/Support"
+    }
+  },
+  "scripts": {
+    "test:setup": "bash scripts/testing/bootstrap.sh",
+    "test": "bash scripts/testing/bootstrap.sh && bash scripts/testing/run-phpunit.sh --testsuite Unit,Feature",
+    "test:all": "bash scripts/testing/bootstrap.sh && bash scripts/testing/run-phpunit.sh",
+    "test:unit": "bash scripts/testing/bootstrap.sh && bash scripts/testing/run-phpunit.sh --testsuite Unit",
+    "test:feature": "bash scripts/testing/bootstrap.sh && bash scripts/testing/run-phpunit.sh --testsuite Feature",
+    "test:integration": "bash scripts/testing/bootstrap.sh && bash scripts/testing/run-phpunit.sh --testsuite Integration",
+    "test:doctor": "bash scripts/testing/doctor.sh",
+    "post-update-cmd": [
+      "@php spark cache:clear"
+    ],
+    "test:release-regression": "bash scripts/testing/smoke-release-regression.sh --base-url http://localhost:${APP_PORT:-80} --skip-connections",
+    "test:essential": "bash scripts/testing/essential-regression-gate.sh",
+    "release:gate": "php spark release:gate"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

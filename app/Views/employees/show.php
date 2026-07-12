@@ -1,0 +1,663 @@
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('title') ?>Colaborador<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<style>
+/* ── Avatar clicável ────────────────────────────── */
+.sp-emp-avatar-wrap {
+    position: relative; display: inline-block;
+    width: 96px; height: 96px; cursor: pointer;
+}
+.sp-emp-avatar-wrap img,
+.sp-emp-avatar-wrap .sp-emp-avatar-initials {
+    width: 96px; height: 96px; border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--sp-border, #e5e7eb);
+}
+.sp-emp-avatar-initials {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; font-weight: 700;
+    background: var(--sp-primary, #4fa14f);
+    color: #fff;
+}
+.sp-emp-avatar-badge {
+    position: absolute; bottom: 2px; right: 2px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--sp-bg-surface); border: 2px solid var(--sp-border, #e5e7eb);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; color: var(--sp-text-muted);
+    transition: background .2s, color .2s;
+}
+.sp-emp-avatar-wrap:hover .sp-emp-avatar-badge {
+    background: var(--sp-primary); color: #fff; border-color: var(--sp-primary);
+}
+
+/* ── KPI biometria ──────────────────────────────── */
+.sp-bio-kpi {
+    display: flex; flex-direction: column;
+    border-radius: .75rem; overflow: hidden;
+    border: 1px solid var(--sp-border, #e5e7eb);
+}
+.sp-bio-kpi__header {
+    padding: .6rem 1rem;
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .85rem; font-weight: 600;
+}
+.sp-bio-kpi__body { padding: .75rem 1rem; }
+.sp-bio-kpi__status {
+    font-size: 1.5rem; font-weight: 700;
+    display: flex; align-items: center; gap: .5rem;
+}
+.sp-bio-kpi--ok .sp-bio-kpi__header { background: var(--sp-success-light); color: var(--sp-success); }
+.sp-bio-kpi--warn .sp-bio-kpi__header { background: var(--sp-warning-light); color: var(--sp-warning); }
+</style>
+<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+<?php
+$emp                  = $employee ?? null;
+$hasFace              = $hasFaceBiometric ?? $emp->has_face_biometric ?? false;
+$hasFingerprint       = $hasFingerprintBiometric ?? $emp->has_fingerprint_biometric ?? false;
+$faceT                = $faceTemplate ?? null;
+$fpT                  = $fingerprintTemplate ?? null;
+$hasPhoto             = !empty($emp->photo_path);
+$photoUrl             = $hasPhoto ? base_url($emp->photo_path) : null;
+$isSelf               = isset($currentUser) && ((int)($currentUser->id ?? 0) === (int)($emp->id ?? -1));
+$isManager            = in_array($currentUser->role ?? '', ['admin','rh','gestor'], true);
+$canUploadPhoto       = $isSelf || $isManager;
+$uploadUrl            = site_url('employees/' . ($emp->id ?? '') . '/photo');
+?>
+<div class="container-fluid">
+
+    <?= view('components/page_header', [
+        'title'    => esc($emp->name ?? 'Colaborador'),
+        'subtitle' => 'Dados principais, vínculo profissional e atalhos de gestão.',
+        'icon'     => 'bi bi-person-badge-fill',
+        'actions'  => [],
+    ]) ?>
+
+    <?= view('components/flash_messages') ?>
+
+    <!-- Alerta: sem foto -->
+    <?php if ($canUploadPhoto && !$hasPhoto): ?>
+    <div class="alert alert-warning d-flex align-items-center gap-3 mb-3" id="alertNoPhoto">
+        <i class="bi bi-person-bounding-box fs-4 flex-shrink-0"></i>
+        <div class="flex-grow-1">
+            <strong>Sem foto cadastrada.</strong>
+            Adicione uma foto para facilitar o reconhecimento e personalizar o perfil.
+        </div>
+        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalPhoto">
+            <i class="bi bi-camera me-1"></i>Adicionar foto
+        </button>
+    </div>
+    <?php endif; ?>
+
+    <div class="row g-3">
+
+        <!-- ╔══ Coluna: Identificação ══════════════════════════╗ -->
+        <div class="col-md-4 col-xl-3">
+            <div class="sp-card h-100 mb-0">
+                <div class="sp-card-body text-center">
+
+                    <!-- Avatar clicável -->
+                    <?php if ($canUploadPhoto): ?>
+                    <div class="sp-emp-avatar-wrap mx-auto mb-3"
+                         data-bs-toggle="modal" data-bs-target="#modalPhoto"
+                         title="Clique para alterar a foto">
+                    <?php else: ?>
+                    <div class="sp-emp-avatar-wrap mx-auto mb-3" style="cursor:default">
+                    <?php endif; ?>
+                        <?php if ($photoUrl): ?>
+                            <img src="<?= esc($photoUrl) ?>" alt="Foto de <?= esc($emp->name ?? '') ?>" id="empAvatarImg">
+                        <?php else: ?>
+                            <div class="sp-emp-avatar-initials" id="empAvatarInitial">
+                                <?= mb_substr($emp->name ?? 'C', 0, 1) ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($canUploadPhoto): ?>
+                        <div class="sp-emp-avatar-badge" title="Alterar foto">
+                            <i class="bi bi-camera-fill"></i>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <h5 class="mb-1"><?= esc($emp->name ?? '–') ?></h5>
+                    <div class="text-muted small mb-3"><?= esc($emp->email ?? '–') ?></div>
+                    <div class="d-flex gap-2 justify-content-center flex-wrap mb-3">
+                        <span class="sp-badge sp-badge-primary"><?= esc(ucfirst($emp->role ?? 'funcionario')) ?></span>
+                        <span class="sp-status <?= !empty($emp->active) ? 'sp-status-active' : 'sp-status-inactive' ?>">
+                            <?= !empty($emp->active) ? 'Ativo' : 'Inativo' ?>
+                        </span>
+                    </div>
+                </div>
+                <div class="sp-card-footer p-0">
+                    <ul class="list-group list-group-flush" style="border-radius:0 0 var(--sp-radius-md) var(--sp-radius-md)">
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--sp-border)">
+                            <span class="text-muted small"><i class="bi bi-building me-1"></i>Departamento</span>
+                            <strong class="small"><?= esc($emp->department ?? '–') ?></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--sp-border)">
+                            <span class="text-muted small"><i class="bi bi-briefcase me-1"></i>Cargo</span>
+                            <strong class="small"><?= esc($emp->position ?? '–') ?></strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--sp-border)">
+                            <span class="text-muted small"><i class="bi bi-clock me-1"></i>Jornada</span>
+                            <span class="small"><?= esc($emp->work_shift ?? '–') ?></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--sp-border)">
+                            <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i>Unidade</span>
+                            <span class="small"><?= esc($emp->work_unit ?? '–') ?></span>
+                        </li>
+                        <?php if (!empty($emp->phone)): ?>
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--sp-border)">
+                            <span class="text-muted small"><i class="bi bi-telephone me-1"></i>Telefone</span>
+                            <a href="tel:<?= esc($emp->phone) ?>" class="small text-decoration-none"><?= esc($emp->phone) ?></a>
+                        </li>
+                        <?php endif; ?>
+                        <?php if (!empty($emp->admission_date)): ?>
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--sp-border)">
+                            <span class="text-muted small"><i class="bi bi-calendar-check me-1"></i>Admissão</span>
+                            <span class="small"><?= date('d/m/Y', strtotime($emp->admission_date)) ?></span>
+                        </li>
+                        <?php endif; ?>
+                        <?php if (!empty($emp->last_login)): ?>
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--sp-border)">
+                            <span class="text-muted small"><i class="bi bi-box-arrow-in-right me-1"></i>Último acesso</span>
+                            <span class="small text-muted"><?= date('d/m/y H:i', strtotime($emp->last_login)) ?></span>
+                        </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ╔══ Coluna: QR Code + Dados ═══════════════════════╗ -->
+        <div class="col-md-4 col-xl-3">
+            <div class="d-flex flex-column gap-3 h-100">
+
+                <!-- QR Code -->
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="bi bi-qr-code-scan me-2"></i>Identificação para Ponto
+                        </h6>
+                    </div>
+                    <div class="card-body py-3">
+                        <?php $qrData = urlencode($emp->unique_code ?? ''); ?>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=<?= $qrData ?>&format=png&color=000000&bgcolor=FFFFFF&margin=3&ecc=M"
+                             alt="QR Code" class="img-fluid rounded shadow-sm mb-2" style="max-width:140px">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mt-1">
+                            <code class="fs-6 bg-light px-2 py-1 rounded fw-bold"><?= esc($emp->unique_code ?? '–') ?></code>
+                            <?php if (!empty($emp->unique_code)): ?>
+                            <button class="btn btn-sm btn-outline-secondary p-1" onclick="copyUniqueCode()" title="Copiar">
+                                <i class="bi bi-copy"></i>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent py-2">
+                        <div class="d-flex gap-1 justify-content-center flex-wrap">
+                            <a href="<?= site_url('employees/' . ($emp->id ?? '') . '/qrcode') ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Ver</a>
+                            <a href="<?= site_url('employees/' . ($emp->id ?? '') . '/qrcode/download') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Baixar</a>
+                            <a href="<?= site_url('employees/' . ($emp->id ?? '') . '/qrcode/print') ?>" class="btn btn-sm btn-outline-secondary" target="_blank"><i class="bi bi-printer me-1"></i>Imprimir</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dados rápidos -->
+                <div class="sp-profile-card mb-0 flex-grow-1">
+                    <div class="sp-profile-card__body">
+                        <dl class="row mb-0 small">
+                            <dt class="col-5 text-muted fw-normal">CPF</dt>
+                            <dd class="col-7 fw-semibold"><?= esc($emp->cpf ?? '–') ?></dd>
+                            <dt class="col-5 text-muted fw-normal">Admissão</dt>
+                            <dd class="col-7"><?= esc($emp->admission_date ?? '–') ?></dd>
+                            <dt class="col-5 text-muted fw-normal">PIS</dt>
+                            <dd class="col-7"><?= esc($emp->pis ?? '–') ?></dd>
+                            <dt class="col-5 text-muted fw-normal">Telefone</dt>
+                            <dd class="col-7"><?= esc($emp->telefone ?? $emp->phone ?? '–') ?></dd>
+                            <dt class="col-5 text-muted fw-normal">Atualização</dt>
+                            <dd class="col-7 text-muted"><?= esc($emp->updated_at ?? '–') ?></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ╔══ Coluna: KPIs Biometria + Atalhos ══════════════╗ -->
+        <div class="col-md-4 col-xl-6 d-flex flex-column gap-3">
+
+            <!-- KPIs de biometria: 2 cards lado a lado -->
+            <div class="row g-3">
+
+                <!-- KPI: Biometria Facial -->
+                <div class="col-6">
+                    <div class="sp-bio-kpi <?= $hasFace ? 'sp-bio-kpi--ok' : 'sp-bio-kpi--warn' ?> h-100 shadow-sm">
+                        <div class="sp-bio-kpi__header">
+                            <i class="bi bi-camera-video-fill"></i>
+                            Facial
+                        </div>
+                        <div class="sp-bio-kpi__body">
+                            <div class="sp-bio-kpi__status mb-2">
+                                <?php if ($hasFace): ?>
+                                    <i class="bi bi-check-circle-fill text-success" style="font-size:1.3rem"></i>
+                                    <span class="text-success fs-6">Cadastrada</span>
+                                <?php else: ?>
+                                    <i class="bi bi-x-circle-fill text-warning" style="font-size:1.3rem"></i>
+                                    <span class="text-warning fs-6">Pendente</span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($hasFace && $faceT): ?>
+                            <div class="text-muted" style="font-size:.72rem">
+                                <div>Cadastrada em <?= date('d/m/Y', strtotime($faceT->created_at ?? 'now')) ?></div>
+                                <?php if (!empty($faceT->enrollment_quality)): ?>
+                                <div class="mt-1">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Qualidade</span>
+                                        <span><?= round(($faceT->enrollment_quality ?? 0) * 100) ?>%</span>
+                                    </div>
+                                    <div class="progress" style="height:4px">
+                                        <div class="progress-bar bg-success" style="width:<?= round(($faceT->enrollment_quality ?? 0) * 100) ?>%"></div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <?php elseif (!$hasFace): ?>
+                            <div class="text-muted small mb-2">Nenhum registro facial.</div>
+                            <?php endif; ?>
+                            <div class="mt-2">
+                                <?php
+                                $faceEnrollUrl = $isSelf
+                                    ? site_url('minha-biometria')
+                                    : site_url('biometric/enroll-for/' . ($emp->id ?? ''));
+                                ?>
+                                <a href="<?= $faceEnrollUrl ?>"
+                                   class="btn btn-sm <?= $hasFace ? 'btn-outline-secondary' : 'btn-warning' ?> w-100">
+                                    <i class="bi bi-<?= $hasFace ? 'arrow-clockwise' : 'plus-circle' ?> me-1"></i>
+                                    <?= $hasFace ? 'Rever' : 'Cadastrar' ?>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI: Biometria Digital -->
+                <div class="col-6">
+                    <div class="sp-bio-kpi <?= $hasFingerprint ? 'sp-bio-kpi--ok' : 'sp-bio-kpi--warn' ?> h-100 shadow-sm">
+                        <div class="sp-bio-kpi__header">
+                            <i class="bi bi-fingerprint"></i>
+                            Digital
+                        </div>
+                        <div class="sp-bio-kpi__body">
+                            <div class="sp-bio-kpi__status mb-2">
+                                <?php if ($hasFingerprint): ?>
+                                    <i class="bi bi-check-circle-fill text-success" style="font-size:1.3rem"></i>
+                                    <span class="text-success fs-6">Cadastrada</span>
+                                <?php else: ?>
+                                    <i class="bi bi-x-circle-fill text-warning" style="font-size:1.3rem"></i>
+                                    <span class="text-warning fs-6">Pendente</span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($hasFingerprint && $fpT): ?>
+                            <div class="text-muted" style="font-size:.72rem">
+                                <div>Cadastrada em <?= date('d/m/Y', strtotime($fpT->created_at ?? 'now')) ?></div>
+                                <?php if (!empty($fpT->enrollment_quality)): ?>
+                                <div class="mt-1">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Qualidade</span>
+                                        <span><?= round(($fpT->enrollment_quality ?? 0) * 100) ?>%</span>
+                                    </div>
+                                    <div class="progress" style="height:4px">
+                                        <div class="progress-bar bg-success" style="width:<?= round(($fpT->enrollment_quality ?? 0) * 100) ?>%"></div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <?php elseif (!$hasFingerprint): ?>
+                            <div class="text-muted small mb-2">Nenhuma digital cadastrada.</div>
+                            <?php endif; ?>
+                            <div class="mt-2">
+                                <?php
+                                $fpEnrollUrl = $isSelf
+                                    ? site_url('minha-biometria')
+                                    : site_url('biometric/fingerprint/enroll/' . ($emp->id ?? ''));
+                                ?>
+                                <a href="<?= $fpEnrollUrl ?>"
+                                   class="btn btn-sm <?= $hasFingerprint ? 'btn-outline-secondary' : 'btn-warning' ?> w-100">
+                                    <i class="bi bi-<?= $hasFingerprint ? 'arrow-clockwise' : 'plus-circle' ?> me-1"></i>
+                                    <?= $hasFingerprint ? 'Rever' : 'Cadastrar' ?>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atalhos de gestão -->
+            <div class="sp-shortcuts-grid" style="grid-template-columns:repeat(3,1fr)">
+                <a class="sp-shortcut-card" href="<?= site_url('timesheet/employee/' . ($emp->id ?? '')) ?>">
+                    <div class="icon"><i class="bi bi-calendar-range-fill"></i></div>
+                    <strong>Espelho de ponto</strong>
+                    <span>Histórico operacional.</span>
+                </a>
+                <a class="sp-shortcut-card" href="<?= site_url('justifications?employee_id=' . ($emp->id ?? '')) ?>">
+                    <div class="icon"><i class="bi bi-chat-left-text-fill"></i></div>
+                    <strong>Justificativas</strong>
+                    <span>Ocorrências justificadas.</span>
+                </a>
+                <a class="sp-shortcut-card" href="<?= site_url('warnings/dashboard/' . ($emp->id ?? '')) ?>">
+                    <div class="icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <strong>Advertências</strong>
+                    <span>Histórico disciplinar.</span>
+                </a>
+                <a class="sp-shortcut-card" href="<?= site_url('operacao/banco-horas?employee_id=' . ($emp->id ?? '')) ?>">
+                    <div class="icon"><i class="bi bi-hourglass-split"></i></div>
+                    <strong>Banco de horas</strong>
+                    <span>Saldo de horas extras.</span>
+                </a>
+                <?php if ($isManager): ?>
+                <a class="sp-shortcut-card" href="<?= site_url('employees/' . ($emp->id ?? '') . '/edit') ?>">
+                    <div class="icon"><i class="bi bi-pencil-square"></i></div>
+                    <strong>Editar perfil</strong>
+                    <span>Dados cadastrais.</span>
+                </a>
+                <?php else: ?>
+                <a class="sp-shortcut-card" href="<?= site_url('employees/change-request/create/' . ($emp->id ?? '')) ?>">
+                    <div class="icon"><i class="bi bi-pencil-square"></i></div>
+                    <strong>Solicitar alteração</strong>
+                    <span>Pedir mudança no cadastro.</span>
+                </a>
+                <?php endif; ?>
+                <a class="sp-shortcut-card" href="<?= $isSelf ? site_url('timesheet/punch/justify') : site_url('manager/pending-punches?employee_id=' . ($emp->id ?? '')) ?>">
+                    <div class="icon"><i class="bi bi-clock-history"></i></div>
+                    <strong>Pendência de ponto</strong>
+                    <span><?= $isSelf ? 'Minhas pendências.' : 'Pontos pendentes.' ?></span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ╔══ Modal: Upload de foto ══════════════════════════════════╗ -->
+<?php if ($canUploadPhoto): ?>
+<div class="modal fade" id="modalPhoto" tabindex="-1" aria-labelledby="modalPhotoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:440px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPhotoLabel">
+                    <i class="bi bi-person-fill me-2"></i>Foto do colaborador
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Preview -->
+                <div class="text-center mb-3" id="photoPreviewWrap" style="display:none!important">
+                    <img id="photoPreviewImg" src="" alt="Preview" class="rounded shadow-sm img-fluid" style="max-height:200px;max-width:100%;object-fit:cover">
+                </div>
+
+                <!-- Tabs: Câmera / Arquivo -->
+                <ul class="nav nav-pills nav-fill mb-3 gap-1" id="photoTabNav">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="tabCameraBtn" onclick="switchPhotoTab('camera')">
+                            <i class="bi bi-camera-fill me-1"></i>Câmera
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="tabFileBtn" onclick="switchPhotoTab('file')">
+                            <i class="bi bi-upload me-1"></i>Arquivo
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab: Câmera (foto ao vivo ou selfie) -->
+                <div id="tabCamera">
+                    <div class="ratio ratio-4x3 rounded overflow-hidden bg-dark mb-2" id="cameraBox" style="max-height:220px">
+                        <video id="photoVideo" autoplay muted playsinline style="object-fit:cover;width:100%;height:100%"></video>
+                    </div>
+                    <!-- Para mobile: input capture (abre câmera nativa do dispositivo) -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" id="btnPhotoCapture">
+                            <i class="bi bi-camera me-2"></i>Tirar foto
+                        </button>
+                        <!-- Input nativo para dispositivos móveis -->
+                        <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2" id="labelNativeCamera">
+                            <i class="bi bi-phone me-1"></i>Usar câmera do celular
+                            <input type="file" accept="image/*" capture="user" id="inputNativeCamera" class="d-none">
+                        </label>
+                    </div>
+                    <canvas id="photoCanvas" class="d-none"></canvas>
+                </div>
+
+                <!-- Tab: Arquivo -->
+                <div id="tabFile" style="display:none">
+                    <label class="d-block border rounded p-4 text-center text-muted" style="cursor:pointer;border-style:dashed!important" id="dropZone">
+                        <i class="bi bi-cloud-upload fs-2 d-block mb-2"></i>
+                        <span>Clique para selecionar ou arraste uma imagem aqui</span>
+                        <small class="d-block mt-1">JPG, PNG, WEBP — máx. 5 MB</small>
+                        <input type="file" accept="image/jpeg,image/png,image/webp" id="inputFilePhoto" class="d-none">
+                    </label>
+                </div>
+
+                <div id="photoUploadMsg" class="mt-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary d-none" id="btnPhotoSave">
+                    <i class="bi bi-check-circle me-1"></i>Salvar foto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?> src="<?= sp_safe_url(asset_url('js/camera-manager.js')) ?>"></script>
+<script <?= csp_script_nonce_attr() ?>>
+/* ── Copiar código único ────────────────────────── */
+function copyUniqueCode() {
+    var code = <?= json_encode($emp->unique_code ?? '') ?>;
+    if (!code) return;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(code).then(function () { showToast('Código ' + code + ' copiado!'); });
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = code; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta); showToast('Código ' + code + ' copiado!');
+    }
+}
+function showToast(msg) {
+    var t = document.createElement('div');
+    t.className = 'position-fixed bottom-0 end-0 m-3 alert alert-success shadow';
+    t.style.zIndex = '9999'; t.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 3000);
+}
+
+<?php if ($canUploadPhoto): ?>
+/* ── Upload de foto ─────────────────────────────── */
+(function () {
+    var cam = CameraManager.getInstance();
+    var photoVideo  = document.getElementById('photoVideo');
+    var photoCanvas = document.getElementById('photoCanvas');
+    var previewWrap = document.getElementById('photoPreviewWrap');
+    var previewImg  = document.getElementById('photoPreviewImg');
+    var btnCapture  = document.getElementById('btnPhotoCapture');
+    var btnSave     = document.getElementById('btnPhotoSave');
+    var msgEl       = document.getElementById('photoUploadMsg');
+    var cameraBox   = document.getElementById('cameraBox');
+    var pendingDataUrl = null;
+    var pendingFile    = null;
+    var activeTab   = 'camera';
+    var camStarted  = false;
+
+    function escHtml(s) {
+        var d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML;
+    }
+    function showMsg(text, type) {
+        type = type || 'info';
+        msgEl.innerHTML = '<div class="alert alert-' + type + ' py-2 mb-0">' + text + '</div>';
+    }
+    function clearMsg() { msgEl.innerHTML = ''; }
+
+    function showPreview(src) {
+        previewImg.src = src;
+        previewWrap.style.removeProperty('display');
+        btnSave.classList.remove('d-none');
+    }
+
+    /* ── Câmera ao vivo ───────────────────────────── */
+    async function startCam() {
+        if (camStarted) return;
+        try {
+            await cam.start(photoVideo, { facingMode: 'user', width: 640, height: 480 });
+            camStarted = true;
+        } catch (e) {
+            cameraBox.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted small p-3 text-center"><div><i class="bi bi-camera-video-off-fill fs-2 d-block mb-2"></i>Câmera não disponível: ' + escHtml(e.message) + '<br><br>Use a opção <strong>Câmera do celular</strong> ou <strong>Arquivo</strong>.</div></div>';
+        }
+    }
+
+    btnCapture?.addEventListener('click', function () {
+        if (!camStarted) { showMsg('Câmera não iniciada.', 'warning'); return; }
+        photoCanvas.width  = photoVideo.videoWidth  || 640;
+        photoCanvas.height = photoVideo.videoHeight || 480;
+        photoCanvas.getContext('2d').drawImage(photoVideo, 0, 0);
+        pendingDataUrl = photoCanvas.toDataURL('image/jpeg', 0.88);
+        pendingFile    = null;
+        cam.stop(); camStarted = false;
+        cameraBox.style.display = 'none';
+        btnCapture.classList.add('d-none');
+        showPreview(pendingDataUrl);
+        showMsg('<i class="bi bi-check-circle me-1"></i>Foto capturada! Clique em <strong>Salvar foto</strong>.', 'success');
+    });
+
+    /* ── Câmera nativa mobile ─────────────────────── */
+    var inputNative = document.getElementById('inputNativeCamera');
+    inputNative?.addEventListener('change', function () {
+        var f = this.files[0];
+        if (!f) return;
+        if (f.size > 5 * 1024 * 1024) { showMsg('Arquivo muito grande (máx. 5 MB).', 'warning'); return; }
+        pendingFile    = f;
+        pendingDataUrl = null;
+        var url = URL.createObjectURL(f);
+        showPreview(url);
+        showMsg('<i class="bi bi-check-circle me-1"></i>Foto selecionada! Clique em <strong>Salvar foto</strong>.', 'success');
+    });
+
+    /* ── Arquivo ────────────────────────────────────── */
+    var inputFile = document.getElementById('inputFilePhoto');
+    var dropZone  = document.getElementById('dropZone');
+
+    function handleFile(f) {
+        if (!f) return;
+        if (!f.type.match(/^image\//)) { showMsg('Arquivo inválido. Use JPG, PNG ou WEBP.', 'danger'); return; }
+        if (f.size > 5 * 1024 * 1024) { showMsg('Arquivo muito grande (máx. 5 MB).', 'warning'); return; }
+        pendingFile = f; pendingDataUrl = null;
+        var url = URL.createObjectURL(f);
+        showPreview(url);
+        showMsg('<i class="bi bi-check-circle me-1"></i>Imagem selecionada! Clique em <strong>Salvar foto</strong>.', 'success');
+    }
+
+    inputFile?.addEventListener('change', function () { handleFile(this.files[0]); });
+    dropZone?.addEventListener('click', function () { inputFile?.click(); });
+    dropZone?.addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('border-primary'); });
+    dropZone?.addEventListener('dragleave', function () { this.classList.remove('border-primary'); });
+    dropZone?.addEventListener('drop', function (e) {
+        e.preventDefault(); this.classList.remove('border-primary');
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    /* ── Trocar aba ─────────────────────────────────── */
+    window.switchPhotoTab = function (tab) {
+        activeTab = tab;
+        document.getElementById('tabCameraBtn').classList.toggle('active', tab === 'camera');
+        document.getElementById('tabFileBtn').classList.toggle('active', tab === 'file');
+        document.getElementById('tabCamera').style.display = tab === 'camera' ? '' : 'none';
+        document.getElementById('tabFile').style.display   = tab === 'file'   ? '' : 'none';
+        clearMsg();
+        if (tab === 'camera') {
+            cameraBox.style.removeProperty('display');
+            btnCapture.classList.remove('d-none');
+            startCam();
+        } else {
+            cam.stop(); camStarted = false;
+        }
+    };
+
+    /* ── Abre modal → inicia câmera ─────────────────── */
+    var modal = document.getElementById('modalPhoto');
+    if (modal) {
+        modal.addEventListener('show.bs.modal', function () {
+            pendingDataUrl = null; pendingFile = null;
+            previewWrap.style.display = 'none';
+            btnSave.classList.add('d-none');
+            clearMsg();
+            if (activeTab === 'camera') {
+                cameraBox.style.removeProperty('display');
+                btnCapture.classList.remove('d-none');
+                startCam();
+            }
+        });
+        modal.addEventListener('hidden.bs.modal', function () {
+            cam.stop(); camStarted = false;
+        });
+    }
+
+    /* ── Salvar foto ─────────────────────────────────── */
+    btnSave?.addEventListener('click', async function () {
+        if (!pendingDataUrl && !pendingFile) { showMsg('Selecione ou capture uma foto primeiro.', 'warning'); return; }
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
+        clearMsg();
+        try {
+            var formData = new FormData();
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+            if (pendingFile) {
+                formData.append('photo', pendingFile, pendingFile.name);
+            } else {
+                // Envia base64
+                formData.append('photo_base64', pendingDataUrl);
+            }
+            var r = await spFetch('<?= $uploadUrl ?>', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData });
+            var data = {}; try { data = await r.json(); } catch (_) {}
+            if (data.success) {
+                showMsg('<i class="bi bi-check-circle me-2"></i>' + (data.message || 'Foto salva!'), 'success');
+                var newUrl = data.data?.photo_url;
+                if (newUrl) {
+                    // Atualiza avatar na página sem reload
+                    var wrap = document.querySelector('.sp-emp-avatar-wrap');
+                    if (wrap) {
+                        var img = wrap.querySelector('img') || document.createElement('img');
+                        img.src = newUrl + '?t=' + Date.now();
+                        img.alt = 'Foto'; img.id = 'empAvatarImg';
+                        img.style.cssText = 'width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--sp-border,#e5e7eb)';
+                        var initials = wrap.querySelector('.sp-emp-avatar-initials');
+                        if (initials) initials.replaceWith(img);
+                    }
+                    var alertNoPhoto = document.getElementById('alertNoPhoto');
+                    if (alertNoPhoto) alertNoPhoto.remove();
+                }
+                setTimeout(function () {
+                    var bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                }, 1500);
+            } else {
+                showMsg('<i class="bi bi-x-circle me-2"></i>' + escHtml(data.message || 'Erro ao salvar.'), 'danger');
+            }
+        } catch (e) {
+            showMsg('Erro de comunicação: ' + escHtml(e.message), 'danger');
+        }
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-check-circle me-1"></i>Salvar foto';
+    });
+
+    // Inicia câmera ao carregar se modal já estiver visível (improvável, mas seguro)
+    if (activeTab === 'camera') startCam();
+})();
+<?php endif; ?>
+</script>
+<?= $this->endSection() ?>

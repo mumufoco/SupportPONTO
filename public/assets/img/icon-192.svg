@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" fill="#9DB89D" rx="20"/>
+  <circle cx="96" cy="70" r="25" fill="white"/>
+  <path d="M 60 120 Q 60 95 96 95 Q 132 95 132 120 L 132 140 Q 132 145 127 145 L 65 145 Q 60 145 60 140 Z" fill="white"/>
+  <text x="96" y="175" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" font-weight="bold">PONTO</text>
+</svg>

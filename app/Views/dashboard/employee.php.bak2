@@ -1,0 +1,73 @@
+﻿<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('title') ?><?= esc(lang('DashboardEmployee.title')) ?><?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+<?php
+$dashboardPresentation = is_array($dashboardPresentation ?? null) ? $dashboardPresentation : [];
+$pageHeader      = is_array($dashboardPresentation['pageHeader'] ?? null)          ? $dashboardPresentation['pageHeader']    : [];
+$hero            = is_array($dashboardPresentation['hero'] ?? null)                ? $dashboardPresentation['hero']          : [];
+$kpis            = is_array($dashboardPresentation['kpis'] ?? null)                ? $dashboardPresentation['kpis']          : [];
+$sections        = is_array($dashboardPresentation['sections'] ?? null)            ? $dashboardPresentation['sections']      : [];
+$shortcutsSection= is_array($sections['shortcuts'] ?? null)                        ? $sections['shortcuts']                  : [];
+$shortcuts       = is_array($shortcutsSection['items'] ?? null)                    ? $shortcutsSection['items']              : [];
+?>
+<div class="container-fluid sp-module-stack">
+    <?= view('components/page_header', [
+        'title'    => $pageHeader['title']    ?? lang('DashboardEmployee.title'),
+        'subtitle' => $pageHeader['subtitle'] ?? lang('DashboardEmployee.subtitle'),
+        'icon'     => $pageHeader['icon']     ?? lang('DashboardEmployee.icon'),
+        'actions'  => $pageHeader['actions']  ?? [],
+    ]) ?>
+
+    <!-- Status do dia -->
+    <div class="card mb-4">
+        <div class="card-body d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3">
+            <div>
+                <h2 class="h5 mb-1"><?= esc($hero['title'] ?? '') ?></h2>
+                <p class="mb-0 text-muted">
+                    <?= esc(lang('DashboardEmployee.hero.statusLabel')) ?>
+                    <span class="badge ms-1 <?= esc($hero['statusBadgeClass'] ?? 'text-bg-secondary') ?>">
+                        <?= esc($hero['statusText'] ?? '') ?>
+                    </span>
+                </p>
+            </div>
+            <a href="<?= sp_safe_url($hero['ctaUrl'] ?? sp_timesheet_punch_url()) ?>"
+               class="btn btn-primary btn-lg flex-shrink-0">
+                <i class="bi bi-clock-history me-1"></i>
+                <?= esc($hero['ctaLabel'] ?? lang('DashboardEmployee.hero.cta')) ?>
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="sp-kpi-grid mb-4">
+        <?php foreach ($kpis as $kpi): ?>
+            <?= view('components/kpi', $kpi) ?>
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Atalhos -->
+    <?php if (!empty($shortcuts)): ?>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-grid-fill me-1"></i>
+                <?= esc($shortcutsSection['title'] ?? lang('DashboardEmployee.shortcuts.sectionTitle')) ?>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="sp-shortcuts-grid">
+                <?php foreach ($shortcuts as $shortcut): ?>
+                    <a class="sp-shortcut-card" href="<?= sp_safe_url($shortcut['href'] ?? '#') ?>">
+                        <div class="icon"><i class="<?= esc($shortcut['icon'] ?? 'bi bi-link-45deg') ?>"></i></div>
+                        <strong><?= esc($shortcut['title'] ?? '') ?></strong>
+                        <span><?= esc($shortcut['description'] ?? '') ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+<?= $this->endSection() ?>

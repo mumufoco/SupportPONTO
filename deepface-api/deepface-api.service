@@ -1,0 +1,51 @@
+[Unit]
+Description=DeepFace API - Facial Recognition Service
+Documentation=https://github.com/serengil/deepface
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/deepface-api
+Environment="PATH=/var/www/deepface-api/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="FLASK_ENV=production"
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=/var/www/deepface-api/.env
+
+# Start service with gunicorn
+ExecStart=/var/www/deepface-api/venv/bin/gunicorn \
+    --bind 127.0.0.1:5000 \
+    --workers 2 \
+    --worker-class sync \
+    --timeout 120 \
+    --access-logfile /var/www/deepface-api/logs/access.log \
+    --error-logfile /var/www/deepface-api/logs/error.log \
+    --log-level info \
+    --capture-output \
+    --enable-stdio-inheritance \
+    app:app
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/deepface-api/logs
+ReadWritePaths=/var/www/deepface-api/faces_db
+ReadWritePaths=/var/www/deepface-api/storage
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Healthcheck using systemd-watchdog
+# Watchdog will restart service if it doesn't respond within 90s
+WatchdogSec=90
+
+[Install]
+WantedBy=multi-user.target

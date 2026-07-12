@@ -1,0 +1,11 @@
+# Fallback para diretório legado de assets enviados.
+Options -Indexes -ExecCGI
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pl .py .cgi .sh .asp .aspx .jsp .exe .dll
+RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pl .py .cgi .sh .asp .aspx .jsp .exe .dll
+<FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml|phar|pl|py|cgi|sh|asp|aspx|jsp|exe|dll|com|bat|cmd|ps1|html|htm|svg|xml|shtml|swf)$">
+    Require all denied
+</FilesMatch>
+Header set X-Content-Type-Options "nosniff"

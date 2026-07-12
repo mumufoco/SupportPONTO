@@ -1,0 +1,128 @@
+{
+    "version": "1.1.500",
+    "release": "v1.1.500",
+    "package": 500,
+    "name": "SupportPONTO",
+    "environment": "production",
+    "generated_at": "2026-06-06T00:00:00+00:00",
+    "deployable": true,
+    "package_focus": "release-pipeline-rebuild",
+    "title": "Pacote 500 — Reconstrução do pipeline de release/deploy",
+    "description": "Abandona o conceito legado de source-package vs release-package (arquitetura Docker removida na limpeza completa). O repositório É o artefato que roda em produção: deploy direto via script único (scripts/release/deploy.sh) por rsync/SSH para o servidor aaPanel, sem empacotamento intermediário em zip nem distinção de tipos de artefato.",
+
+    "deploy_model": {
+        "strategy": "single-script-ssh-deploy",
+        "script": "scripts/release/deploy.sh",
+        "config_example": "scripts/release/deploy.env.example",
+        "transport": "rsync-over-ssh",
+        "stages": [
+            "package (rsync exclude-list, sem zip intermediário)",
+            "transfer (rsync --delete-after via SSH)",
+            "install (composer install --no-dev, spark migrate, cache:clear, permissões www:www)",
+            "restart (systemctl reload php8.3-fpm; restart do queue worker se existir)"
+        ],
+        "verification": "scripts/verify-deployment.sh e checagem automática de /health/readiness ao final do deploy.sh",
+        "replaces": [
+            "docker-compose.yml / docker-compose.*.yml",
+            "tools/release/*.php (27 scripts de auditoria pré-empacotamento)",
+            "artifact-manifest.json",
+            "scripts/release/build-release-package.sh e build-source-package.sh",
+            "docs/releases/ARTIFACT_STRATEGY.md (conceito source vs release package)"
+        ],
+        "manual_fallback_pattern": "SFTP getfo/putfo + sudo cp + chown www:www + systemctl reload php8.3-fpm (documentado para emergências; o script automatiza o ciclo completo)"
+    },
+
+    "release_channel": "stable",
+    "release_candidate": false,
+    "homologation_ready": true,
+    "production_stable": true,
+
+    "quality_gate": {
+        "command": "php spark release:gate",
+        "service": "app/Services/Release/ReleaseGateService.php",
+        "blocking": true,
+        "validates_current_architecture": true,
+        "note": "Substitui integralmente os antigos *_integrity_gate baseados em tools/release/*.php e tools/quality/*.php (removidos na limpeza completa). O gate atual valida o código-fonte e a documentação correntes via checks estáticos próprios (closure audits por rodada)."
+    },
+
+    "phase8_time_punch_integrity": {
+        "nsr_single_source": true,
+        "employee_advisory_lock": true,
+        "hmac_chain_hash": true,
+        "fingerprint_text_match_disabled": true
+    },
+    "phase9_canonical_time_punch_registration": {
+        "command": "app/DTO/Timesheet/PunchRegistrationCommand.php",
+        "canonical_service": "app/Services/Timesheet/TimesheetPunchRegistrationService.php",
+        "web_flow_delegates": true,
+        "api_flow_delegates": true,
+        "qrcode_flow_delegates": true,
+        "pending_approval_delegates": true,
+        "direct_time_punch_inserts_removed_from_entrypoints": true
+    },
+    "phase10_timesheet_calculation_engine": {
+        "engine": "app/Services/Timesheet/Calculation/TimesheetCalculationEngine.php",
+        "policies": [
+            "WorkPairingPolicy",
+            "JornadaPolicy",
+            "IntervalPolicy",
+            "TolerancePolicy",
+            "OvertimePolicy",
+            "NightShiftPolicy"
+        ],
+        "daily_consolidation_delegates": true,
+        "model_calculate_hours_delegates": true,
+        "supports_multiple_intervals": true,
+        "supports_night_hours": true,
+        "supports_tolerance_and_interval_violation": true
+    },
+    "phase11_biometric_public_endpoint_security": {
+        "terminal_device_registry": "punch_terminal_devices",
+        "anti_replay_nonce_table": "punch_terminal_nonces",
+        "terminal_security_filter": "terminal-security",
+        "token_version": "v2",
+        "short_ttl_seconds": 300,
+        "hmac_signed_tokens": true,
+        "legacy_tokens_blocked_in_production": true,
+        "fingerprint_engine": "SourceAFIS/FingerprintMatchingService",
+        "textual_fingerprint_matching_removed": true
+    },
+    "phase12_operational_observability": {
+        "telemetry_service": "app/Services/Observability/OperationalTelemetryService.php",
+        "alert_service": "app/Services/Observability/OperationalAlertService.php",
+        "support_bundle_service": "app/Services/Support/ApplicationSupportBundleService.php",
+        "cli_command": "php spark support:bundle --json",
+        "admin_endpoint": "admin/health/support-bundle",
+        "health_checks": [
+            "database",
+            "queue",
+            "storage",
+            "logs",
+            "deepface",
+            "websocket",
+            "migrations",
+            "observability"
+        ],
+        "correlation_headers": [
+            "X-Request-ID",
+            "X-Correlation-ID"
+        ],
+        "sanitized_support_bundle": true
+    },
+
+    "cleanup_2026_06": {
+        "summary": "Limpeza completa entre v1.1.498 e v1.1.500: remoção da arquitetura de empacotamento Docker/source-package e reconstrução do pipeline de release/deploy do zero.",
+        "removed": [
+            "docker-compose.yml, docker-compose.clean-install.yml, docker-compose.installer-test.yml",
+            "docker/ (entrypoint.sh, nginx, php, postgres, supervisor, testing)",
+            "tools/release/*.php (27 scripts de auditoria) e tools/quality/*.php",
+            "artifact-manifest.json",
+            "~30 entradas mortas em composer.json (audit:*, test:*-integrity, test:release-critical etc.)"
+        ],
+        "rebuilt": [
+            "scripts/release/deploy.sh — deploy único (pacote→transfere→instala→reinicia) via rsync/SSH",
+            "release.json simplificado — sem distinção source-package vs release-package",
+            "app/Services/Release/ReleaseGateService.php — closure audits recalibrados para a arquitetura atual (sem checks de docker-compose.yml)"
+        ]
+    }
+}
