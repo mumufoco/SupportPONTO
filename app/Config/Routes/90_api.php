@@ -21,8 +21,12 @@ $apiAdminFilters = ['cors', 'ratelimit', 'api-json', 'oauth2', 'api-role:admin']
 $apiBiometricFilters = ['cors', 'ratelimit', 'api-json', 'oauth2', 'biometric-rate-limit'];
 
 // Endpoints públicos mínimos, sem dados sensíveis.
-$routes->group('api', ['filter' => $apiPublicFilters], static function ($routes) {
-    $routes->post('validate-code', 'API\ApiController::validateCode', ['as' => 'api.validate-code', 'filter' => 'throttle']);
+$routes->group('api', ['filter' => $apiPublicFilters], static function ($routes) use ($apiPublicFilters) {
+    // BAIXO-04 (auditoria): 'filter' => 'throttle' SUBSTITUÍA $apiPublicFilters (mesma
+    // classe de bug de MED-05/BAIXO-02), perdendo cors/ratelimit/api-json — o endpoint
+    // ficava só com o throttle de 30/min por IP+path, sem a segunda camada do bucket
+    // 'api' (60/min) do RateLimitFilter. Repete a lista completa + throttle.
+    $routes->post('validate-code', 'API\ApiController::validateCode', ['as' => 'api.validate-code', 'filter' => [...$apiPublicFilters, 'throttle']]);
     $routes->get('health', 'API\ApiController::health', ['as' => 'api.health']);
 });
 
