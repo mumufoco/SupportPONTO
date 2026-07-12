@@ -90,7 +90,9 @@ class ApiController extends BaseController
                 'timestamp' => $health['timestamp'] ?? gmdate(DATE_ATOM),
                 'services' => [
                     'database' => $health['checks']['database']['status'] ?? 'error',
-                    'filesystem' => $health['checks']['filesystem']['status'] ?? 'error',
+                    // Nome público 'filesystem' mantido por compatibilidade; a checagem
+                    // real vive na chave 'writable' de SystemHealthCheckService::readiness().
+                    'filesystem' => $health['checks']['writable']['status'] ?? 'error',
                     'storage' => $health['checks']['storage']['status'] ?? 'error',
                     'encryption' => $health['checks']['encryption']['status'] ?? 'error',
                 ],

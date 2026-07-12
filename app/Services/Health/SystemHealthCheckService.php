@@ -8,6 +8,7 @@ use App\Models\SettingModel;
 use App\Services\Observability\OperationalTelemetryService;
 use App\Services\Biometric\DeepFaceCircuitBreakerService;
 use App\Services\Biometric\DeepFaceService;
+use App\Services\Security\EncryptionService;
 use CodeIgniter\Database\BaseConnection;
 use Config\Queue as QueueConfig;
 use Throwable;
@@ -58,6 +59,7 @@ class SystemHealthCheckService
             'queue' => $this->checkQueue(false),
             'storage' => $this->checkStorage(false),
             'observability' => $this->checkObservability(false),
+            'encryption' => $this->checkEncryption(),
         ];
 
         return [
@@ -83,6 +85,7 @@ class SystemHealthCheckService
             'logs' => $this->checkLogs(),
             'observability' => $this->checkObservability(true),
             'env' => $this->checkEnvironment(true),
+            'encryption' => $this->checkEncryption(),
         ];
 
         return [
@@ -502,6 +505,32 @@ class SystemHealthCheckService
         $ok = (bool) ($health['writable'] ?? false);
 
         return $this->check($ok ? 'ok' : 'warning', 'observability', $ok ? 'Telemetria operacional local disponível.' : 'Telemetria operacional local indisponível ou sem escrita.', $detailed ? $health : []);
+    }
+
+    /**
+     * Round-trip de encrypt/decrypt com a EncryptionService (libsodium) usada para
+     * CPF e outras colunas sensíveis. Não expõe a chave nem dado real, só confirma
+     * que ENCRYPTION_KEY está configurada e é utilizável no processo atual.
+     */
+    private function checkEncryption(): array
+    {
+        try {
+            $service = new EncryptionService();
+            $probe = 'health-check-' . bin2hex(random_bytes(8));
+            $roundTrip = $service->decrypt($service->encrypt($probe));
+
+            if ($roundTrip !== $probe) {
+                return $this->check('error', 'encryption', 'Round-trip de criptografia retornou valor inesperado.', []);
+            }
+
+            return $this->check('ok', 'encryption', 'Serviço de criptografia operacional.', []);
+        } catch (Throwable $e) {
+            log_message('critical', '[Health] Encryption check failed: ' . $e->getMessage());
+
+            return $this->check('error', 'encryption', 'Falha ao inicializar ou usar o serviço de criptografia.', [
+                'hint' => 'Verifique ENCRYPTION_KEY/encryption.key em .env e a extensão sodium.',
+            ]);
+        }
     }
 
     private function checkWebsocket(): array
