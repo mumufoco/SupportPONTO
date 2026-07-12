@@ -64,7 +64,14 @@ WantedBy=multi-user.target
 ```cron
 * * * * * cd /www/wwwroot/ponto.supportsondagens.com.br && /usr/bin/php spark jobs:process --queues reports,biometric,exports,notifications,maintenance --limit 10 --cleanup-temp >> writable/logs/queue-worker.log 2>&1
 15 3 * * * cd /www/wwwroot/ponto.supportsondagens.com.br && /usr/bin/php spark jobs:cleanup >> writable/logs/queue-cleanup.log 2>&1
+*/15 * * * * cd /www/wwwroot/ponto.supportsondagens.com.br && /usr/bin/php spark punches:expire-stale >> writable/logs/punches-expire.log 2>&1
 ```
+
+> **MED-03 (auditoria):** o cron acima do `punches:expire-stale` é obrigatório — sem
+> ele, pontos pendentes vencidos só eram expirados de forma "preguiçosa" (quando o
+> próprio funcionário reenviava justificativa ou um gestor abria o painel), podendo
+> ficar presos em `status='pending'` indefinidamente e contando contra a cota mensal
+> do colaborador mesmo já expirados.
 
 ## Variáveis recomendadas
 
