@@ -2,6 +2,7 @@
 
 namespace App\Services\Excel;
 
+use App\Services\Security\FormulaInjectionGuard;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
@@ -85,7 +86,7 @@ class ExcelOperationalReportBuilder
             $b   = isset($record['balance']) ? (float)$record['balance'] : ($tw - $exp);
             $totalsWork += $tw; $totalsExp += $exp; $totalsExt += $ext; $totalsOwd += $owd;
 
-            $detail->fromArray([
+            $detail->fromArray(FormulaInjectionGuard::neutralizeRow([
                 $this->fmtD($record['date'] ?? null),
                 $record['employee_name'] ?? '-',
                 $record['department']    ?? '-',
@@ -97,7 +98,7 @@ class ExcelOperationalReportBuilder
                 $ext > 0 ? $this->fmtH($ext) : '-',
                 $owd > 0 ? $this->fmtH($owd) : '-',
                 $record['notes'] ?? '',
-            ], null, "A{$row}");
+            ]), null, "A{$row}");
             $this->formatter->styleDataRow($detail, $row, 11, $odd);
             if ($b != 0) {
                 $b > 0 ? $this->formatter->stylePositive($detail, "H{$row}")
@@ -167,7 +168,7 @@ class ExcelOperationalReportBuilder
             $wk  = !empty($record['is_weekend']);
             $totE += $ext;
 
-            $detail->fromArray([
+            $detail->fromArray(FormulaInjectionGuard::neutralizeRow([
                 $this->fmtD($record['date'] ?? null),
                 $record['employee_name'] ?? '-',
                 $record['department']    ?? '-',
@@ -176,7 +177,7 @@ class ExcelOperationalReportBuilder
                 $this->fmtH($ext),
                 $this->fmtH($ext * 1.5),
                 $wk ? 'Fim de semana' : 'Dia útil',
-            ], null, "A{$row}");
+            ]), null, "A{$row}");
             $this->formatter->styleDataRow($detail, $row, 8, $odd);
             $this->formatter->stylePositive($detail, "F{$row}");
             $row++; $odd = !$odd;
@@ -220,7 +221,7 @@ class ExcelOperationalReportBuilder
 
         $row = 2; $odd = true;
         foreach ($data as $record) {
-            $detail->fromArray([
+            $detail->fromArray(FormulaInjectionGuard::neutralizeRow([
                 $this->fmtD($record['date'] ?? null),
                 $record['employee_name']  ?? '-',
                 $record['department']     ?? '-',
@@ -229,7 +230,7 @@ class ExcelOperationalReportBuilder
                 $record['expected_time']  ?? '-',
                 (int)($record['delay_minutes'] ?? 0),
                 ($record['justified'] ?? false) ? 'Justificado' : 'Pendente',
-            ], null, "A{$row}");
+            ]), null, "A{$row}");
             $this->formatter->styleDataRow($detail, $row, 8, $odd);
             $row++; $odd = !$odd;
         }
@@ -278,14 +279,14 @@ class ExcelOperationalReportBuilder
             $sit = $bal > 0 ? 'Credor' : ($bal < 0 ? 'Devedor' : 'Neutro');
             $totE += $ext; $totO += $owd;
 
-            $detail->fromArray([
+            $detail->fromArray(FormulaInjectionGuard::neutralizeRow([
                 $record['employee_name'] ?? '-',
                 $record['department']    ?? '-',
                 $this->fmtH($ext),
                 $this->fmtH($owd),
                 ($bal >= 0 ? '+' : '') . $this->fmtH($bal),
                 $sit,
-            ], null, "A{$row}");
+            ]), null, "A{$row}");
             $this->formatter->styleDataRow($detail, $row, 6, $odd);
             $bal > 0 ? $this->formatter->stylePositive($detail, "E{$row}")
                      : ($bal < 0 ? $this->formatter->styleNegative($detail, "E{$row}") : null);
@@ -343,7 +344,7 @@ class ExcelOperationalReportBuilder
             $tLate += (int)($record['late_count'] ?? 0);
             $tAbs  += (int)($record['absence_count'] ?? 0);
 
-            $detail->fromArray([
+            $detail->fromArray(FormulaInjectionGuard::neutralizeRow([
                 $record['employee_name'] ?? '-',
                 $record['department']    ?? '-',
                 (int)($record['days_worked'] ?? 0),
@@ -355,7 +356,7 @@ class ExcelOperationalReportBuilder
                 (int)($record['late_count']    ?? 0),
                 (int)($record['absence_count'] ?? 0),
                 $pres . '%',
-            ], null, "A{$row}");
+            ]), null, "A{$row}");
             $this->formatter->styleDataRow($detail, $row, 11, $odd);
             $bal != 0 && ($bal > 0 ? $this->formatter->stylePositive($detail, "H{$row}") : $this->formatter->styleNegative($detail, "H{$row}"));
             $row++; $odd = !$odd;

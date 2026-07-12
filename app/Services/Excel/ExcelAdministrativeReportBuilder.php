@@ -2,6 +2,7 @@
 
 namespace App\Services\Excel;
 
+use App\Services\Security\FormulaInjectionGuard;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class ExcelAdministrativeReportBuilder
@@ -25,7 +26,7 @@ class ExcelAdministrativeReportBuilder
 
         $row = 2;
         foreach ($data as $record) {
-            $detailsSheet->fromArray([
+            $detailsSheet->fromArray(FormulaInjectionGuard::neutralizeRow([
                 date('d/m/Y', strtotime($record['justification_date'])),
                 $record['employee_name'],
                 ucfirst(str_replace('-', ' ', $record['justification_type'])),
@@ -34,7 +35,7 @@ class ExcelAdministrativeReportBuilder
                 ucfirst($record['status']),
                 $record['has_attachments'] ? 'Sim' : 'Não',
                 date('d/m/Y H:i', strtotime($record['created_at'])),
-            ], null, "A{$row}");
+            ]), null, "A{$row}");
             $row++;
         }
 
@@ -59,7 +60,7 @@ class ExcelAdministrativeReportBuilder
 
         $row = 2;
         foreach ($data as $record) {
-            $detailsSheet->fromArray([
+            $detailsSheet->fromArray(FormulaInjectionGuard::neutralizeRow([
                 date('d/m/Y', strtotime($record['date'])),
                 $record['employee_name'],
                 $record['department'],
@@ -67,7 +68,7 @@ class ExcelAdministrativeReportBuilder
                 mb_substr($record['reason'], 0, 80) . '...',
                 ucfirst($record['status']),
                 $record['issued_by_name'] ?? '-',
-            ], null, "A{$row}");
+            ]), null, "A{$row}");
             $row++;
         }
 
@@ -102,7 +103,7 @@ class ExcelAdministrativeReportBuilder
                 $col = 'A';
                 foreach ($columns as $column) {
                     $value = is_array($record) ? $record[$column] : $record->$column;
-                    $sheet->setCellValue("{$col}{$row}", $value);
+                    $sheet->setCellValue("{$col}{$row}", FormulaInjectionGuard::neutralize($value));
                     $col++;
                 }
                 $row++;

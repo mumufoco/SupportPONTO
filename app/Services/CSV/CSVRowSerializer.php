@@ -2,6 +2,8 @@
 
 namespace App\Services\CSV;
 
+use App\Services\Security\FormulaInjectionGuard;
+
 class CSVRowSerializer
 {
     public function __construct(
@@ -15,7 +17,7 @@ class CSVRowSerializer
         $row = [];
 
         foreach ($fields as $field) {
-            $value = (string) $field;
+            $value = (string) FormulaInjectionGuard::neutralize((string) $field);
             $value = str_replace($this->enclosure, $this->enclosure . $this->enclosure, $value);
 
             if (
