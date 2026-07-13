@@ -8,7 +8,8 @@
         'subtitle' => 'Configurações de servidor SMTP e remetente.',
         'icon'     => 'bi bi-envelope-fill',
         'actions'  => [
-                    ],
+            ['label' => 'Templates de e-mail', 'icon' => 'bi bi-file-earmark-text', 'url' => sp_route_url('admin.settings.email-templates')],
+        ],
     ]) ?>
 
     <?= view('components/flash_messages') ?>

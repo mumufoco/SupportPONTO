@@ -112,7 +112,6 @@ $menuStructure = [
                 ['label' => 'Informações',        'url' => route_to('admin.settings.information')],
                 ['label' => 'Personalização',     'url' => route_to('admin.settings.personalization')],
                 ['label' => 'E-mail',             'url' => route_to('admin.settings.email')],
-                ['label' => 'Templates de e-mail','url' => route_to('admin.settings.email-templates')],
                 ['label' => 'Templates de Termos', 'url' => 'settings/consent-terms'],
                 ['label' => 'Feriados',           'url' => route_to('settings.holidays')],
                 ['label' => 'Integrações',        'url' => route_to('admin.settings.integrations')],
