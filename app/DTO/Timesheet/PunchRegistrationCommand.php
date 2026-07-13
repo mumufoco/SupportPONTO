@@ -96,7 +96,11 @@ final class PunchRegistrationCommand
             accuracy: $accuracy,
             ipAddress: $request->getIPAddress(),
             userAgent: (string) $request->getUserAgent()->getAgentString(),
-            photo: $additionalData['photo'] ?? null,
+            // Fallback para o corpo da requisição: o método facial já popula
+            // additionalData['photo'] antes de chegar aqui, mas os demais métodos
+            // (código/CPF/QR/biometria) enviam a foto da segunda camada de
+            // verificação diretamente no payload da requisição.
+            photo: $additionalData['photo'] ?? $request->getPost('photo') ?? $jsonBody['photo'] ?? null,
             additionalData: $additionalData,
             context: $context,
             confirmedOutsideGeofence: $confirmedOutsideGeofence,

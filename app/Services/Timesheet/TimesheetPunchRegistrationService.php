@@ -102,6 +102,21 @@ class TimesheetPunchRegistrationService
                 if (isset($faceResult['similarity'])) {
                     $additionalData['face_similarity'] = $faceResult['similarity'];
                 }
+            } elseif ($this->settingModel->get('punch_require_face_second_factor', true)) {
+                // Segunda camada de segurança contra fraude (empréstimo de código/CPF/QR,
+                // ou leitor de digital comprometido): além do método principal já ter
+                // identificado o funcionário, exige uma foto ao vivo comparada 1:1 com o
+                // cadastro biométrico facial DESSE funcionário (verificação, não
+                // identificação aberta — não é possível "cadastrar por cima" do rosto de
+                // outra pessoa por esse caminho, ver validateFaceSecondFactor()).
+                $secondFactor = $this->validateFaceSecondFactor($command);
+                if (! ($secondFactor['success'] ?? false)) {
+                    return $secondFactor;
+                }
+
+                if (isset($secondFactor['similarity'])) {
+                    $additionalData['face_second_factor_similarity'] = $secondFactor['similarity'];
+                }
             }
 
             $punchData = array_merge([
@@ -254,6 +269,72 @@ class TimesheetPunchRegistrationService
         }
 
         return ['success' => true, 'similarity' => $recognition['similarity'] ?? null];
+    }
+
+    /**
+     * Segunda camada de verificação facial para os métodos não-biométricos
+     * (código, CPF, QR) e para a biometria digital: confirma 1:1 que a pessoa
+     * na foto é o próprio funcionário já identificado pelo método principal,
+     * usando o cadastro biométrico facial dele (FaceRecognitionService::
+     * verifyFace — comparação 1:1 contra UM cadastro específico, diferente do
+     * método "facial" puro, que faz reconhecimento aberto 1:N para descobrir
+     * quem é a pessoa).
+     *
+     * Importante para segurança: não existe caminho aqui para "cadastrar" ou
+     * sobrescrever o rosto de outro funcionário — o link de autocadastro
+     * devolvido no caso "sem cadastro" só permite que a PRÓPRIA pessoa logada
+     * cadastre o PRÓPRIO rosto (ver FaceRecognitionController::enroll()), então
+     * uma tentativa de fraude com CPF/código de outra pessoa não consegue usar
+     * esse fluxo para validar-se como a vítima.
+     */
+    private function validateFaceSecondFactor(PunchRegistrationCommand $command): array
+    {
+        if (! $command->photo) {
+            return $this->failure(
+                'Verificação facial de segurança é obrigatória para concluir este registro.',
+                400,
+                ['face_second_factor' => 'photo_required']
+            );
+        }
+
+        $limitInfo = $this->rateLimitService->attempt(
+            'facial_punch_' . $command->employeeId,
+            'biometric',
+            $this->rateLimitService->getClientIp()
+        );
+        if (! ($limitInfo['allowed'] ?? true)) {
+            return $this->failure('Muitas tentativas de verificação facial. Aguarde antes de tentar novamente.', 429, ['biometric_rate_limited' => true]);
+        }
+
+        try {
+            $result = $this->deepFaceService->verifyFace($command->employeeId, (string) $command->photo);
+        } catch (\Throwable $e) {
+            log_message('error', 'Face second-factor verification failed: ' . $e->getMessage());
+            return $this->failure('Erro ao verificar identidade facial. Tente novamente.', 500, ['face_second_factor' => 'service_error']);
+        }
+
+        if (! ($result['success'] ?? false)) {
+            $error = (string) ($result['error'] ?? '');
+            if (str_contains($error, 'não possui cadastro facial')) {
+                return $this->failure(
+                    'Você ainda não possui cadastro de biometria facial. Cadastre para continuar usando este método com segurança.',
+                    403,
+                    ['face_second_factor' => 'no_enrollment', 'enroll_url' => site_url('minha-biometria')]
+                );
+            }
+
+            return $this->failure($error !== '' ? $error : 'Erro ao verificar identidade facial.', 500, ['face_second_factor' => 'service_error']);
+        }
+
+        if (! ($result['verified'] ?? false)) {
+            return $this->failure(
+                'A foto não corresponde ao cadastro biométrico deste colaborador. Registro não efetuado — procure seu gestor ou RH se acredita que isso é um erro.',
+                403,
+                ['face_second_factor' => 'mismatch']
+            );
+        }
+
+        return ['success' => true, 'similarity' => $result['similarity'] ?? null];
     }
 
     private function failure(string $message, int $status, ?array $errors = null): array

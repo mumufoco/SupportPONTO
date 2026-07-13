@@ -16,6 +16,13 @@ window.SupportPontoPunchUI = (() => {
     let qrScanner = null;
     let faceStream = null;
     let fpWs = null;
+    // Segunda camada de segurança contra fraude: quando definido, a próxima
+    // captura no painel facial não é o método "facial" em si, e sim a
+    // confirmação de identidade exigida após código/CPF/QR/biometria digital.
+    // Só é limpo quando o registro é efetuado com sucesso (ou o usuário troca
+    // de método) -- assim, se a foto não bater, o usuário pode tentar de novo
+    // sem precisar redigitar o código/CPF.
+    let pendingSecondFactor = null;
 
     const methodAliases = {
         codigo: 'codigo',
@@ -136,6 +143,7 @@ window.SupportPontoPunchUI = (() => {
     }
 
     async function showMethodPanel(method) {
+        pendingSecondFactor = null;
         await stopHardware();
         document.querySelectorAll('.sp-method-panel').forEach((panel) => panel.classList.add('d-none'));
 
@@ -186,6 +194,7 @@ window.SupportPontoPunchUI = (() => {
             });
             const result = await response.json();
             const pendingPunch = result?.data?.pending_punch || null;
+            const faceSecondFactor = result?.errors?.face_second_factor || null;
             let extra = '';
             if (pendingPunch?.eligible && pendingPunch?.justify_url) {
                 // Validate URL to prevent javascript: injection; only allow relative or http/https URLs
@@ -194,14 +203,42 @@ window.SupportPontoPunchUI = (() => {
                 extra = `<div class="mt-3"><a class="btn btn-sm btn-warning" href="${safeUrl}">Abrir justificativa automática</a></div>`;
             } else if (pendingPunch?.block_reason) {
                 extra = `<div class="small mt-2">${escHtml(pendingPunch.block_reason)}</div>`;
+            } else if (faceSecondFactor === 'no_enrollment' && result?.errors?.enroll_url) {
+                const rawUrl = String(result.errors.enroll_url);
+                const safeUrl = /^(https?:\/\/|\/)/.test(rawUrl) ? escHtml(rawUrl) : '#';
+                extra = `<div class="mt-3"><a class="btn btn-sm btn-warning" href="${safeUrl}" target="_blank" rel="noopener">Cadastrar minha biometria facial</a></div>`;
             }
             setResult(response.ok ? 'success' : 'danger', escHtml(result.message) || (response.ok ? 'Registro efetuado com sucesso.' : 'Falha ao registrar ponto.'), extra);
             if (response.ok) {
                 clearMethodInputs();
             }
+            return response.ok;
         } catch (error) {
             setResult('danger', 'Falha de comunicação com o servidor.');
+            return false;
         }
+    }
+
+    /**
+     * Segunda camada de segurança contra fraude: código/CPF/QR/biometria digital
+     * já identificaram o funcionário, mas antes de efetivar o registro exigimos
+     * uma foto confirmando que é a própria pessoa (comparação 1:1 contra o
+     * cadastro biométrico facial dela — não é o método "facial" livre).
+     */
+    async function requireFaceSecondFactorThenSend(endpoint, payload) {
+        await stopHardware();
+        document.querySelectorAll('.sp-method-panel').forEach((panel) => panel.classList.add('d-none'));
+        const panel = document.getElementById('form-face');
+        if (!panel || !config.supportsCamera) {
+            // Sem câmera disponível: não há como cumprir a segunda camada de
+            // segurança neste dispositivo -- não envia o registro sem ela.
+            setResult('warning', 'Este dispositivo não possui câmera disponível para a verificação de segurança exigida neste método.');
+            return;
+        }
+        panel.classList.remove('d-none');
+        pendingSecondFactor = { endpoint, payload };
+        setResult('info', 'Identificação confirmada. Posicione seu rosto no oval e clique em "Capturar e registrar" para concluir o registro com segurança.');
+        await startFace();
     }
 
     function clearMethodInputs() {
@@ -239,10 +276,10 @@ window.SupportPontoPunchUI = (() => {
                 if (msg.status === 'ready') {
                     setFpStatus('info', 'Apoie o dedo no leitor de impressao digital...', true);
                 } else if (msg.status === 'captured' && msg.data) {
-                    setFpStatus('success', 'Digital capturada! Registrando ponto...', true);
+                    setFpStatus('success', 'Digital capturada! Confirme sua identidade com uma foto para concluir.', true);
                     var ws = fpWs; fpWs = null;
                     try { ws.close(); } catch(_) {}
-                    sendPunch(endpointMap.fingerprint, {
+                    requireFaceSecondFactorThenSend(endpointMap.fingerprint, {
                         fingerprint_data: msg.data,
                         punch_type: selectedPunchType,
                     });
@@ -274,7 +311,7 @@ window.SupportPontoPunchUI = (() => {
                     return;
                 }
                 const formData = new FormData(codeForm);
-                await sendPunch(endpointMap.codigo, {
+                await requireFaceSecondFactorThenSend(endpointMap.codigo, {
                     unique_code: String(formData.get('unique_code') || '').trim(),
                     punch_type: selectedPunchType,
                 });
@@ -299,7 +336,7 @@ window.SupportPontoPunchUI = (() => {
                     return;
                 }
                 const formData = new FormData(cpfForm);
-                await sendPunch(endpointMap.cpf, {
+                await requireFaceSecondFactorThenSend(endpointMap.cpf, {
                     cpf: String(formData.get('cpf') || '').trim(),
                     punch_type: selectedPunchType,
                 });
@@ -308,7 +345,7 @@ window.SupportPontoPunchUI = (() => {
 
         if (faceButton) {
             faceButton.addEventListener('click', async () => {
-                if (selectedMethod !== 'face') {
+                if (!pendingSecondFactor && selectedMethod !== 'face') {
                     setResult('warning', 'Selecione o método facial para registrar.');
                     return;
                 }
@@ -326,8 +363,19 @@ window.SupportPontoPunchUI = (() => {
                     return;
                 }
                 context.drawImage(video, 0, 0);
+                const photo = canvas.toDataURL('image/jpeg').split(',')[1];
+
+                if (pendingSecondFactor) {
+                    const ctx = pendingSecondFactor;
+                    const ok = await sendPunch(ctx.endpoint, Object.assign({}, ctx.payload, { photo }));
+                    // Só limpa em caso de sucesso -- assim, se a foto não bater (ou faltar
+                    // cadastro), o usuário pode tentar de novo sem redigitar código/CPF.
+                    if (ok) pendingSecondFactor = null;
+                    return;
+                }
+
                 await sendPunch(endpointMap.face, {
-                    photo: canvas.toDataURL('image/jpeg').split(',')[1],
+                    photo,
                     punch_type: selectedPunchType,
                 });
             });
@@ -367,11 +415,12 @@ window.SupportPontoPunchUI = (() => {
                 { facingMode: 'environment' },
                 { fps: 10, qrbox: 240 },
                 async (text) => {
-                    await sendPunch(endpointMap.qr, {
+                    // requireFaceSecondFactorThenSend() já para o leitor de QR (via
+                    // stopHardware()) ao trocar para o painel de câmera facial.
+                    await requireFaceSecondFactorThenSend(endpointMap.qr, {
                         token: text,
                         punch_type: selectedPunchType,
                     });
-                    await stopQR();
                 }
             );
         } catch (error) {
