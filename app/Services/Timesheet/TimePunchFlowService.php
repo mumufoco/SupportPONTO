@@ -109,7 +109,16 @@ class TimePunchFlowService
                 return $this->errorResult('Funcionário não encontrado ou inativo.', 404);
             }
 
-            return $this->processPunchRegistration((int) $employee->id, (string) $punchType, 'qrcode', $request);
+            $result = $this->processPunchRegistration((int) $employee->id, (string) $punchType, 'qrcode', $request);
+
+            // Só marca o token como consumido se o registro realmente foi efetuado —
+            // caso contrário (ex.: sequência de ponto inválida), o funcionário precisa
+            // poder tentar de novo com o mesmo QR Code dentro da janela de 5 minutos.
+            if (($result['success'] ?? false) && ! empty($qrValidation['jti'])) {
+                $this->punchService->markQrTokenUsed((string) $qrValidation['jti'], (int) $employee->id);
+            }
+
+            return $result;
         } catch (\Throwable $e) {
             log_message('error', 'QR validation flow failed: ' . $e->getMessage());
             return $this->errorResult('Erro ao validar QR Code.', 500);

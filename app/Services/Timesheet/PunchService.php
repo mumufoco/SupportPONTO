@@ -62,6 +62,21 @@ class PunchService
         return $qrService->validateToken($qrData);
     }
 
+    /**
+     * Marca o token de QR Code como usado após um registro de ponto bem-sucedido.
+     *
+     * Achado na auditoria: QRCodeService::validateToken() checa isTokenUsed(jti),
+     * mas nada no fluxo de /timesheet/punch chamava markTokenAsUsed() depois de
+     * um registro válido — só o fluxo separado /qrcode/validate (scanner de
+     * terminal) fazia essa marcação. Na prática, o mesmo QR Code (válido por 5
+     * minutos) podia ser reaproveitado várias vezes dentro da janela de validade,
+     * já que a tabela qrcode_used_tokens nunca era populada por este caminho.
+     */
+    public function markQrTokenUsed(string $jti, int $employeeId): void
+    {
+        (new QRCodeService())->markTokenAsUsed($jti, $employeeId);
+    }
+
     public function identifyFingerprint(string $template): ?array
     {
         // Fase 11: identificação digital usa somente engine biométrica dedicada.
