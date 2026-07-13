@@ -56,7 +56,7 @@ class TimesheetController extends BaseController
         }
 
         $selectedMonth = normalize_month_reference($this->request->getGet('month'));
-        $targetEmployeeId = (int) ($employeeId ?? $this->request->getGet('employee_id') ?? $actor['id']);
+        $targetEmployeeId = (int) ($employeeId ?: ($this->request->getGet('employee_id') ?: $actor['id']));
 
         $access = $this->timesheetReadService->resolveAuthorizedEmployee($actor, $targetEmployeeId);
         if (! $access['success']) {
@@ -89,7 +89,7 @@ class TimesheetController extends BaseController
             'method' => $this->request->getGet('method'),
         ];
 
-        $targetEmployeeId = (int) ($this->request->getGet('employee_id') ?? $actor['id']);
+        $targetEmployeeId = (int) ($this->request->getGet('employee_id') ?: $actor['id']);
         $access = $this->timesheetReadService->resolveAuthorizedEmployee($actor, $targetEmployeeId);
         if (! $access['success']) {
             return redirect()->back()->with('error', $access['message']);
@@ -151,7 +151,7 @@ class TimesheetController extends BaseController
             'method' => $this->request->getGet('method'),
         ];
 
-        $targetEmployeeId = (int) ($this->request->getGet('employee_id') ?? $actor['id']);
+        $targetEmployeeId = (int) ($this->request->getGet('employee_id') ?: $actor['id']);
         $access = $this->timesheetReadService->resolveAuthorizedEmployee($actor, $targetEmployeeId);
         if (! $access['success']) {
             return redirect()->back()->with('error', $access['message']);
@@ -184,7 +184,7 @@ class TimesheetController extends BaseController
         }
 
         $selectedMonth = normalize_month_reference($this->request->getPost('month'));
-        $targetEmployeeId = (int) ($this->request->getPost('employee_id') ?? $actor['id']);
+        $targetEmployeeId = (int) ($this->request->getPost('employee_id') ?: $actor['id']);
 
         $access = $this->timesheetReadService->resolveAuthorizedEmployee($actor, $targetEmployeeId);
         if (! $access['success']) {
@@ -206,7 +206,7 @@ class TimesheetController extends BaseController
             return $this->response->setJSON(['error' => 'Não autenticado'])->setStatusCode(401);
         }
 
-        $targetEmployeeId = (int) ($this->request->getPost('employee_id') ?? $actor['id']);
+        $targetEmployeeId = (int) ($this->request->getPost('employee_id') ?: $actor['id']);
         $access = $this->timesheetReadService->resolveAuthorizedEmployee($actor, $targetEmployeeId);
         if (! $access['success']) {
             return $this->response->setJSON(['error' => $access['message']])->setStatusCode($access['status'] ?? 403);
@@ -223,7 +223,7 @@ class TimesheetController extends BaseController
         }
 
         $date = $this->request->getPost('date');
-        $targetEmployeeId = (int) ($this->request->getPost('employee_id') ?? $actor['id']);
+        $targetEmployeeId = (int) ($this->request->getPost('employee_id') ?: $actor['id']);
 
         $access = $this->timesheetReadService->resolveAuthorizedEmployee($actor, $targetEmployeeId);
         if (! $access['success']) {
@@ -419,7 +419,7 @@ class TimesheetController extends BaseController
         }
 
         $selectedMonth = normalize_month_reference($this->request->getGet('month'));
-        $targetEmployeeId = (int) ($this->request->getGet('employee_id') ?? $actor['id']);
+        $targetEmployeeId = (int) ($this->request->getGet('employee_id') ?: $actor['id']);
 
         $result = $this->timesheetManagementService->queueTimesheetExport($actor, $targetEmployeeId, $selectedMonth, $format);
         if (! ($result['success'] ?? false)) {
