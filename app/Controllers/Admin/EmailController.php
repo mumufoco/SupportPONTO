@@ -42,6 +42,17 @@ class EmailController extends BaseController
             return redirect()->back()->with('error', 'Método inválido');
         }
 
+        $rules = [
+            'smtp_host'      => 'required|max_length[255]',
+            'smtp_port'      => 'required|is_natural_no_zero|less_than_equal_to[65535]',
+            'smtp_secure'    => 'permit_empty|in_list[tls,ssl,starttls,none]',
+            'smtp_from_email' => 'required|valid_email',
+            'smtp_from_name' => 'required|max_length[100]',
+        ];
+        if (! $this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
         $data      = security_sanitize($this->request->getPost() ?? []);
         $fields    = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_from_email', 'smtp_from_name'];
         $encrypted = ['smtp_password'];

@@ -59,10 +59,24 @@ class SystemMaintenanceController extends BaseSettingsController
         helper('observability');
 
         try {
-            $smtpHost = (string) $this->settingModel->getSetting('smtp_host', '');
-            $smtpUser = (string) $this->settingModel->getSetting('smtp_user', '');
-            $smtpFrom = (string) $this->settingModel->getSetting('smtp_from_email', '');
-            $fromName = (string) $this->settingModel->getSetting('smtp_from_name', 'SupportPONTO');
+            // Aceita valores ainda não salvos vindos do formulário (POST ou JSON) para
+            // testar antes de gravar — cai para a configuração já salva quando o campo
+            // não é enviado, mantendo compatibilidade com quem só manda 'test_email'.
+            $posted = $this->request->getPost() ?? [];
+            if ($posted === [] && str_contains((string) $this->request->getHeaderLine('Content-Type'), 'json')) {
+                $posted = (array) ($this->request->getJSON(true) ?? []);
+            }
+
+            $smtpHost = trim((string) ($posted['host'] ?? $this->settingModel->getSetting('smtp_host', '')));
+            $smtpUser = trim((string) ($posted['username'] ?? $this->settingModel->getSetting('smtp_user', '')));
+            $smtpFrom = trim((string) ($posted['from_address'] ?? $this->settingModel->getSetting('smtp_from_email', '')));
+            $fromName = trim((string) ($posted['from_name'] ?? $this->settingModel->getSetting('smtp_from_name', 'SupportPONTO')));
+            $smtpPort = (int) ($posted['port'] ?? $this->settingModel->getSetting('smtp_port', 587));
+            $smtpCrypto = trim((string) ($posted['encryption'] ?? $this->settingModel->getSetting('smtp_secure', 'tls')));
+            // Senha em branco no formulário de teste (usuário não digitou de novo) mantém a já salva.
+            $smtpPass = (string) ($posted['password'] ?? '') !== ''
+                ? (string) $posted['password']
+                : (string) $this->settingModel->getSetting('smtp_password', '');
 
             if ($smtpHost === '' || $smtpUser === '') {
                 return $this->response->setJSON([
@@ -71,7 +85,7 @@ class SystemMaintenanceController extends BaseSettingsController
                 ]);
             }
 
-            $toEmail = trim((string) ($this->request->getPost('test_email') ?? ''));
+            $toEmail = trim((string) ($posted['test_email'] ?? $posted['to'] ?? ''));
             if ($toEmail === '' || ! filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
                 $toEmail = $smtpFrom !== '' ? $smtpFrom : $smtpUser;
             }
@@ -80,10 +94,10 @@ class SystemMaintenanceController extends BaseSettingsController
             $email->initialize([
                 'protocol'    => 'smtp',
                 'SMTPHost'    => $smtpHost,
-                'SMTPPort'    => (int) $this->settingModel->getSetting('smtp_port', 587),
+                'SMTPPort'    => $smtpPort,
                 'SMTPUser'    => $smtpUser,
-                'SMTPPass'    => (string) $this->settingModel->getSetting('smtp_password', ''),
-                'SMTPCrypto'  => (string) $this->settingModel->getSetting('smtp_secure', 'tls'),
+                'SMTPPass'    => $smtpPass,
+                'SMTPCrypto'  => $smtpCrypto,
                 'mailType'    => 'html',
                 'charset'     => 'utf-8',
                 'newline'     => "\r\n",
