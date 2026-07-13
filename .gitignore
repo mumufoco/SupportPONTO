@@ -31,6 +31,11 @@ writable/installer/installed.lock
 !writable/secrets/.gitkeep
 !writable/installer/.gitkeep
 
+# Gerado dinamicamente por ManifestGeneratorService a cada salvar de
+# configurações PWA / upload de ícone — versionar causava conflito no próximo
+# git pull do servidor (o arquivo regenerado sempre diverge do committed).
+public/manifest.webmanifest
+
 # Node / npm (if any frontend build tools)
 node_modules/
 npm-debug.log
