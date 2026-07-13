@@ -55,6 +55,15 @@ class TwoFactorController extends BaseController
         if (!$this->request->is('post')) {
             return redirect()->back()->with('error', 'Método inválido');
         }
+
+        $rules = [
+            '2fa_method' => 'permit_empty|in_list[totp,email]',
+            '2fa_backup_codes_count' => 'permit_empty|is_natural_no_zero|greater_than_equal_to[4]|less_than_equal_to[20]',
+        ];
+        if (! $this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
         $data = security_sanitize($this->request->getPost() ?? []);
         $boolFields = ['enable_2fa', '2fa_force_all_users'];
         foreach ($boolFields as $f) {

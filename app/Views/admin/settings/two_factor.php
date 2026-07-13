@@ -1,84 +1,96 @@
-﻿<?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/main') ?>
 
 <?= $this->section('title') ?>Autenticação de Dois Fatores (2FA)<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="container-fluid sp-module-stack">
+<div class="container-fluid">
 
     <?= view('components/page_header', [
         'title'    => 'Autenticação de Dois Fatores (2FA)',
         'subtitle' => 'Configure, ative e monitore a autenticação em duas etapas para maior segurança do sistema.',
         'icon'     => 'bi bi-shield-lock-fill',
         'actions'  => [
-            ['label' => 'Autenticação', 'icon' => 'bi bi-key-fill', 'url' => route_to('admin.settings.authentication')],
+            ['label' => 'Autenticação', 'icon' => 'bi bi-key-fill', 'url' => sp_route_url('admin.settings.authentication')],
         ],
     ]) ?>
 
     <?= view('components/flash_messages') ?>
 
-    <!-- Status cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm text-center py-3">
-                <?php if (($settings['enable_2fa'] ?? '0') === '1'): ?>
-                    <div class="fs-4 text-success"><i class="bi bi-shield-check-fill"></i></div>
-                    <div class="fw-semibold small mt-1">2FA Habilitado</div>
-                    <span class="badge bg-success mt-1">Ativo</span>
-                <?php else: ?>
-                    <div class="fs-4 text-secondary"><i class="bi bi-shield-slash-fill"></i></div>
-                    <div class="fw-semibold small mt-1">2FA Desabilitado</div>
-                    <span class="badge bg-secondary mt-1">Inativo</span>
-                <?php endif; ?>
-            </div>
+    <!-- Status -->
+    <?php
+    $enabled = ($settings['enable_2fa'] ?? '0') === '1';
+    $forced  = ($settings['2fa_force_all_users'] ?? '0') === '1';
+    $method  = strtoupper($settings['2fa_method'] ?? 'TOTP');
+    $backupCodes = (int) ($settings['2fa_backup_codes_count'] ?? 8);
+    ?>
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <?= view('components/kpi', [
+                'icon' => $enabled ? 'bi bi-shield-check-fill' : 'bi bi-shield-slash-fill',
+                'iconColor' => $enabled ? 'success' : 'warning',
+                'value' => $enabled ? 'Ativo' : 'Inativo',
+                'label' => '2FA',
+                'indicator' => $method,
+                'indicatorType' => $enabled ? 'success' : 'neutral',
+            ]) ?>
         </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm text-center py-3">
-                <div class="fs-4 text-info"><i class="bi bi-phone-fill"></i></div>
-                <div class="fw-semibold small mt-1">Método</div>
-                <span class="badge bg-info text-dark mt-1"><?= esc(strtoupper($settings['2fa_method'] ?? 'TOTP')) ?></span>
-            </div>
+        <div class="col-md-3">
+            <?= view('components/kpi', [
+                'icon' => 'bi bi-phone-fill',
+                'iconColor' => 'info',
+                'value' => $method,
+                'label' => 'Método',
+                'indicator' => $method === 'TOTP' ? 'App autenticador' : 'Código por e-mail',
+                'indicatorType' => 'neutral',
+            ]) ?>
         </div>
-        <div class="col-sm-6 col-xl-3">
-            <?php $forced = ($settings['2fa_force_all_users'] ?? '0') === '1'; ?>
-            <div class="card border-0 shadow-sm text-center py-3">
-                <div class="fs-4 <?= $forced ? 'text-warning' : 'text-secondary' ?>"><i class="bi bi-people-fill"></i></div>
-                <div class="fw-semibold small mt-1">Forçado para todos</div>
-                <span class="badge <?= $forced ? 'bg-warning text-dark' : 'bg-secondary' ?> mt-1"><?= $forced ? 'Sim' : 'Não' ?></span>
-            </div>
+        <div class="col-md-3">
+            <?= view('components/kpi', [
+                'icon' => 'bi bi-people-fill',
+                'iconColor' => $forced ? 'warning' : 'primary',
+                'value' => $forced ? 'Sim' : 'Não',
+                'label' => 'Forçado para todos',
+                'indicator' => $forced ? 'Obrigatório no próximo login' : 'Opcional por usuário',
+                'indicatorType' => $forced ? 'warning' : 'neutral',
+            ]) ?>
         </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="card border-0 shadow-sm text-center py-3">
-                <div class="fs-4 text-primary"><i class="bi bi-key-fill"></i></div>
-                <div class="fw-semibold small mt-1">Backup Codes</div>
-                <span class="badge bg-primary mt-1"><?= (int)($settings['2fa_backup_codes_count'] ?? 8) ?> por usuário</span>
-            </div>
+        <div class="col-md-3">
+            <?= view('components/kpi', [
+                'icon' => 'bi bi-key-fill',
+                'iconColor' => 'primary',
+                'value' => (string) $backupCodes,
+                'label' => 'Backup codes',
+                'indicator' => 'Por usuário',
+                'indicatorType' => 'neutral',
+            ]) ?>
         </div>
     </div>
 
-    <!-- Settings form -->
-    <form action="<?= sp_safe_url(sp_route_url('admin.settings.two-factor.update')) ?>" method="POST">
-        <?= csrf_field() ?>
-        <div class="sp-data-card mb-4">
-            <div class="sp-data-card__header">
-                <h2 class="sp-data-card__title"><i class="bi bi-toggles"></i>Configurações de 2FA</h2>
-            </div>
-            <div class="sp-data-card__body">
+    <!-- Configurações de 2FA -->
+    <div class="sp-card mb-3">
+        <div class="sp-card-header">
+            <span class="sp-card-title"><i class="bi bi-toggles"></i> Configurações de 2FA</span>
+        </div>
+        <div class="sp-card-body">
+            <form action="<?= sp_safe_url(sp_route_url('admin.settings.two-factor.update')) ?>" method="POST" id="two-factor-form">
+                <?= csrf_field() ?>
+
                 <div class="row g-4">
                     <div class="col-md-6">
                         <div class="form-check form-switch mb-1">
                             <input class="form-check-input" type="checkbox" name="enable_2fa" value="1"
-                                   id="enable_2fa" <?= ($settings['enable_2fa'] ?? '0') === '1' ? 'checked' : '' ?>>
+                                   id="enable_2fa" <?= $enabled ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="enable_2fa">Habilitar 2FA</label>
                         </div>
-                        <div class="form-text">Ativa autenticação em duas etapas. Usuários precisarão de um segundo fator no login.</div>
+                        <span class="sp-help">Ativa autenticação em duas etapas. Usuários precisarão de um segundo fator no login.</span>
                     </div>
                     <div class="col-md-6">
                         <div class="form-check form-switch mb-1">
                             <input class="form-check-input" type="checkbox" name="2fa_force_all_users" value="1"
-                                   id="2fa_force_all_users" <?= ($settings['2fa_force_all_users'] ?? '0') === '1' ? 'checked' : '' ?>>
+                                   id="2fa_force_all_users" <?= $forced ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="2fa_force_all_users">Forçar 2FA para todos</label>
                         </div>
-                        <div class="form-text">Todos os usuários serão obrigados a configurar 2FA no próximo login.</div>
+                        <span class="sp-help">Todos os usuários serão obrigados a configurar 2FA no próximo login.</span>
                     </div>
                     <div class="col-md-6">
                         <label for="2fa_method" class="form-label fw-semibold">Método</label>
@@ -90,36 +102,37 @@
                                 E-mail — Código enviado por e-mail
                             </option>
                         </select>
-                        <div class="form-text">TOTP é recomendado: mais seguro e independente do e-mail.</div>
+                        <span class="sp-help">TOTP é recomendado: mais seguro e independente do e-mail.</span>
                     </div>
                     <div class="col-md-6">
                         <label for="2fa_backup_codes_count" class="form-label fw-semibold">Códigos de backup por usuário</label>
                         <input type="number" class="form-control" id="2fa_backup_codes_count"
                                name="2fa_backup_codes_count"
-                               value="<?= (int)($settings['2fa_backup_codes_count'] ?? 8) ?>"
+                               value="<?= $backupCodes ?>"
                                min="4" max="20">
-                        <div class="form-text">Códigos de uso único para acesso de emergência (4 a 20).</div>
+                        <span class="sp-help">Códigos de uso único para acesso de emergência (4 a 20).</span>
                     </div>
                 </div>
-            </div>
-            <div class="sp-data-card__footer d-flex justify-content-end gap-2">
-                <a href="<?= sp_safe_url(route_to('admin.settings.authentication')) ?>" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>Voltar
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-floppy-fill me-1"></i>Salvar configurações
-                </button>
-            </div>
-        </div>
-    </form>
 
-    <!-- TOTP Test section -->
-    <div class="sp-data-card mb-4">
-        <div class="sp-data-card__header">
-            <h2 class="sp-data-card__title"><i class="bi bi-qr-code"></i>Testar TOTP</h2>
-            <span class="text-muted small ms-auto">Gere um QR Code e confirme que o código funciona antes de ativar</span>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="<?= sp_safe_url(sp_route_url('admin.settings.authentication')) ?>" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-floppy-fill me-1"></i>Salvar configurações
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="sp-data-card__body">
+    </div>
+
+    <!-- Testar TOTP -->
+    <div class="sp-card mb-3">
+        <div class="sp-card-header">
+            <span class="sp-card-title"><i class="bi bi-qr-code"></i> Testar TOTP</span>
+            <span class="text-muted small">Gere um QR Code e confirme que o código funciona antes de ativar.</span>
+        </div>
+        <div class="sp-card-body">
             <div class="alert alert-info d-flex gap-2 align-items-start py-2 mb-4 small">
                 <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
                 <span>Esta seção é para <strong>testar</strong> a integração TOTP. Gere um QR Code, escaneie com Google Authenticator ou Authy, e verifique o código gerado antes de habilitar o 2FA para todos os usuários.</span>
@@ -134,7 +147,7 @@
                     </button>
                     <div id="qr_wrapper" style="display:none">
                         <img id="qr_img" src="" alt="QR Code 2FA"
-                             style="width:200px;height:200px;border:1px solid var(--sp-border);padding:8px;background:#fff;display:block;">
+                             style="width:200px;height:200px;border:1px solid var(--sp-border,#e4e8ed);padding:8px;background:#fff;display:block;">
                         <label class="form-label small fw-semibold mt-2 mb-1">Chave manual:</label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="qr_secret" readonly placeholder="Chave TOTP">
@@ -166,53 +179,52 @@
         </div>
     </div>
 
-    <!-- Recent events -->
-    <div class="sp-data-card mb-4">
-        <div class="sp-data-card__header">
-            <h2 class="sp-data-card__title"><i class="bi bi-clock-history"></i>Eventos Recentes de 2FA</h2>
+    <!-- Eventos recentes -->
+    <div class="sp-card">
+        <div class="sp-card-header">
+            <span class="sp-card-title"><i class="bi bi-clock-history"></i> Eventos recentes de 2FA</span>
         </div>
-        <?php if (!empty($recent_events)): ?>
-        <div class="sp-data-card__body p-0">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-3" style="width:140px">Evento</th>
-                            <th style="width:100px">Usuário</th>
-                            <th style="width:130px">IP</th>
-                            <th class="pe-3">Data/Hora</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recent_events as $ev): ?>
-                        <?php
-                            $act = $ev['action'] ?? '';
-                            $badge = match($act) {
-                                '2fa_success'  => '<span class="badge bg-success">Sucesso</span>',
-                                '2fa_failure'  => '<span class="badge bg-danger">Falha</span>',
-                                '2fa_setup'    => '<span class="badge bg-primary">Configurado</span>',
-                                '2fa_disabled' => '<span class="badge bg-secondary">Desativado</span>',
-                                default        => '<span class="badge bg-secondary">' . esc($act) . '</span>',
-                            };
-                        ?>
-                        <tr>
-                            <td class="ps-3"><?= $badge ?></td>
-                            <td class="small text-muted"><?= !empty($ev['user_id']) ? 'ID: ' . (int)$ev['user_id'] : '<em>Sistema</em>' ?></td>
-                            <td class="small font-monospace text-muted"><?= esc($ev['ip_address'] ?? '-') ?></td>
-                            <td class="small text-muted pe-3"><?= esc($ev['created_at'] ?? '') ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+        <?php if (! empty($recent_events)): ?>
+            <div class="sp-card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3" style="width:140px">Evento</th>
+                                <th style="width:100px">Usuário</th>
+                                <th style="width:130px">IP</th>
+                                <th class="pe-3">Data/Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recent_events as $ev): ?>
+                                <?php
+                                $act = $ev['action'] ?? '';
+                                $badge = match ($act) {
+                                    '2fa_success'  => '<span class="badge bg-success">Sucesso</span>',
+                                    '2fa_failure'  => '<span class="badge bg-danger">Falha</span>',
+                                    '2fa_setup'    => '<span class="badge bg-primary">Configurado</span>',
+                                    '2fa_disabled' => '<span class="badge bg-secondary">Desativado</span>',
+                                    default        => '<span class="badge bg-secondary">' . esc($act) . '</span>',
+                                };
+                                ?>
+                                <tr>
+                                    <td class="ps-3"><?= $badge ?></td>
+                                    <td class="small text-muted"><?= ! empty($ev['user_id']) ? 'ID: ' . (int) $ev['user_id'] : '<em>Sistema</em>' ?></td>
+                                    <td class="small font-monospace text-muted"><?= esc($ev['ip_address'] ?? '-') ?></td>
+                                    <td class="small text-muted pe-3"><?= esc($ev['created_at'] ?? '') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
         <?php else: ?>
-        <div class="sp-data-card__body">
-            <div class="alert alert-info d-flex gap-2 align-items-center py-2 mb-0 small">
-                <i class="bi bi-info-circle-fill flex-shrink-0"></i>
-                Nenhum evento de 2FA registrado. Os eventos aparecem após ativações, verificações ou falhas.
+            <div class="sp-card-body">
+                <div class="sp-callout-neutral mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Nenhum evento de 2FA registrado. Os eventos aparecem após ativações, verificações ou falhas.
+                </div>
             </div>
-        </div>
         <?php endif; ?>
     </div>
 
@@ -277,7 +289,7 @@
         }).catch(function () { document.getElementById('qr_secret').select(); document.execCommand('copy'); });
     });
 
-    // Verify code — FIX: passes currentSecret from QR generation
+    // Verify code
     document.getElementById('btn_verify_code').addEventListener('click', function () {
         const code    = document.getElementById('verify_code').value.trim();
         const resultEl = document.getElementById('verify_result');
