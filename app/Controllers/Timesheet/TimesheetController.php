@@ -120,6 +120,62 @@ class TimesheetController extends BaseController
         return $this->punchDetails($id);
     }
 
+    public function historyExportPdf()
+    {
+        return $this->historyExport('pdf');
+    }
+
+    public function historyExportExcel()
+    {
+        return $this->historyExport('excel');
+    }
+
+    /**
+     * Exporta o espelho de ponto com os MESMOS filtros aplicados na tela
+     * /timesheet/history (start_date, end_date, type, method, employee_id) —
+     * antes desta rota não existia nenhum export que respeitasse esses
+     * filtros (o export existente em directExport() é do saldo consolidado
+     * e só entende period/irregularities).
+     */
+    protected function historyExport(string $format)
+    {
+        $actor = $this->requireAuthenticatedEmployee();
+        if ($actor === null) {
+            return redirect()->to(sp_login_url())->with('error', 'Você precisa estar autenticado.');
+        }
+
+        $filters = [
+            'start_date' => $this->request->getGet('start_date') ?: date('Y-m-01'),
+            'end_date' => $this->request->getGet('end_date') ?: date('Y-m-d'),
+            'type' => $this->request->getGet('type'),
+            'method' => $this->request->getGet('method'),
+        ];
+
+        $targetEmployeeId = (int) ($this->request->getGet('employee_id') ?? $actor['id']);
+        $access = $this->timesheetReadService->resolveAuthorizedEmployee($actor, $targetEmployeeId);
+        if (! $access['success']) {
+            return redirect()->back()->with('error', $access['message']);
+        }
+
+        $historyData = $this->timesheetReadService->getHistoryData($targetEmployeeId, $filters);
+
+        $exporter = new \App\Services\Timesheet\TimesheetHistoryExportService();
+        $result = $format === 'pdf'
+            ? $exporter->buildPdf($access['employee'], $historyData['punches'], $filters, $historyData['summary'])
+            : $exporter->buildExcel($access['employee'], $historyData['punches'], $filters, $historyData['summary']);
+
+        $mimeType = $format === 'pdf'
+            ? 'application/pdf'
+            : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+        return $this->response
+            ->setHeader('Content-Type', $mimeType)
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"')
+            ->setHeader('Content-Length', (string) strlen($result['content']))
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody($result['content']);
+    }
+
     public function filter()
     {
         $actor = $this->requireAuthenticatedEmployee();

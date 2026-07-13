@@ -22,6 +22,8 @@ $routes->group('timesheet', $timesheetAuth, static function ($routes) use ($time
     $routes->post('punch/fingerprint', $timePunchController . '::punchByFingerprint', ['as' => 'timesheet.punch.fingerprint']);
     $routes->get('punch/capabilities', $timePunchController . '::capabilities', ['as' => 'timesheet.punch.capabilities']);
     $routes->get('history', $timesheetController . '::history', ['as' => 'timesheet.history']);
+    $routes->get('history/export/pdf', $timesheetController . '::historyExportPdf', ['as' => 'timesheet.history.export.pdf']);
+    $routes->get('history/export/excel', $timesheetController . '::historyExportExcel', ['as' => 'timesheet.history.export.excel']);
     $routes->get('day/(:segment)', $timesheetController . '::day/$1', ['as' => 'timesheet.day']);
     $routes->get('history/(:num)', $timesheetController . '::show/$1', ['as' => 'timesheet.history.show']);
     $routes->get('balance', $timesheetController . '::balance', ['as' => 'timesheet.balance']);

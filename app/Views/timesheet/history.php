@@ -3,12 +3,24 @@
 <?= $this->section('title') ?>Histórico de ponto<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?php
+$exportQuery = http_build_query(array_filter([
+    'start_date'  => $filters['start_date'] ?? null,
+    'end_date'    => $filters['end_date'] ?? null,
+    'type'        => $filters['type'] ?? null,
+    'method'      => $filters['method'] ?? null,
+    'employee_id' => ($targetEmployeeId ?? 0) > 0 ? (int) $targetEmployeeId : null,
+]));
+?>
 <div class="container-fluid sp-module-stack">
     <?= view('components/page_header', [
         'title'    => 'Histórico de ponto',
         'subtitle' => 'Filtre registros, acompanhe o resumo do período e acesse rapidamente cada lançamento.',
         'icon'     => 'bi bi-clock-history',
-        'actions'  => [],
+        'actions'  => [
+            ['label' => 'Exportar PDF',   'icon' => 'bi bi-file-earmark-pdf-fill',   'url' => base_url('timesheet/history/export/pdf?' . $exportQuery)],
+            ['label' => 'Exportar Excel', 'icon' => 'bi bi-file-earmark-excel-fill', 'url' => base_url('timesheet/history/export/excel?' . $exportQuery)],
+        ],
     ]) ?>
 
     <!-- Filtros -->
@@ -62,7 +74,7 @@
                         <option value="cpf"       <?= (($filters['method'] ?? '') === 'cpf')       ? 'selected' : '' ?>>CPF</option>
                         <option value="facial"    <?= (($filters['method'] ?? '') === 'facial')    ? 'selected' : '' ?>>Facial</option>
                         <option value="biometria" <?= (($filters['method'] ?? '') === 'biometria') ? 'selected' : '' ?>>Biometria</option>
-                        <option value="qr"        <?= (($filters['method'] ?? '') === 'qr')        ? 'selected' : '' ?>>QR Code</option>
+                        <option value="qrcode"    <?= (($filters['method'] ?? '') === 'qrcode')    ? 'selected' : '' ?>>QR Code</option>
                     </select>
                 </div>
                 <div style="display:flex;gap:.5rem;align-items:flex-end;padding-bottom:1px;">
@@ -191,12 +203,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <?php if (!empty($pager)): ?>
-                <div class="sp-card-footer">
-                    <?= $pager->links() ?>
-                </div>
-            <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>
