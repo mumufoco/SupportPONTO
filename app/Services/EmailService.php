@@ -7,6 +7,7 @@ use App\Models\SettingModel;
 use App\Models\AuditModel;
 use App\Services\Email\EmailAuditLogger;
 use App\Services\Email\EmailDeliveryService;
+use App\Services\Email\EmailTemplateCatalog;
 use App\Services\Email\EmailTemplateRenderer;
 use App\Services\Email\EmailTransportConfigurator;
 
@@ -115,14 +116,15 @@ class EmailService
             return false;
         }
 
-        $subject = 'Bem-vindo ao Sistema de Ponto Eletrônico';
-        $message = $this->templates->render('welcome', [
+        $data = [
             'employee_name' => $employee->name,
             'email' => $employee->email,
             'temporary_password' => $temporaryPassword,
             'login_url' => sp_login_url(),
             'company_name' => $this->settingModel->get('company_name', 'Empresa'),
-        ]);
+        ];
+        $subject = $this->subjectFor('welcome', 'Bem-vindo ao Sistema de Ponto Eletrônico', $data);
+        $message = $this->templates->render('welcome', $data);
 
         return $this->sendToEmployee($employeeId, $subject, $message);
     }
@@ -134,12 +136,13 @@ class EmailService
             return false;
         }
 
-        $subject = 'Redefinição de Senha - Sistema de Ponto';
-        $message = $this->templates->render('password_reset', [
+        $data = [
             'employee_name' => $employee->name,
             'reset_url' => base_url("auth/reset-password/{$resetToken}"),
             'expires_in' => '24 horas',
-        ]);
+        ];
+        $subject = $this->subjectFor('password_reset', 'Redefinição de Senha - Sistema de Ponto', $data);
+        $message = $this->templates->render('password_reset', $data);
 
         return $this->sendToEmployee($employeeId, $subject, $message);
     }
@@ -151,20 +154,22 @@ class EmailService
             return false;
         }
 
-        $message = $this->templates->render('punch_receipt', [
+        $data = [
             'employee_name' => $employee->name,
             'punch_time' => $punchData['punch_time'] ?? '',
             'punch_type' => $punchData['punch_type'] ?? '',
             'nsr' => $punchData['nsr'] ?? '',
             'hash' => $punchData['hash'] ?? '',
-        ]);
+        ];
+        $subject = $this->subjectFor('punch_receipt', 'Comprovante de Registro de Ponto', $data);
+        $message = $this->templates->render('punch_receipt', $data);
 
         $options = [];
         if ($pdfPath && file_exists($pdfPath)) {
             $options['attachments'] = [$pdfPath];
         }
 
-        return $this->sendToEmployee($employeeId, 'Comprovante de Registro de Ponto', $message, $options);
+        return $this->sendToEmployee($employeeId, $subject, $message, $options);
     }
 
     public function sendJustificationStatus(int $employeeId, string $status, ?string $reason = null): bool
@@ -219,7 +224,7 @@ class EmailService
         $warning = $warningModel->find($warningId);
         $issuer = $warning ? $this->employeeModel->find((int) $warning->issued_by) : null;
 
-        $message = $this->templates->render('warning_notification', [
+        $data = [
             'employee_name' => $employee->name,
             'warning_type' => $warningType,
             'warning_number' => $warningId,
@@ -230,9 +235,23 @@ class EmailService
             'show_url' => sp_warning_show_url($warningId),
             'company_name' => $this->settingModel->get('company_name', 'Support Solo Sondagens'),
             'support_email' => $this->settingModel->get('contact_email', 'contato@supportsondagens.com.br'),
-        ]);
+        ];
+        $subject = $this->subjectFor('warning_notification', 'Advertência disciplinar - ciência e assinatura', $data);
+        $message = $this->templates->render('warning_notification', $data);
 
-        return $this->sendToEmployee($employeeId, 'Advertência disciplinar - ciência e assinatura', $message);
+        return $this->sendToEmployee($employeeId, $subject, $message);
+    }
+
+    /**
+     * Usa o assunto customizado pelo admin (Configurações > E-mail > Templates)
+     * quando definido, senão o padrão do código — mesma prioridade usada por
+     * EmailTemplateRenderer::render() para o corpo do e-mail.
+     */
+    private function subjectFor(string $templateKey, string $defaultSubject, array $data): string
+    {
+        $custom = (string) $this->settingModel->get(EmailTemplateCatalog::subjectSettingKey($templateKey), '');
+
+        return EmailTemplateCatalog::interpolatePlain($custom !== '' ? $custom : $defaultSubject, $data);
     }
 
     public function sendReminder(int $employeeId, string $subject, string $reminderMessage): bool

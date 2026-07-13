@@ -143,9 +143,13 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->post('personalization/update', 'Admin\PersonalizationController::update', ['as' => 'admin.settings.personalization.update']);
     $routes->get('email', 'Admin\EmailController::index', ['as' => 'admin.settings.email']);
     $routes->post('email/update', 'Admin\EmailController::update', ['as' => 'admin.settings.email.update']);
+    // Um template por página (lista + editar/salvar/redefinir individual), em vez do
+    // formulário único com todos os templates de uma vez — mesmo modelo do editor de
+    // Personalização e alinhado ao layout de referência anexado pelo usuário.
     $routes->get('email-templates', 'Admin\EmailTemplatesController::index', ['as' => 'admin.settings.email-templates']);
-    $routes->post('email-templates/update', 'Admin\EmailTemplatesController::update', ['as' => 'admin.settings.email-templates.update']);
-    $routes->post('email-templates/preview', 'Admin\EmailTemplatesController::preview', ['as' => 'admin.settings.email-templates.preview']);
+    $routes->get('email-templates/(:segment)/edit', 'Admin\EmailTemplatesController::edit/$1', ['as' => 'admin.settings.email-templates.edit']);
+    $routes->post('email-templates/(:segment)/update', 'Admin\EmailTemplatesController::update/$1', ['as' => 'admin.settings.email-templates.update']);
+    $routes->post('email-templates/(:segment)/reset', 'Admin\EmailTemplatesController::reset/$1', ['as' => 'admin.settings.email-templates.reset']);
     $routes->get('integrations', 'Admin\IntegrationsController::index', ['as' => 'admin.settings.integrations']);
     $routes->post('integrations/update', 'Admin\IntegrationsController::update', ['as' => 'admin.settings.integrations.update']);
     $routes->get('backup', 'Admin\BackupController::index', ['as' => 'admin.settings.backup']);

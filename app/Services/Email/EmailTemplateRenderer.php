@@ -12,78 +12,79 @@ class EmailTemplateRenderer
 
     public function render(string $templateName, array $data = []): string
     {
-        $templatePath = APPPATH . "Views/emails/{$templateName}.php";
+        $catalogEntry = EmailTemplateCatalog::get($templateName);
 
+        // 1) Customização salva pelo admin (Configurações > E-mail > Templates) tem prioridade.
+        if ($catalogEntry !== null) {
+            $override = (string) $this->settings->get(EmailTemplateCatalog::bodySettingKey($templateName), '');
+            if ($override !== '') {
+                return $this->wrap($templateName, EmailTemplateCatalog::interpolate($override, $data));
+            }
+        }
+
+        // 2) View dedicada em app/Views/emails/{nome}.php, se existir.
+        $templatePath = APPPATH . "Views/emails/{$templateName}.php";
         if (file_exists($templatePath)) {
             return view("emails/{$templateName}", $data);
         }
 
+        // 3) Corpo padrão do catálogo (mesmo texto que o admin vê ao editar pela primeira vez).
+        if ($catalogEntry !== null) {
+            return $this->wrap($templateName, EmailTemplateCatalog::interpolate($catalogEntry['default_body'], $data));
+        }
+
+        // 4) Nenhum template conhecido: fallback legado (mantém compatibilidade com nomes
+        // fora do catálogo), nunca expondo um dump bruto de $data ao destinatário.
         return $this->basicTemplate($templateName, $data);
     }
 
+    /**
+     * Envolve o corpo (já interpolado) no wrapper visual padrão de e-mail
+     * (cabeçalho com nome/cor da empresa, rodapé) — o mesmo wrapper usado
+     * pelo preview client-side na tela de edição de templates.
+     */
+    private function wrap(string $templateName, string $bodyHtml): string
+    {
+        $companyName = (string) $this->settings->get('company_name', 'Empresa');
+        $primaryColor = (string) $this->settings->get('primary_color', '#1f9d57');
+
+        return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+            . '<title>' . htmlspecialchars($templateName, ENT_QUOTES, 'UTF-8') . '</title>'
+            . '<style>'
+            . 'body{font-family:Arial,sans-serif;line-height:1.6;color:#333;margin:0;background:#f4f4f4}'
+            . '.container{max-width:600px;margin:0 auto;padding:20px}'
+            . '.header{background-color:' . htmlspecialchars($primaryColor, ENT_QUOTES, 'UTF-8') . ';color:#fff;padding:20px;text-align:center;border-radius:8px 8px 0 0}'
+            . '.content{padding:24px;background-color:#fff}'
+            . '.footer{padding:16px 20px;text-align:center;font-size:12px;color:#888;background:#fff;border-radius:0 0 8px 8px}'
+            . 'a{color:' . htmlspecialchars($primaryColor, ENT_QUOTES, 'UTF-8') . '}'
+            . '</style></head><body><div class="container">'
+            . '<div class="header"><strong>' . htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') . '</strong><br><small>Sistema de Ponto Eletrônico</small></div>'
+            . '<div class="content">' . $bodyHtml . '</div>'
+            . '<div class="footer">&copy; ' . date('Y') . ' ' . htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') . '. Todos os direitos reservados.<br>Este é um e-mail automático, não responda.</div>'
+            . '</div></body></html>';
+    }
+
+    /**
+     * Fallback legado para nomes de template fora do EmailTemplateCatalog.
+     * Nunca despeja $data em bruto (json_encode) no corpo enviado ao
+     * destinatário — passa a listar os campos de forma legível.
+     */
     private function basicTemplate(string $templateName, array $data): string
     {
-        $companyName = $this->settings->get('company_name', 'Empresa');
-        $primaryColor = $this->settings->get('primary_color', '#9DB89D');
+        $body = '<h2>' . htmlspecialchars(ucwords(str_replace('_', ' ', $templateName)), ENT_QUOTES, 'UTF-8') . '</h2>';
 
-        $html = '<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"="width=device-width, initial-scale=1.0">
-    <title>' . htmlspecialchars($templateName) . '</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: ' . $primaryColor . '; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; background-color: #f4f4f4; }
-        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
-        .button { display: inline-block; padding: 10px 20px; background-color: ' . $primaryColor . '; color: white; text-decoration: none; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>' . htmlspecialchars($companyName) . '</h1>
-            <p>Sistema de Ponto Eletrônico</p>
-        </div>
-        <div class="content">';
-
-        switch ($templateName) {
-            case 'welcome':
-                $html .= '<h2>Bem-vindo, ' . htmlspecialchars((string) ($data['employee_name'] ?? '')) . '!</h2>';
-                $html .= '<p>Sua conta foi criada com sucesso.</p>';
-                $html .= '<p><strong>E-mail:</strong> ' . htmlspecialchars((string) ($data['email'] ?? '')) . '</p>';
-                $html .= '<p><strong>Senha Temporária:</strong> ' . htmlspecialchars((string) ($data['temporary_password'] ?? '')) . '</p>';
-                $html .= '<p><a href="' . (string) ($data['login_url'] ?? '#') . '" class="button">Fazer Login</a></p>';
-                $html .= '<p><small>Por favor, altere sua senha após o primeiro login.</small></p>';
-                break;
-
-            case 'punch_receipt':
-                $html .= '<h2>Comprovante de Registro de Ponto</h2>';
-                $html .= '<p>Olá, ' . htmlspecialchars((string) ($data['employee_name'] ?? '')) . '</p>';
-                $html .= '<p>Seu registro de ponto foi registrado com sucesso:</p>';
-                $html .= '<ul>';
-                $html .= '<li><strong>Data/Hora:</strong> ' . htmlspecialchars((string) ($data['punch_time'] ?? '')) . '</li>';
-                $html .= '<li><strong>Tipo:</strong> ' . htmlspecialchars((string) ($data['punch_type'] ?? '')) . '</li>';
-                $html .= '<li><strong>NSR:</strong> ' . htmlspecialchars((string) ($data['nsr'] ?? '')) . '</li>';
-                $html .= '</ul>';
-                break;
-
-            default:
-                $html .= '<p>' . htmlspecialchars((string) json_encode($data)) . '</p>';
+        if ($data !== []) {
+            $body .= '<ul>';
+            foreach ($data as $key => $value) {
+                if (! is_scalar($value) && $value !== null) {
+                    continue;
+                }
+                $body .= '<li><strong>' . htmlspecialchars((string) $key, ENT_QUOTES, 'UTF-8') . ':</strong> '
+                    . htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8') . '</li>';
+            }
+            $body .= '</ul>';
         }
 
-        $html .= '
-        </div>
-        <div class="footer">
-            <p>&copy; ' . date('Y') . ' ' . htmlspecialchars($companyName) . '. Todos os direitos reservados.</p>
-            <p><small>Este é um email automático. Por favor, não responda.</small></p>
-        </div>
-    </div>
-</body>
-</html>';
-
-        return $html;
+        return $this->wrap($templateName, $body);
     }
 }
