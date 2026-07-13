@@ -434,7 +434,7 @@ class LGPDController extends BaseController
         // Geração inline via Gotenberg (motor de PDF do sistema — ver
         // App\Services\Pdf\GotenbergPdfDocument) para manter entrega imediata
         // do relatório ANPD sem depender de fila assíncrona.
-        $pdf = new \App\Services\Pdf\GotenbergPdfDocument(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf = new \App\Services\Pdf\GotenbergPdfDocument('P', 'mm', 'A4', true, 'UTF-8', false);
 
         $pdf->SetCreator('Sistema de Ponto Eletrônico');
         $pdf->SetAuthor(env('COMPANY_NAME', 'Empresa'));

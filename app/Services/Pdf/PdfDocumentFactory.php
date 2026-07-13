@@ -12,7 +12,7 @@ class PdfDocumentFactory
 
     public function create(string $title, string $orientation = 'P'): GotenbergPdfDocument
     {
-        $pdf = new GotenbergPdfDocument($orientation, PDF_UNIT, 'A4', true, 'UTF-8', false);
+        $pdf = new GotenbergPdfDocument($orientation, 'mm', 'A4', true, 'UTF-8', false);
 
         $pdf->SetCreator($this->companyName);
         $pdf->SetAuthor($this->companyName);
@@ -37,7 +37,7 @@ class PdfDocumentFactory
         $pdf->SetHeaderMargin(6);
         $pdf->SetFooterMargin(8);
         $pdf->SetAutoPageBreak(true, 16);
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+        $pdf->setImageScale(1.0);
         $pdf->SetFont('helvetica', '', 8);
         $pdf->AddPage();
 
