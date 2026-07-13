@@ -29,7 +29,6 @@ class PdfDocumentFactory
         $subtitle = $this->companyCnpj ? 'CNPJ: ' . $this->companyCnpj : '';
         $pdf->SetHeaderData($this->logoPath ?? '', $logoWidth, $this->companyName, $subtitle);
         $pdf->setHeaderFont(['helvetica', 'B', 10]);
-        $pdf->setHeaderHTMLStyleCSS('table{border-bottom:1px solid #1B3A6B;}');
 
         // ── Rodapé ───────────────────────────────────────────────────────────
         $pdf->setFooterFont(['helvetica', '', 7]);
