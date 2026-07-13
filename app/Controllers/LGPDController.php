@@ -431,9 +431,10 @@ class LGPDController extends BaseController
 
         $report = $this->consentService->generateANPDReport($startDate, $endDate);
 
-        // Geração inline via TCPDF para manter entrega imediata do relatório
-        // ANPD sem depender de fila assíncrona.
-        $pdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        // Geração inline via Gotenberg (motor de PDF do sistema — ver
+        // App\Services\Pdf\GotenbergPdfDocument) para manter entrega imediata
+        // do relatório ANPD sem depender de fila assíncrona.
+        $pdf = new \App\Services\Pdf\GotenbergPdfDocument(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
         $pdf->SetCreator('Sistema de Ponto Eletrônico');
         $pdf->SetAuthor(env('COMPANY_NAME', 'Empresa'));

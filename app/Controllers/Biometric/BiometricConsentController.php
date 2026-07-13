@@ -236,9 +236,7 @@ class BiometricConsentController extends BaseController
 
     private function buildConsentPdf(object $consent): string
     {
-        require_once VENDORPATH . 'tecnickcom/tcpdf/tcpdf.php';
-
-        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8');
+        $pdf = new \App\Services\Pdf\GotenbergPdfDocument('P', 'mm', 'A4', true, 'UTF-8');
         $pdf->SetCreator('SupportPONTO');
         $pdf->SetAuthor('Support Solo Sondagens');
         $pdf->SetTitle('Termo de Consentimento Biometrico');

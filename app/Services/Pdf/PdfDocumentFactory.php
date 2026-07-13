@@ -2,8 +2,6 @@
 
 namespace App\Services\Pdf;
 
-use TCPDF;
-
 class PdfDocumentFactory
 {
     public function __construct(
@@ -12,9 +10,9 @@ class PdfDocumentFactory
         private readonly ?string $logoPath       = null,
     ) {}
 
-    public function create(string $title, string $orientation = 'P'): TCPDF
+    public function create(string $title, string $orientation = 'P'): GotenbergPdfDocument
     {
-        $pdf = new TCPDF($orientation, PDF_UNIT, 'A4', true, 'UTF-8', false);
+        $pdf = new GotenbergPdfDocument($orientation, PDF_UNIT, 'A4', true, 'UTF-8', false);
 
         $pdf->SetCreator($this->companyName);
         $pdf->SetAuthor($this->companyName);

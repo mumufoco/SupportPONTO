@@ -5,6 +5,10 @@ namespace App\Services\Timesheet\Endpoint;
 use App\Models\AuditModel;
 use App\Models\SettingModel;
 use App\Models\TimePunchModel;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Common\Version;
+use chillerlan\QRCode\Output\QRGdImagePNG;
 
 class TimePunchReceiptService
 {
@@ -22,10 +26,6 @@ class TimePunchReceiptService
             return $this->resultFactory->error('Usuário não autenticado.', 401);
         }
 
-        if (!class_exists('\\TCPDF')) {
-            return $this->resultFactory->error('TCPDF library not installed.', 500);
-        }
-
         $punch = $this->findPunchById($punchId);
         if (!$punch) {
             return $this->resultFactory->error('Registro não encontrado.', 404);
@@ -41,7 +41,9 @@ class TimePunchReceiptService
         $companyAddress = $this->settingModel->get('company_address', 'Rua Exemplo, 123 - São Paulo/SP');
         $inpiRegistry = $this->settingModel->get('inpi_registry', 'BR512024000000');
 
-        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8');
+        $html = $this->buildReceiptHtml($punch, $companyName, $companyCNPJ, $companyAddress, $inpiRegistry);
+
+        $pdf = new \App\Services\Pdf\GotenbergPdfDocument('P', 'mm', 'A4', true, 'UTF-8');
         $pdf->SetCreator('Sistema de Ponto Eletrônico');
         $pdf->SetAuthor($companyName);
         $pdf->SetTitle('Comprovante de Registro de Ponto - NSR ' . str_pad((string) $punch->nsr, 10, '0', STR_PAD_LEFT));
@@ -51,98 +53,7 @@ class TimePunchReceiptService
         $pdf->SetMargins(15, 15, 15);
         $pdf->SetAutoPageBreak(true, 15);
         $pdf->AddPage();
-
-        $logoPath = WRITEPATH . 'uploads/company_logo.png';
-        if (file_exists($logoPath)) {
-            $pdf->Image($logoPath, 15, 15, 30, 0, 'PNG');
-            $pdf->SetY(20);
-        } else {
-            $pdf->SetY(15);
-        }
-
-        $pdf->SetFont('helvetica', 'B', 16);
-        $pdf->Cell(0, 10, $companyName, 0, 1, 'C');
-
-        $pdf->SetFont('helvetica', '', 10);
-        $pdf->Cell(0, 5, 'CNPJ: ' . $companyCNPJ, 0, 1, 'C');
-        $pdf->Cell(0, 5, $companyAddress, 0, 1, 'C');
-        $pdf->Ln(5);
-
-        $pdf->SetFont('helvetica', 'B', 14);
-        $pdf->SetFillColor(0, 102, 204);
-        $pdf->SetTextColor(255, 255, 255);
-        $pdf->Cell(0, 10, 'COMPROVANTE DE REGISTRO DE PONTO ELETRÔNICO', 0, 1, 'C', true);
-        $pdf->SetTextColor(0, 0, 0);
-        $pdf->Ln(5);
-
-        $pdf->SetFont('helvetica', 'B', 11);
-        $pdf->Cell(0, 7, 'DADOS DO FUNCIONÁRIO', 0, 1);
-        $pdf->SetFont('helvetica', '', 10);
-
-        $pdf->Cell(50, 6, 'Nome:', 0, 0);
-        $pdf->Cell(0, 6, $punch->name, 0, 1);
-        $pdf->Cell(50, 6, 'CPF:', 0, 0);
-        $pdf->Cell(0, 6, $punch->cpf, 0, 1);
-        $pdf->Cell(50, 6, 'Matrícula:', 0, 0);
-        $pdf->Cell(0, 6, $punch->unique_code, 0, 1);
-        $pdf->Ln(3);
-
-        $pdf->SetFont('helvetica', 'B', 11);
-        $pdf->Cell(0, 7, 'DADOS DO REGISTRO', 0, 1);
-        $pdf->SetFont('helvetica', '', 10);
-
-        $pdf->Cell(50, 6, 'Data/Hora:', 0, 0);
-        $pdf->Cell(0, 6, date('d/m/Y H:i:s', strtotime((string) $punch->punch_time)), 0, 1);
-
-        $pdf->Cell(50, 6, 'Tipo de Marcação:', 0, 0);
-        $pdf->Cell(0, 6, strtoupper($this->punchTypeLabel((string) $punch->punch_type)), 0, 1);
-
-        $pdf->Cell(50, 6, 'Método:', 0, 0);
-        $pdf->Cell(0, 6, $this->methodLabel((string) $punch->method), 0, 1);
-
-        $pdf->Cell(50, 6, 'NSR:', 0, 0);
-        $pdf->SetFont('courier', 'B', 10);
-        $pdf->Cell(0, 6, str_pad((string) $punch->nsr, 10, '0', STR_PAD_LEFT), 0, 1);
-
-        $pdf->SetFont('helvetica', '', 10);
-        $pdf->Cell(50, 6, 'Hash SHA-256:', 0, 0);
-        $pdf->SetFont('courier', '', 8);
-        $pdf->MultiCell(0, 6, $punch->hash, 0, 'L');
-        $pdf->Ln(3);
-
-        if (!empty($punch->location_lat) && !empty($punch->location_lng)) {
-            $pdf->SetFont('helvetica', '', 10);
-            $pdf->Cell(50, 6, 'Localização:', 0, 0);
-            $pdf->Cell(0, 6, sprintf('%.6f, %.6f', $punch->location_lat, $punch->location_lng), 0, 1);
-        }
-
-        $pdf->Ln(5);
-        $pdf->SetFont('helvetica', 'B', 11);
-        $pdf->Cell(0, 7, 'QR CODE PARA VALIDAÇÃO', 0, 1, 'C');
-
-        $qrData = json_encode([
-            'nsr' => $punch->nsr,
-            'employee_id' => $punch->employee_id,
-            'punch_time' => $punch->punch_time,
-            'hash' => $punch->hash,
-            'validation_url' => base_url('validate-punch/public/' . $punch->nsr),
-        ]);
-
-        $pdf->write2DBarcode((string) $qrData, 'QRCODE,L', 70, $pdf->GetY(), 60, 60, null, 'N');
-
-        $pdf->Ln(65);
-        $pdf->SetFont('helvetica', 'I', 9);
-        $pdf->MultiCell(0, 5, 'Escaneie o QR Code acima para validar a autenticidade deste comprovante online.', 0, 'C');
-        $pdf->Ln(5);
-
-        $pdf->SetFont('helvetica', '', 8);
-        $pdf->SetTextColor(100, 100, 100);
-        $pdf->MultiCell(0, 4, 'Este documento é válido sem assinatura conforme Portaria MTE nº 671/2021.', 0, 'C');
-        $pdf->MultiCell(0, 4, 'Registro INPI: ' . $inpiRegistry, 0, 'C');
-        $pdf->MultiCell(0, 4, 'Validação online: ' . base_url('validate-punch/public/' . $punch->nsr), 0, 'C');
-        $pdf->Ln(2);
-        $pdf->SetFont('helvetica', 'I', 7);
-        $pdf->MultiCell(0, 3, 'Sistema de Ponto Eletrônico - Emitido em ' . date('d/m/Y H:i:s'), 0, 'C');
+        $pdf->writeHTML($html, true, false, true, false, '');
 
         $year = date('Y', strtotime((string) $punch->punch_time));
         $month = date('m', strtotime((string) $punch->punch_time));
@@ -301,5 +212,95 @@ class TimePunchReceiptService
             'facial' => 'Reconhecimento Facial',
             'biometria' => 'Biometria (Digital)',
         ][$method] ?? $method;
+    }
+
+    /**
+     * Monta o HTML do comprovante — equivalente ao layout antes desenhado
+     * célula-a-célula via TCPDF (Cell/MultiCell), agora renderizado pelo
+     * Gotenberg (ver GotenbergPdfDocument). O QR code é gerado como PNG
+     * base64 embutido (mesma lib/opções usadas em QRCodeService), já que o
+     * write2DBarcode nativo do TCPDF não existe nesse novo motor.
+     */
+    private function buildReceiptHtml(object $punch, string $companyName, string $companyCNPJ, string $companyAddress, string $inpiRegistry): string
+    {
+        $logoPath = WRITEPATH . 'uploads/company_logo.png';
+        $logoHtml = '';
+        if (file_exists($logoPath)) {
+            $logoData = base64_encode((string) file_get_contents($logoPath));
+            $logoHtml = '<img src="data:image/png;base64,' . $logoData . '" style="height:22mm;display:block;margin:0 auto 3mm;">';
+        }
+
+        $validationUrl = base_url('validate-punch/public/' . $punch->nsr);
+        $qrData = json_encode([
+            'nsr' => $punch->nsr,
+            'employee_id' => $punch->employee_id,
+            'punch_time' => $punch->punch_time,
+            'hash' => $punch->hash,
+            'validation_url' => $validationUrl,
+        ]);
+
+        $qrOptions = new QROptions([
+            'version' => Version::AUTO,
+            'outputInterface' => QRGdImagePNG::class,
+            'eccLevel' => 'H',
+            'scale' => 6,
+            'outputBase64' => true,
+            'addQuietzone' => true,
+            'quietzoneSize' => 2,
+        ]);
+        $qrImage = (new QRCode($qrOptions))->render((string) $qrData);
+
+        $locationRow = '';
+        if (!empty($punch->location_lat) && !empty($punch->location_lng)) {
+            $locationRow = '<tr><td class="lbl">Localização:</td><td>' . sprintf('%.6f, %.6f', $punch->location_lat, $punch->location_lng) . '</td></tr>';
+        }
+
+        $h = '<style>';
+        $h .= 'body{font-family:helvetica,sans-serif;font-size:10pt;color:#111;text-align:center;}';
+        $h .= 'table{width:100%;border-collapse:collapse;text-align:left;margin-bottom:3mm;}';
+        $h .= 'td{padding:1.2mm 0;font-size:10pt;vertical-align:top;}';
+        $h .= '.lbl{width:45mm;color:#333;}';
+        $h .= '.section{font-weight:bold;font-size:11pt;text-align:left;margin:3mm 0 1mm;}';
+        $h .= '.title-bar{background:#0066cc;color:#fff;font-weight:bold;font-size:14pt;padding:4mm;margin:3mm 0;}';
+        $h .= '.mono{font-family:courier,monospace;}';
+        $h .= '.hash{font-family:courier,monospace;font-size:8pt;word-break:break-all;text-align:left;}';
+        $h .= '.muted{color:#666;font-size:8pt;}';
+        $h .= '.small{font-size:7pt;color:#666;}';
+        $h .= '</style>';
+
+        $h .= $logoHtml;
+        $h .= '<div style="font-size:16pt;font-weight:bold;">' . esc($companyName) . '</div>';
+        $h .= '<div style="font-size:10pt;">CNPJ: ' . esc($companyCNPJ) . '</div>';
+        $h .= '<div style="font-size:10pt;margin-bottom:3mm;">' . esc($companyAddress) . '</div>';
+
+        $h .= '<div class="title-bar">COMPROVANTE DE REGISTRO DE PONTO ELETRÔNICO</div>';
+
+        $h .= '<div class="section">DADOS DO FUNCIONÁRIO</div>';
+        $h .= '<table>';
+        $h .= '<tr><td class="lbl">Nome:</td><td>' . esc($punch->name) . '</td></tr>';
+        $h .= '<tr><td class="lbl">CPF:</td><td>' . esc($punch->cpf) . '</td></tr>';
+        $h .= '<tr><td class="lbl">Matrícula:</td><td>' . esc($punch->unique_code) . '</td></tr>';
+        $h .= '</table>';
+
+        $h .= '<div class="section">DADOS DO REGISTRO</div>';
+        $h .= '<table>';
+        $h .= '<tr><td class="lbl">Data/Hora:</td><td>' . date('d/m/Y H:i:s', strtotime((string) $punch->punch_time)) . '</td></tr>';
+        $h .= '<tr><td class="lbl">Tipo de Marcação:</td><td>' . esc(strtoupper($this->punchTypeLabel((string) $punch->punch_type))) . '</td></tr>';
+        $h .= '<tr><td class="lbl">Método:</td><td>' . esc($this->methodLabel((string) $punch->method)) . '</td></tr>';
+        $h .= '<tr><td class="lbl">NSR:</td><td class="mono">' . esc(str_pad((string) $punch->nsr, 10, '0', STR_PAD_LEFT)) . '</td></tr>';
+        $h .= '<tr><td class="lbl">Hash SHA-256:</td><td class="hash">' . esc((string) $punch->hash) . '</td></tr>';
+        $h .= $locationRow;
+        $h .= '</table>';
+
+        $h .= '<div class="section" style="text-align:center;">QR CODE PARA VALIDAÇÃO</div>';
+        $h .= '<img src="' . $qrImage . '" style="width:50mm;height:50mm;margin:2mm auto;display:block;">';
+        $h .= '<p style="font-style:italic;font-size:9pt;">Escaneie o QR Code acima para validar a autenticidade deste comprovante online.</p>';
+
+        $h .= '<p class="muted">Este documento é válido sem assinatura conforme Portaria MTE nº 671/2021.</p>';
+        $h .= '<p class="muted">Registro INPI: ' . esc($inpiRegistry) . '</p>';
+        $h .= '<p class="muted">Validação online: ' . esc($validationUrl) . '</p>';
+        $h .= '<p class="small">Sistema de Ponto Eletrônico - Emitido em ' . date('d/m/Y H:i:s') . '</p>';
+
+        return $h;
     }
 }

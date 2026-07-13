@@ -2,11 +2,9 @@
 
 namespace App\Services\Pdf;
 
-use TCPDF;
-
 class PdfFileExporter
 {
-    public function export(TCPDF $pdf, string $filename): array
+    public function export(GotenbergPdfDocument $pdf, string $filename): array
     {
         $year = date('Y');
         $month = date('m');

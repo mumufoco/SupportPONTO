@@ -2,13 +2,13 @@
 
 namespace App\Services\Warning\Pdf;
 
-use TCPDF;
+use App\Services\Pdf\GotenbergPdfDocument;
 
 class WarningPdfDocumentFactory
 {
-    public function create(string $companyName, string $issuerName, string $title, string $subject): TCPDF
+    public function create(string $companyName, string $issuerName, string $title, string $subject): GotenbergPdfDocument
     {
-        $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf = new GotenbergPdfDocument('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator($companyName);
         $pdf->SetAuthor($issuerName);
         $pdf->SetTitle($title);

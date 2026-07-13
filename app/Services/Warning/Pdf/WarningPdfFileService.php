@@ -2,8 +2,8 @@
 
 namespace App\Services\Warning\Pdf;
 
+use App\Services\Pdf\GotenbergPdfDocument;
 use App\Services\Warning\WarningPdfStorageService;
-use TCPDF;
 
 class WarningPdfFileService
 {
@@ -12,7 +12,7 @@ class WarningPdfFileService
         $this->storageService->ensureDirectory();
     }
 
-    public function save(TCPDF $pdf, int $warningId, bool $final): array
+    public function save(GotenbergPdfDocument $pdf, int $warningId, bool $final): array
     {
         $filename = ($final ? 'advertencia_final_' : 'advertencia_') . $warningId . '_' . time() . '.pdf';
         $filepath = $this->storageService->outputDirectory() . $filename;
