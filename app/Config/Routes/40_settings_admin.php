@@ -156,7 +156,10 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->post('backup/update', 'Admin\BackupController::update', ['as' => 'admin.settings.backup.update']);
     $routes->get('pwa', 'Admin\PwaController::index', ['as' => 'admin.settings.pwa']);
     $routes->post('pwa/update', 'Admin\PwaController::update', ['as' => 'admin.settings.pwa.update']);
-    $routes->post('pwa/upload-image', 'Admin\PwaController::uploadPwaImage', ['as' => 'admin.settings.pwa.upload-image']);
+    // Ícones 192/512 (mínimo para o PWA ser instalável) — substitui o antigo upload-image
+    // único ('pwa_icon', reaproveitado em ambos os tamanhos) por um upload real por tamanho.
+    $routes->post('pwa/icons/(:num)/upload', 'Admin\PwaController::uploadIcon/$1', ['as' => 'admin.settings.pwa.icon.upload']);
+    $routes->post('pwa/icons/(:num)/delete', 'Admin\PwaController::deleteIcon/$1', ['as' => 'admin.settings.pwa.icon.delete']);
     $routes->get('two-factor', 'Admin\TwoFactorController::index', ['as' => 'admin.settings.two-factor']);
     $routes->post('two-factor/update', 'Admin\TwoFactorController::update', ['as' => 'admin.settings.two-factor.update']);
     $routes->post('two-factor/generate-qr', 'Admin\TwoFactorController::generateQr', ['as' => 'admin.settings.two-factor.generate-qr']);

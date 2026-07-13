@@ -59,10 +59,13 @@ class ManifestGeneratorService
         $orientation = (string) ($pwa['pwa_orientation']      ?? 'any');
         $bgColor     = (string) ($pwa['pwa_background_color'] ?? '#ffffff');
         $themeColor  = (string) ($pwa['pwa_theme_color']      ?? '#4fa14f');
-        $iconPath    = (string) ($pwa['pwa_icon']             ?? '');
-        $shortcutIcon= (string) ($pwa['pwa_shortcut_icon']    ?? $iconPath);
+        $icon192     = (string) ($pwa['pwa_icon_192']         ?? '');
+        $icon512     = (string) ($pwa['pwa_icon_512']         ?? '');
+        // Ícone de atalho não tem upload próprio na tela — usa o 512 (ou o 192 se só
+        // esse existir) como o melhor substituto disponível.
+        $shortcutIcon = $icon512 !== '' ? $icon512 : $icon192;
 
-        $icons = $this->buildIconList($iconPath);
+        $icons = $this->buildIconList($icon192, $icon512);
 
         return [
             'name'             => $name,
@@ -85,7 +88,7 @@ class ManifestGeneratorService
         ];
     }
 
-    private function buildIconList(string $customIconPath): array
+    private function buildIconList(string $icon192Path, string $icon512Path): array
     {
         $staticBase = '/assets/img';
         $icons      = [];
@@ -100,24 +103,23 @@ class ManifestGeneratorService
             ];
         }
 
-        // For 192 and 512 prefer the custom uploaded icon
-        $customUrl = $this->resolveCustomIconUrl($customIconPath);
+        $custom192 = $this->resolveCustomIconUrl($icon192Path);
+        $custom512 = $this->resolveCustomIconUrl($icon512Path);
 
-        if ($customUrl !== null) {
-            // Custom icon covers 192 and 512 (browser scales as needed)
-            $icons[] = ['src' => $customUrl, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'];
-            $icons[] = ['src' => $customUrl, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'];
-            $icons[] = ['src' => $customUrl, 'sizes' => '384x384', 'type' => 'image/png', 'purpose' => 'any'];
-            $icons[] = ['src' => $customUrl, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'];
-            $icons[] = ['src' => $customUrl, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'];
-        } else {
-            // Fallback to static generated icons
-            foreach ([192, 384, 512] as $size) {
-                $icons[] = ['src' => "{$staticBase}/icon-{$size}.png", 'sizes' => "{$size}x{$size}", 'type' => 'image/png', 'purpose' => 'any'];
-            }
-            $icons[] = ['src' => "{$staticBase}/icon-192.png", 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'];
-            $icons[] = ['src' => "{$staticBase}/icon-512.png", 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'];
-        }
+        // 192: ícone real enviado pelo admin, senão o estático padrão.
+        $url192 = $custom192 ?? "{$staticBase}/icon-192.png";
+        $icons[] = ['src' => $url192, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'];
+        $icons[] = ['src' => $url192, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'];
+
+        // 384: sem slot próprio na tela — reaproveita o 512 (ou o 192) por ser maior
+        // que o alvo, algo que o navegador reduz bem; senão cai para o estático.
+        $url384 = $custom512 ?? $custom192 ?? "{$staticBase}/icon-384.png";
+        $icons[] = ['src' => $url384, 'sizes' => '384x384', 'type' => 'image/png', 'purpose' => 'any'];
+
+        // 512: ícone real enviado pelo admin, senão o estático padrão.
+        $url512 = $custom512 ?? "{$staticBase}/icon-512.png";
+        $icons[] = ['src' => $url512, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'];
+        $icons[] = ['src' => $url512, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'];
 
         return $icons;
     }
