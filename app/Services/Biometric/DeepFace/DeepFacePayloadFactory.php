@@ -20,11 +20,11 @@ class DeepFacePayloadFactory
         ];
     }
 
-    public function forVerify(int $employeeId, string $photoBase64): array
+    public function forVerify(string $photo1Base64, string $photo2Base64): array
     {
         return [
-            'employee_id' => $employeeId,
-            'photo' => $photoBase64,
+            'photo1' => $photo1Base64,
+            'photo2' => $photo2Base64,
         ];
     }
 

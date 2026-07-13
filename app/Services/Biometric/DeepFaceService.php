@@ -187,7 +187,16 @@ class DeepFaceService
             ];
         }
 
-        $response = $this->performPost('/verify', $this->payloadFactory->forVerify($employeeId, $photoBase64));
+        if (!$template->file_path || !file_exists($template->file_path)) {
+            return [
+                'success' => false,
+                'error' => 'Foto de cadastro facial não encontrada.',
+            ];
+        }
+
+        $enrolledPhotoBase64 = base64_encode((string) file_get_contents($template->file_path));
+
+        $response = $this->performPost('/verify', $this->payloadFactory->forVerify($photoBase64, $enrolledPhotoBase64));
 
         return $this->resultNormalizer->verify($response);
     }
