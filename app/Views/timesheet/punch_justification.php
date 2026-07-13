@@ -51,7 +51,6 @@
         <div class="card-body">
           <h5 class="card-title mb-4">Justificativa de Presença</h5>
 
-          <?= view('partials/flash_messages') ?>
 
           <form method="post" action="<?= sp_timesheet_justify_submit_url() ?>">
             <?php if (!empty($attemptLog)): ?>

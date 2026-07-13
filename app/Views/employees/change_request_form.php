@@ -19,7 +19,6 @@ $fields = $allowedFields ?? [];
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <?php if (!empty($pending)): ?>
     <div class="alert alert-warning d-flex gap-2 align-items-start">

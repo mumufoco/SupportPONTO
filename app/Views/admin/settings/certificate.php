@@ -12,7 +12,6 @@
                                             ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <?php if (!empty($certificate_info)): ?>
     <div class="sp-card mb-3">

@@ -94,7 +94,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <form method="POST"
           action="<?= sp_route_url('settings.holidays.update', (int) $holiday->id) ?>"

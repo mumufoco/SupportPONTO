@@ -36,7 +36,6 @@ $pending = array_filter($requests, fn($r) => ($r->status ?? '') === 'pending');
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Contadores -->
     <div class="row g-3 mb-4">

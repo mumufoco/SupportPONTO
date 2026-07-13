@@ -9,7 +9,6 @@
         'icon'     => 'bi bi-phone-fill',
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Status do PWA -->
     <?php

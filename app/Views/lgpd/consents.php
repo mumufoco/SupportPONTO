@@ -45,7 +45,6 @@ const CONSENT_TERMS = <?= json_encode(array_map(function($t) {
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Aviso de toast -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">

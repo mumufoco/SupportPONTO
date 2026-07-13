@@ -12,7 +12,6 @@
         'actions'  => [],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <?php
         $countAprov      = count($employees ?? []);

@@ -39,7 +39,17 @@ $iconColor = $iconColor ?? 'primary'; // primary, accent, warning, danger
 ?>
 
 <div class="card <?= $type === 'kpi' ? 'card-kpi' : '' ?> <?= $classes ?>" <?= $id ? 'id="' . esc($id) . '"' : '' ?>>
-    <?php if ($title || $extra): ?>
+    <?php /*
+     * Cards do tipo 'kpi' nunca usam $title/$extra no próprio design (só value/
+     * label/indicator) — nenhum call site do app passa 'title' para este
+     * componente com type=kpi. A checagem "$type !== 'kpi'" existe porque
+     * CodeIgniter\View com saveData=true (padrão do framework) faz o $title da
+     * view de página (ex.: controller passando 'title' => 'Nome da Página')
+     * vazar para dentro de qualquer view('components/...') chamada depois,
+     * dentro do mesmo request — sem essa guarda, todo kpi-card herdava e
+     * exibia o título da página inteira como cabeçalho do card.
+     */ ?>
+    <?php if (($title || $extra) && $type !== 'kpi'): ?>
         <div class="card-header">
             <div class="card-header-title">
                 <?php if ($icon): ?>

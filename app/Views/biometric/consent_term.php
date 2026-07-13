@@ -3,7 +3,6 @@
 <?= $this->section('content') ?>
 
 <div class="container py-4" style="max-width:820px;">
-    <?= view('components/flash_messages') ?>
 
     <div class="card border-0 shadow">
         <div class="card-header bg-primary text-white py-3">

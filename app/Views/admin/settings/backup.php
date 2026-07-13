@@ -12,7 +12,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <form action="<?= sp_safe_url(sp_route_url('admin.settings.backup.update')) ?>" method="POST">
         <?= csrf_field() ?>

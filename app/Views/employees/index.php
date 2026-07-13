@@ -16,7 +16,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <div class="sp-card">
         <div class="sp-card-header">

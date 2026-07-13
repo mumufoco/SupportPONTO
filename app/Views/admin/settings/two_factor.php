@@ -14,7 +14,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Status -->
     <?php

@@ -9,7 +9,6 @@
     'icon'     => 'bi bi-person-circle',
 ]) ?>
 
-<?= view('components/flash_messages') ?>
 
 <div class="row g-4">
 

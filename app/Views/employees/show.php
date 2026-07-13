@@ -76,7 +76,6 @@ $uploadUrl            = site_url('employees/' . ($emp->id ?? '') . '/photo');
         'actions'  => [],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Alerta: sem foto -->
     <?php if ($canUploadPhoto && !$hasPhoto): ?>

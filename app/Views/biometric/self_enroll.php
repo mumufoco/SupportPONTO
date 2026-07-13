@@ -76,7 +76,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <?php
     // Status geral

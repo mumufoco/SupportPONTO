@@ -7,7 +7,6 @@
       <div class="sp-card p-4">
         <h1 class="h4 mb-3"><i data-lucide="shield-check"></i> Gerenciar autentica&ccedil;&atilde;o em duas etapas</h1>
 
-        <?= view('components/flash_messages') ?>
 
         <?php if ((bool) ($employee->two_factor_enabled ?? false)): ?>
           <div class="alert alert-success">2FA est&aacute; habilitado para <strong><?= esc($employee->email ?? '') ?></strong>.</div>

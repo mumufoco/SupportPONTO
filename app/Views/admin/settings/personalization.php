@@ -10,7 +10,6 @@
         'actions'  => [],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <div id="personalizationToast" style="position:fixed;top:1rem;right:1rem;z-index:9999;min-width:300px"></div>
 

@@ -36,7 +36,6 @@ $statusClass = ['integrated' => 'bg-success', 'selfservice' => 'bg-info text-dar
                     ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Visão geral dos 6 tipos -->
     <div class="row g-3 mb-4">

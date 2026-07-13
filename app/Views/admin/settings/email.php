@@ -12,7 +12,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Servidor SMTP -->
     <div class="sp-card mb-3">

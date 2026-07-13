@@ -12,7 +12,6 @@
                                             ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <div class="sp-callout-info mb-3">
         <strong><i class="bi bi-info-circle-fill me-2"></i>Quando declarar uma alteração cadastral</strong>

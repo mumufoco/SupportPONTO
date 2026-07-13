@@ -19,7 +19,6 @@ $reqs  = $requests ?? [];
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <div class="sp-data-card">
         <div class="sp-data-card__body p-0">

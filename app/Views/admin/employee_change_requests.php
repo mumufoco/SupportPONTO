@@ -12,7 +12,6 @@
         'actions'  => [],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <?php
     $pending  = array_filter($reqs, fn($r) => $r->status === 'pending');

@@ -111,7 +111,6 @@ $enrolledFingers = array_values(array_filter(array_map(
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Status strip -->
     <div class="sp-data-card">

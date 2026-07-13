@@ -12,7 +12,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Filtros -->
     <div class="card border-0 shadow-sm mb-4">

@@ -29,7 +29,6 @@ $statusBadge = [
         'actions'  => [],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- KPIs colaboradores -->
     <div class="row g-3 mb-3">

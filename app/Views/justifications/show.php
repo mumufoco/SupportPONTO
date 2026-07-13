@@ -209,7 +209,6 @@ $empInitials = $empName
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Hero de status -->
     <div class="sp-just-hero sp-just-hero--<?= esc($statusInfo['hero']) ?>">

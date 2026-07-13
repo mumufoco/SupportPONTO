@@ -9,7 +9,6 @@
         <span class="badge bg-warning text-dark fs-6"><?= count($pendingList) ?> pendente(s)</span>
     </div>
 
-    <?= view('components/flash_messages') ?>
 
     <div id="panelFeedback" aria-live="polite"></div>
 

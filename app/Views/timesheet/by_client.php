@@ -15,7 +15,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <!-- Filtros -->
     <div class="sp-filter-shell mb-4">

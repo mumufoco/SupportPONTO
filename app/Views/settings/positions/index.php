@@ -14,7 +14,6 @@
         ],
     ]) ?>
 
-    <?= view('components/flash_messages') ?>
 
     <div class="card shadow-sm">
         <div class="card-body">
