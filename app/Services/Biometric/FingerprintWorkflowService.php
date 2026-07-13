@@ -238,12 +238,25 @@ class FingerprintWorkflowService
 
     private function hasConsent(int $employeeId): bool
     {
+        // Aceita o consentimento específico de digital OU o termo genérico
+        // "biometric_data" (gravado pelo autocadastro em /minha-biometria, que
+        // cobre facial e digital) — mesmo fallback já usado em
+        // FaceRecognitionWorkflowService e ApiFingerprintBiometricService.
+        // Sem isso, um colaborador que já aceitou o termo genérico e usa
+        // facial normalmente era barrado aqui com "consentimento não
+        // concedido" ao tentar cadastrar a digital.
         return $this->consentModel
-            ->where('employee_id', $employeeId)
-            ->where('consent_type', 'biometric_fingerprint')
-            ->where('granted', true)
-            ->where('revoked_at', null)
-            ->first() !== null;
+                ->where('employee_id', $employeeId)
+                ->where('consent_type', 'biometric_fingerprint')
+                ->where('granted', true)
+                ->where('revoked_at', null)
+                ->first() !== null
+            || $this->consentModel
+                ->where('employee_id', $employeeId)
+                ->where('consent_type', 'biometric_data')
+                ->where('granted', true)
+                ->where('revoked_at', null)
+                ->first() !== null;
     }
 
     private function compareFingerprints(string $template1, string $template2): float

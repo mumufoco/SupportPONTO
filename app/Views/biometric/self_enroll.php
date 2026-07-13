@@ -194,6 +194,18 @@
                     Posicione o rosto dentro da moldura oval. Mantenha boa iluminação e olhe diretamente para a câmera.
                 </p>
 
+                <!-- Dicas para uma boa foto -->
+                <div class="alert alert-light border small mb-3" id="faceTipsBox">
+                    <div class="fw-semibold mb-1"><i class="bi bi-lightbulb me-1"></i>Dicas para uma boa foto</div>
+                    <ul class="mb-0 ps-3">
+                        <li>Fique a uma distância de braço da câmera (cerca de 40-50cm)</li>
+                        <li>Olhe diretamente para a câmera, sem inclinar ou girar a cabeça</li>
+                        <li>Centralize o rosto dentro da moldura oval</li>
+                        <li>Ambiente bem iluminado, sem luz forte atrás de você</li>
+                        <li>Retire óculos escuros, boné ou qualquer objeto cobrindo o rosto</li>
+                    </ul>
+                </div>
+
                 <!-- Câmera com overlay oval -->
                 <div class="sp-camera-wrap mb-3" id="cameraWrap">
                     <video id="spVideo" autoplay muted playsinline></video>
@@ -465,6 +477,52 @@ function activateStep(stepId) {
     let captureCanvas = null;
     let overlayRaf = null;
 
+    // Detecção de posição do rosto (afastar/aproximar/centralizar) via Shape
+    // Detection API — disponível em navegadores Chromium. Quando indisponível,
+    // a análise cai de volta para só o heurístico de brilho (comportamento
+    // anterior), sem quebrar nada.
+    const hasFaceDetector = 'FaceDetector' in window;
+    const faceDetector = hasFaceDetector ? new FaceDetector({ fastMode: true, maxDetectedFaces: 1 }) : null;
+    let faceDetectBusy = false;
+    let lastFaceHint = null;
+    let lastFaceHintAt = 0;
+
+    function detectFacePositionAsync() {
+        if (!faceDetector || faceDetectBusy || !captureCanvas || captureCanvas.width === 0) return;
+        faceDetectBusy = true;
+        faceDetector.detect(captureCanvas).then(faces => {
+            faceDetectBusy = false;
+            const W = captureCanvas.width, H = captureCanvas.height;
+            if (!faces || faces.length === 0) {
+                lastFaceHint = { guide: 'Nenhum rosto detectado — posicione seu rosto dentro do oval', ok: false };
+                return;
+            }
+            const box = faces[0].boundingBox;
+            const faceCx = box.x + box.width / 2;
+            const faceCy = box.y + box.height / 2;
+            const ovalCx = W / 2, ovalCy = H * 0.46;
+            const offsetX = Math.abs(faceCx - ovalCx) / W;
+            const offsetY = Math.abs(faceCy - ovalCy) / H;
+            const faceHeightRatio = box.height / H;
+
+            if (faceHeightRatio < 0.32) {
+                lastFaceHint = { guide: 'Aproxime-se mais da câmera', ok: false };
+            } else if (faceHeightRatio > 0.70) {
+                lastFaceHint = { guide: 'Afaste-se um pouco da câmera', ok: false };
+            } else if (offsetX > 0.14 || offsetY > 0.14) {
+                lastFaceHint = { guide: 'Centralize o rosto dentro da moldura oval', ok: false };
+            } else {
+                lastFaceHint = { guide: null, ok: true };
+            }
+            lastFaceHintAt = Date.now();
+        }).catch(() => {
+            faceDetectBusy = false;
+            // Shape Detection pode falhar silenciosamente em alguns navegadores
+            // (ex.: modelo ainda não carregado) — apenas ignora e segue com o
+            // heurístico de brilho.
+        });
+    }
+
     /* ── Overlay oval na câmera ────────────────────────── */
     function drawOval(ovalColor, quality) {
         if (!overlay || !video) return;
@@ -546,6 +604,25 @@ function activateStep(stepId) {
             if (score >= 75) { color = '#22c55e'; label = 'Ótima'; guide = 'Perfeito! Clique em Capturar foto'; }
             else if (score >= 55) { color = '#f59e0b'; label = 'Boa'; guide = 'Boa iluminação — continue assim'; }
             else { color = '#ef4444'; label = 'Ruim'; guide = brightness < 40 ? 'Muito escuro — acenda a luz' : 'Muito claro — evite luz direta'; }
+        }
+
+        // Dispara detecção de posição do rosto de tempos em tempos (não a cada
+        // frame, para não sobrecarregar) — quando disponível no navegador.
+        if (hasFaceDetector) {
+            detectFacePositionAsync();
+            // Hint de posição (distância/centralização) tem prioridade sobre o
+            // de iluminação enquanto for recente (< 1.5s) — evita competir com
+            // a mensagem de brilho quando ambos teriam algo a dizer.
+            if (lastFaceHint && (Date.now() - lastFaceHintAt) < 1500) {
+                if (!lastFaceHint.ok) {
+                    guide = lastFaceHint.guide;
+                    color = '#ef4444';
+                    score = Math.min(score, 30);
+                    label = 'Reposicione';
+                } else if (score >= 75) {
+                    guide = 'Perfeito! Clique em Capturar foto';
+                }
+            }
         }
 
         drawOval(color, score);

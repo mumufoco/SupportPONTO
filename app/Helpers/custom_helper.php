@@ -279,6 +279,16 @@ if (!function_exists('get_user_agent')) {
     function get_user_agent(): string
     {
         $request = \Config\Services::request();
+
+        // Fora de um request HTTP real (worker de fila via CLI, spark, etc.),
+        // $request é um CLIRequest — que não implementa getUserAgent() e
+        // derrubava com fatal error qualquer processamento assíncrono que
+        // passasse por aqui (ex.: cadastro facial, sempre processado pelo
+        // worker `jobs:process`, nunca em contexto web).
+        if (! ($request instanceof \CodeIgniter\HTTP\IncomingRequest)) {
+            return $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+        }
+
         return $request->getUserAgent()->getAgentString();
     }
 }
