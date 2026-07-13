@@ -62,3 +62,7 @@ $routes->get('biometric/consent-terms/pdf/(:num)', 'Biometric\BiometricConsentCo
 // Consent term gate generico por tipo
 $routes->get('biometric/consent-term/(:segment)/(:num)', 'Biometric\BiometricConsentController::showForEmployeeByType/$2/$1', ['as' => 'biometric.consent.term.typed', 'filter' => ['auth', 'role:admin,rh,gestor']]);
 $routes->post('biometric/consent-term/(:segment)/(:num)/accept', 'Biometric\BiometricConsentController::acceptForEmployeeByType/$2/$1', ['as' => 'biometric.consent.term.typed.accept', 'filter' => ['auth', 'role:admin,rh,gestor']]);
+
+// Alertas de possível fraude na segunda camada de verificação facial (código/CPF/QR/digital)
+$routes->get('admin/facial-fraud-alerts', 'Admin\FacialFraudAlertController::index', ['as' => 'admin.facial.fraud.alerts', 'filter' => ['auth', 'role:admin,rh,gestor,dpo']]);
+$routes->post('admin/facial-fraud-alerts/(:num)/review', 'Admin\FacialFraudAlertController::review/$1', ['as' => 'admin.facial.fraud.alerts.review', 'filter' => ['auth', 'role:admin,rh,gestor,dpo']]);

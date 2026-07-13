@@ -8,6 +8,7 @@ use App\Enums\PunchType;
 use App\Events\TimePunchRegistered;
 use App\Models\AuditModel;
 use App\Models\EmployeeModel;
+use App\Models\FacialFraudAlertModel;
 use App\Models\HolidayModel;
 use App\Models\SettingModel;
 use App\Models\TimePunchModel;
@@ -34,6 +35,7 @@ class TimesheetPunchRegistrationService
         private readonly GeolocationService $geolocationService = new GeolocationService(),
         private readonly DeepFaceService $deepFaceService = new DeepFaceService(),
         private readonly RateLimitService $rateLimitService = new RateLimitService(),
+        private readonly FacialFraudAlertModel $facialFraudAlertModel = new FacialFraudAlertModel(),
     ) {
     }
 
@@ -93,6 +95,7 @@ class TimesheetPunchRegistrationService
             }
 
             $additionalData = $command->additionalData;
+            $fraudAlert = null;
             if ($resolvedMethod === PunchMethod::Facial) {
                 $faceResult = $this->validateFacialPunch($command);
                 if (! ($faceResult['success'] ?? false)) {
@@ -116,6 +119,16 @@ class TimesheetPunchRegistrationService
 
                 if (isset($secondFactor['similarity'])) {
                     $additionalData['face_second_factor_similarity'] = $secondFactor['similarity'];
+                }
+
+                if ($secondFactor['fraud_suspected'] ?? false) {
+                    // Não entra em $additionalData: é um sinal de controle interno, não
+                    // uma coluna de time_punches. Registrado à parte em facial_fraud_alerts
+                    // depois que o ponto for gravado com sucesso (precisa do punch_id).
+                    $fraudAlert = [
+                        'similarity_score' => $secondFactor['similarity'] ?? null,
+                        'threshold_used' => $secondFactor['threshold'] ?? null,
+                    ];
                 }
             }
 
@@ -160,6 +173,10 @@ class TimesheetPunchRegistrationService
                 "Ponto registrado via {$command->source}: {$resolvedPunchType->value} via {$resolvedMethod->value}",
                 'info'
             );
+
+            if ($fraudAlert !== null) {
+                $this->recordFraudAlert($command, $resolvedMethod, $punchId, $fraudAlert);
+            }
 
             $this->triggerPunchRegisteredEvent($employee, $punch);
 
@@ -327,14 +344,58 @@ class TimesheetPunchRegistrationService
         }
 
         if (! ($result['verified'] ?? false)) {
-            return $this->failure(
-                'A foto não corresponde ao cadastro biométrico deste colaborador. Registro não efetuado — procure seu gestor ou RH se acredita que isso é um erro.',
-                403,
-                ['face_second_factor' => 'mismatch']
-            );
+            // Mudança de comportamento a pedido: NÃO bloqueia o registro. A foto não
+            // corresponder ao cadastro biométrico não impede a marcação (o funcionário
+            // já foi identificado pelo método principal) — em vez disso, o ponto é
+            // registrado normalmente e um alerta de possível fraude fica registrado
+            // para revisão de gestor/RH (ver facial_fraud_alerts / register()).
+            return [
+                'success' => true,
+                'similarity' => $result['similarity'] ?? null,
+                'threshold' => $result['threshold'] ?? null,
+                'fraud_suspected' => true,
+            ];
         }
 
-        return ['success' => true, 'similarity' => $result['similarity'] ?? null];
+        return ['success' => true, 'similarity' => $result['similarity'] ?? null, 'threshold' => $result['threshold'] ?? null];
+    }
+
+    /**
+     * Registra o alerta de possível fraude sem interromper o registro do ponto
+     * (o ponto já foi gravado com sucesso a esta altura). Falha ao gravar o
+     * alerta é apenas logada — não pode reverter ou impedir a marcação já
+     * concluída.
+     */
+    private function recordFraudAlert(PunchRegistrationCommand $command, PunchMethod $resolvedMethod, int $punchId, array $fraudAlert): void
+    {
+        try {
+            $this->facialFraudAlertModel->record([
+                'employee_id' => $command->employeeId,
+                'time_punch_id' => $punchId,
+                'method' => $resolvedMethod->value,
+                'similarity_score' => $fraudAlert['similarity_score'],
+                'threshold_used' => $fraudAlert['threshold_used'],
+                'ip_address' => $command->ipAddress ?: (function_exists('get_client_ip') ? get_client_ip() : null),
+                'user_agent' => $command->userAgent ?: (function_exists('get_user_agent') ? get_user_agent() : null),
+            ]);
+
+            $this->auditModel->log(
+                $command->employeeId,
+                'FACIAL_FRAUD_SUSPECTED',
+                'time_punches',
+                $punchId,
+                null,
+                [
+                    'method' => $resolvedMethod->value,
+                    'similarity' => $fraudAlert['similarity_score'],
+                    'threshold' => $fraudAlert['threshold_used'],
+                ],
+                'Foto de verificação facial não corresponde ao cadastro biométrico — ponto registrado normalmente, alerta gerado para revisão.',
+                'warning'
+            );
+        } catch (\Throwable $e) {
+            log_message('error', 'Falha ao registrar alerta de fraude facial: ' . $e->getMessage());
+        }
     }
 
     private function failure(string $message, int $status, ?array $errors = null): array
