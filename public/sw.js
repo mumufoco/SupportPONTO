@@ -2,7 +2,7 @@
 // Version: 1.1.500
 // Description: Professional PWA with advanced caching, offline support, and background sync
 
-const CACHE_VERSION = '1.1.500-nocache';
+const CACHE_VERSION = '1.1.501-nocache';
 const CACHE_PREFIX = 'supportponto';
 const CACHE_CORE = `${CACHE_PREFIX}-core-v${CACHE_VERSION}`;
 const CACHE_STATIC = `${CACHE_PREFIX}-static-v${CACHE_VERSION}`;
@@ -55,6 +55,10 @@ const NETWORK_ONLY_PATTERNS = [
   /\/geofences/,
   /\/profile/,
   /\/organizational/,
+  /\/biometric/,
+  /\/acesso/,
+  /\/minha-biometria/,
+  /\/perfil/,
 ];
 
 // Offline fallback pages
