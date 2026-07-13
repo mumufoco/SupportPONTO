@@ -50,6 +50,7 @@
                         <tr>
                             <th class="ps-3">Colaborador</th>
                             <th>Método</th>
+                            <th>Motivo</th>
                             <th>Similaridade</th>
                             <th>Data</th>
                             <th>Status</th>
@@ -58,12 +59,22 @@
                     </thead>
                     <tbody>
                     <?php foreach ($rows as $r): ?>
+                    <?php
+                        $reason = $r->reason ?? 'mismatch';
+                        $reasonLabel = [
+                            'mismatch' => 'Foto não corresponde',
+                            'no_photo' => 'Falha técnica (sem foto)',
+                            'service_error' => 'Serviço indisponível',
+                        ][$reason] ?? $reason;
+                        $reasonBadgeClass = $reason === 'mismatch' ? 'bg-danger' : 'bg-secondary';
+                    ?>
                     <tr>
                         <td class="ps-3">
                             <div class="fw-semibold"><?= esc($r->employee_name ?? '—') ?></div>
                             <div class="small text-muted"><?= esc($r->employee_code ?? '') ?></div>
                         </td>
                         <td class="small text-uppercase"><?= esc($r->method ?? '—') ?></td>
+                        <td class="small"><span class="badge <?= $reasonBadgeClass ?>"><?= esc($reasonLabel) ?></span></td>
                         <td class="small">
                             <?php if ($r->similarity_score !== null): ?>
                                 <?= number_format((float) $r->similarity_score, 4) ?>

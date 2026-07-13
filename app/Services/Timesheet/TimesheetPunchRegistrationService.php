@@ -128,6 +128,7 @@ class TimesheetPunchRegistrationService
                     $fraudAlert = [
                         'similarity_score' => $secondFactor['similarity'] ?? null,
                         'threshold_used' => $secondFactor['threshold'] ?? null,
+                        'reason' => $secondFactor['fraud_reason'] ?? 'mismatch',
                     ];
                 }
             }
@@ -306,12 +307,18 @@ class TimesheetPunchRegistrationService
      */
     private function validateFaceSecondFactor(PunchRegistrationCommand $command): array
     {
+        // Falha técnica de captura (sem câmera, permissão negada, app antigo em
+        // cache, etc.): não há como distinguir isso, no backend, de uma tentativa
+        // deliberada de pular a verificação — então, em vez de travar o
+        // colaborador (o que impedia QUALQUER registro de ponto quando a foto
+        // não chegava), libera o ponto e gera um alerta para revisão de
+        // gestor/RH, mesmo tratamento dado ao caso de "foto não bate".
         if (! $command->photo) {
-            return $this->failure(
-                'Verificação facial de segurança é obrigatória para concluir este registro.',
-                400,
-                ['face_second_factor' => 'photo_required']
-            );
+            return [
+                'success' => true,
+                'fraud_suspected' => true,
+                'fraud_reason' => 'no_photo',
+            ];
         }
 
         $limitInfo = $this->rateLimitService->attempt(
@@ -326,8 +333,16 @@ class TimesheetPunchRegistrationService
         try {
             $result = $this->deepFaceService->verifyFace($command->employeeId, (string) $command->photo);
         } catch (\Throwable $e) {
+            // Indisponibilidade do serviço DeepFace (rede, timeout, fora do ar):
+            // é uma falha de infraestrutura, não um sinal de fraude — não pode
+            // derrubar o registro de ponto da empresa inteira enquanto o
+            // serviço estiver instável. Libera e sinaliza para revisão.
             log_message('error', 'Face second-factor verification failed: ' . $e->getMessage());
-            return $this->failure('Erro ao verificar identidade facial. Tente novamente.', 500, ['face_second_factor' => 'service_error']);
+            return [
+                'success' => true,
+                'fraud_suspected' => true,
+                'fraud_reason' => 'service_error',
+            ];
         }
 
         if (! ($result['success'] ?? false)) {
@@ -340,7 +355,13 @@ class TimesheetPunchRegistrationService
                 );
             }
 
-            return $this->failure($error !== '' ? $error : 'Erro ao verificar identidade facial.', 500, ['face_second_factor' => 'service_error']);
+            // Erro retornado pelo próprio DeepFace (não uma exceção de rede) —
+            // mesma lógica: infraestrutura, não fraude, não pode travar o ponto.
+            return [
+                'success' => true,
+                'fraud_suspected' => true,
+                'fraud_reason' => 'service_error',
+            ];
         }
 
         if (! ($result['verified'] ?? false)) {
@@ -354,6 +375,7 @@ class TimesheetPunchRegistrationService
                 'similarity' => $result['similarity'] ?? null,
                 'threshold' => $result['threshold'] ?? null,
                 'fraud_suspected' => true,
+                'fraud_reason' => 'mismatch',
             ];
         }
 
@@ -368,16 +390,25 @@ class TimesheetPunchRegistrationService
      */
     private function recordFraudAlert(PunchRegistrationCommand $command, PunchMethod $resolvedMethod, int $punchId, array $fraudAlert): void
     {
+        $reason = $fraudAlert['reason'] ?? 'mismatch';
+
         try {
             $this->facialFraudAlertModel->record([
                 'employee_id' => $command->employeeId,
                 'time_punch_id' => $punchId,
                 'method' => $resolvedMethod->value,
+                'reason' => $reason,
                 'similarity_score' => $fraudAlert['similarity_score'],
                 'threshold_used' => $fraudAlert['threshold_used'],
                 'ip_address' => $command->ipAddress ?: (function_exists('get_client_ip') ? get_client_ip() : null),
                 'user_agent' => $command->userAgent ?: (function_exists('get_user_agent') ? get_user_agent() : null),
             ]);
+
+            $description = match ($reason) {
+                'no_photo' => 'Verificação facial não recebeu foto (possível falha técnica de câmera) — ponto registrado normalmente, alerta gerado para revisão.',
+                'service_error' => 'Serviço de verificação facial indisponível no momento do registro — ponto registrado normalmente, alerta gerado para revisão.',
+                default => 'Foto de verificação facial não corresponde ao cadastro biométrico — ponto registrado normalmente, alerta gerado para revisão.',
+            };
 
             $this->auditModel->log(
                 $command->employeeId,
@@ -387,10 +418,11 @@ class TimesheetPunchRegistrationService
                 null,
                 [
                     'method' => $resolvedMethod->value,
+                    'reason' => $reason,
                     'similarity' => $fraudAlert['similarity_score'],
                     'threshold' => $fraudAlert['threshold_used'],
                 ],
-                'Foto de verificação facial não corresponde ao cadastro biométrico — ponto registrado normalmente, alerta gerado para revisão.',
+                $description,
                 'warning'
             );
         } catch (\Throwable $e) {

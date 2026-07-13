@@ -22,6 +22,7 @@ class FacialFraudAlertModel extends Model
         'employee_id',
         'time_punch_id',
         'method',
+        'reason',
         'similarity_score',
         'threshold_used',
         'ip_address',
@@ -36,6 +37,10 @@ class FacialFraudAlertModel extends Model
     public const STATUS_PENDING   = 'pending';
     public const STATUS_REVIEWED  = 'reviewed';
     public const STATUS_DISMISSED = 'dismissed';
+
+    public const REASON_MISMATCH      = 'mismatch';
+    public const REASON_NO_PHOTO      = 'no_photo';
+    public const REASON_SERVICE_ERROR = 'service_error';
 
     public function record(array $data): bool
     {
