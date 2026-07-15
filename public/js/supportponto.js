@@ -401,7 +401,7 @@ if (document.readyState === 'loading') {
     applyCollapsedState(sidebar);
 
     // Toggle button
-    var toggles = document.querySelectorAll('[data-sidebar-toggle]');
+    var toggles = document.querySelectorAll('[data-sidebar-toggle], #appSidebarCollapseTop, #appSidebarCollapseBottom');
     toggles.forEach(function (btn) {
       btn.addEventListener('click', function () {
         if (isDesktop()) {
