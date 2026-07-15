@@ -121,7 +121,6 @@ $menuStructure = [
                 ['label' => 'Autenticação',       'icon' => 'lock',         'url' => route_to('admin.settings.authentication')],
                 ['label' => '2FA',                'icon' => 'shield-check', 'url' => route_to('admin.settings.two-factor')],
                 ['label' => 'Segurança',          'icon' => 'shield-alert', 'url' => route_to('admin.settings.security')],
-                ['label' => 'Certificado',        'icon' => 'award',        'url' => route_to('admin.settings.certificate')],
                 ['label' => 'Níveis de acesso',   'icon' => 'users',        'url' => route_to('settings.roles')],
                 ['label' => 'Saúde do sistema',   'icon' => 'activity',     'url' => route_to('admin.health')],
                 ['label' => 'Métricas',            'icon' => 'bar-chart',   'url' => route_to('admin.metrics')],

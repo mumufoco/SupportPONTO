@@ -128,11 +128,6 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->get('security/audit-logs', 'Admin\SecurityController::auditLogs', ['as' => 'admin.settings.security.audit-logs']);
     $routes->post('security/backup', 'Admin\SecurityController::backup', ['as' => 'admin.settings.security.backup', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->post('security/reset', 'Admin\SecurityController::reset', ['as' => 'admin.settings.security.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
-    $routes->get('certificate', 'Admin\CertificateController::index', ['as' => 'admin.settings.certificate']);
-    $routes->post('certificate/update', 'Admin\CertificateController::update', ['as' => 'admin.settings.certificate.update', 'filter' => ['auth', 'admin', 'stepup:back']]);
-    $routes->post('certificate/test', 'Admin\CertificateController::test', ['as' => 'admin.settings.certificate.test', 'filter' => ['auth', 'admin', 'stepup:back']]);
-    $routes->post('certificate/remove', 'Admin\CertificateController::remove', ['as' => 'admin.settings.certificate.remove', 'filter' => ['auth', 'admin', 'stepup:back']]);
-    $routes->post('certificate/reset', 'Admin\CertificateController::reset', ['as' => 'admin.settings.certificate.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->get('clock-adjustments', 'Admin\ClockAdjustmentController::index', ['as' => 'admin.clock-adjustments']);
     $routes->post('clock-adjustments/store', 'Admin\ClockAdjustmentController::store', ['as' => 'admin.clock-adjustments.store']);
     $routes->get('company-record-events', 'Admin\CompanyRecordEventController::index', ['as' => 'admin.company-record-events']);

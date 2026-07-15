@@ -70,13 +70,6 @@ class PendingCenterService
                 'desc'  => 'Marcações sem par de entrada/saída no dia atual.',
                 'url'   => sp_timesheet_history_url(),
             ],
-            [
-                'icon'  => 'bi bi-patch-check-fill',
-                'count' => $this->countCertificateIssues(),
-                'label' => 'Certificado digital',
-                'desc'  => 'Certificado ausente ou com configuração pendente.',
-                'url'   => sp_admin_settings_certificate_url(),
-            ],
         ];
     }
 
@@ -159,20 +152,5 @@ class PendingCenterService
         }
     }
 
-    /**
-     * Retorna 1 se o certificado digital não estiver configurado, 0 caso contrário.
-     * Não expõe detalhes do certificado — apenas sinaliza ausência de configuração.
-     */
-    private function countCertificateIssues(): int
-    {
-        try {
-            $certPath = $this->settingModel->get('certificate_path');
-            return (empty($certPath) || !file_exists(ROOTPATH . ltrim((string) $certPath, '/'))) ? 1 : 0;
-        } catch (\Throwable $e) {
-            log_structured('warning', 'pending_center.certificate_check_failed',
-                ['error' => $e->getMessage()]);
-            return 0;
-        }
-    }
 }
 

@@ -459,10 +459,6 @@ class ReleaseGateService
         ], static fn (string $p): bool => file_exists($p));
         $checks[] = $this->staticCheck('docker_cleanup_complete', 'Nenhum resíduo de Docker/pgAdmin/artifact-manifest permanece no repositório', $dockerResidue === [], 'A limpeza completa da arquitetura Docker deve ser definitiva — nenhum docker-compose*.yml, docker/ ou artifact-manifest.json pode voltar a existir no repositório.');
 
-        $warningPath = ROOTPATH . 'app/Services/Warning/WarningPdfSignatureService.php';
-        $warning = is_file($warningPath) ? (string) file_get_contents($warningPath) : '';
-        $checks[] = $this->staticCheck('warning_pdf_bootstrap', 'WarningPdfSignatureService usa BootstrapEnv para credenciais ICP-Brasil', str_contains($warning, 'BootstrapEnv::get') && ! str_contains($warning, 'getenv('), 'O serviço de assinatura PDF deve seguir o bootstrap canônico.');
-
         return $this->closureAuditResult('246-249', $checks);
     }
 
@@ -499,9 +495,12 @@ class ReleaseGateService
 
         $checks[] = $this->staticCheck('employee_schema_alignment', 'EmployeeModel e AdminUserSeeder suportam campos canônicos e aliases', str_contains($employeeModel, 'expected_hours_daily') && str_contains($employeeModel, 'work_schedule_start') && str_contains($adminSeeder, 'expected_hours_daily') && str_contains($adminSeeder, 'EmployeeModel'), 'Seeder e model devem compartilhar o mesmo contrato funcional para o admin inicial.');
 
+        // Nota: o check original tambem exigia BootstrapEnv::get em
+        // WarningPdfSignatureService.php, mas esse servico foi removido junto com
+        // toda a funcionalidade de certificado ICP-Brasil (assinatura sempre via
+        // SupportCHECK agora). Corrigido para validar so o bootstrap de sessao.
         $session = is_file(ROOTPATH . 'app/Config/Session.php') ? (string) file_get_contents(ROOTPATH . 'app/Config/Session.php') : '';
-        $warning = is_file(ROOTPATH . 'app/Services/Warning/WarningPdfSignatureService.php') ? (string) file_get_contents(ROOTPATH . 'app/Services/Warning/WarningPdfSignatureService.php') : '';
-        $checks[] = $this->staticCheck('session_pdf_bootstrap', 'Sessão e assinatura PDF usam configuração canônica', str_contains($session, 'BootstrapEnv::get') && str_contains($warning, 'BootstrapEnv::get'), 'Sessão por ambiente e assinatura PDF devem usar o bootstrap canônico.');
+        $checks[] = $this->staticCheck('session_bootstrap', 'Sessão usa configuração canônica de bootstrap', str_contains($session, 'BootstrapEnv::get'), 'Sessão por ambiente deve usar o bootstrap canônico.');
 
         $seeder = is_file(ROOTPATH . 'app/Database/Seeds/AdminUserSeeder.php') ? (string) file_get_contents(ROOTPATH . 'app/Database/Seeds/AdminUserSeeder.php') : '';
         $checks[] = $this->staticCheck('bootstrap_credentials_safety', 'Seeder não imprime senha temporária em stdout por padrão', ! str_contains($seeder, 'Temporary Password: {$temporaryPassword}') && str_contains($seeder, 'admin_bootstrap_credentials.json'), 'Credenciais iniciais devem ser gravadas em arquivo seguro, não expostas em stdout.');

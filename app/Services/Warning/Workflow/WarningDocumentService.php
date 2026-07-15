@@ -28,11 +28,6 @@ class WarningDocumentService
         if (!($pdfResult['success'] ?? false)) {
             return;
         }
-
-        $signedPdf = $this->pdfService->signPDFWithICP($pdfResult['filepath'], $issuerId);
-        if (($signedPdf['success'] ?? false) === true) {
-            $this->warningModel->update($warningId, ['pdf_path' => $signedPdf['filepath']]);
-        }
     }
 
     public function regenerateFinalPdf(int $warningId, ?object $employee, ?object $issuer): void

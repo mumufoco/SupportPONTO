@@ -536,12 +536,6 @@ if (! function_exists('sp_admin_settings_security_path')) {
 if (! function_exists('sp_admin_settings_security_url')) {
     function sp_admin_settings_security_url(): string { return sp_route_url('admin.settings.security'); }
 }
-if (! function_exists('sp_admin_settings_certificate_path')) {
-    function sp_admin_settings_certificate_path(): string { return sp_route_path('admin.settings.certificate'); }
-}
-if (! function_exists('sp_admin_settings_certificate_url')) {
-    function sp_admin_settings_certificate_url(): string { return sp_route_url('admin.settings.certificate'); }
-}
 if (! function_exists('sp_settings_geofences_path')) {
     function sp_settings_geofences_path(): string { return sp_route_path('settings.geofences'); }
 }

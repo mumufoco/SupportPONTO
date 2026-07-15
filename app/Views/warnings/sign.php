@@ -54,10 +54,6 @@
                                     <input class="form-check-input" type="radio" name="signature_method" value="sms" <?= old('signature_method', 'sms') === 'sms' ? 'checked' : '' ?>>
                                     <span class="form-check-label">Assinatura eletrônica com código SMS</span>
                                 </label>
-                                <label class="form-check">
-                                    <input class="form-check-input" type="radio" name="signature_method" value="icp" <?= old('signature_method') === 'icp' ? 'checked' : '' ?>>
-                                    <span class="form-check-label">Certificado digital ICP-Brasil</span>
-                                </label>
                             </div>
                         </div>
 
@@ -71,18 +67,6 @@
                                 <button type="button" class="btn btn-outline-secondary w-100" id="send-sms-code" data-url="<?= sp_safe_url(sp_warning_sign_sms_url((int) ($warning->id ?? 0))) ?>">
                                     <i class="bi bi-phone me-1"></i>Enviar código SMS
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label" for="certificate">Certificado digital</label>
-                                <input type="file" id="certificate" name="certificate" class="form-control" accept=".pfx,.p12,.pem">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="certificate_password">Senha do certificado</label>
-                                <input type="password" id="certificate_password" name="certificate_password" class="form-control" value="<?= sp_attr(old('certificate_password')) ?>">
-                                <div class="form-text">Preencha apenas quando o método escolhido for ICP-Brasil.</div>
                             </div>
                         </div>
 

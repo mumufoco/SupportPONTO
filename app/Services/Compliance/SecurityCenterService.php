@@ -36,7 +36,6 @@ class SecurityCenterService
     public function getChecks(): array
     {
         return [
-            $this->checkCertificate(),
             $this->checkTwoFactor(),
             $this->checkPermissionDistribution(),
             $this->checkRecentCriticalEvents(),
@@ -44,44 +43,6 @@ class SecurityCenterService
     }
 
     // ── Verificações individuais ───────────────────────────────────────────
-
-    private function checkCertificate(): array
-    {
-        try {
-            $certPath = $this->settingModel->get('certificate_path');
-
-            if (empty($certPath)) {
-                return [
-                    'title'  => 'Certificado digital',
-                    'desc'   => 'Nenhum certificado digital configurado. Necessário para emissão de documentos oficiais.',
-                    'status' => 'critico',
-                ];
-            }
-
-            $fullPath = ROOTPATH . ltrim((string) $certPath, '/');
-            if (!file_exists($fullPath)) {
-                return [
-                    'title'  => 'Certificado digital',
-                    'desc'   => 'Caminho de certificado configurado mas o arquivo não foi encontrado. Reconfigure o certificado.',
-                    'status' => 'aviso',
-                ];
-            }
-
-            return [
-                'title'  => 'Certificado digital',
-                'desc'   => 'Certificado configurado e acessível pelo sistema.',
-                'status' => 'ok',
-            ];
-        } catch (\Throwable $e) {
-            log_structured('warning', 'security_center.certificate_check_failed',
-                ['error' => $e->getMessage()]);
-            return [
-                'title'  => 'Certificado digital',
-                'desc'   => 'Não foi possível verificar o certificado. Revise as configurações.',
-                'status' => 'aviso',
-            ];
-        }
-    }
 
     private function checkTwoFactor(): array
     {

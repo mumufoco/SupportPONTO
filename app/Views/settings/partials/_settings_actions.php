@@ -6,8 +6,5 @@
         <a href="<?= sp_admin_settings_security_url() ?>" class="btn btn-outline-primary">
             <i class="bi bi-shield-lock-fill me-1"></i>Segurança
         </a>
-        <a href="<?= sp_admin_settings_certificate_url() ?>" class="btn btn-outline-primary">
-            <i class="bi bi-patch-check-fill me-1"></i>Certificado
-        </a>
     </div>
 </div>
