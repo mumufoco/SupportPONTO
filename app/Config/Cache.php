@@ -290,4 +290,6 @@ class Cache extends BaseConfig
      * @var bool|list<string>
      */
     public $cacheQueryString = false;
+
+    public array $cacheStatusCodes = [];
 }

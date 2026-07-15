@@ -23,6 +23,9 @@ class Filters extends BaseConfig
         'honeypot'        => Honeypot::class,
         'invalidchars'    => InvalidChars::class,
         'secureheaders'   => SecureHeaders::class,
+        'forcehttps'      => \CodeIgniter\Filters\ForceHTTPS::class,
+        'pagecache'       => \CodeIgniter\Filters\PageCache::class,
+        'performance'     => \CodeIgniter\Filters\PerformanceMetrics::class,
 
         // Filtros customizados para empregados e sistema (conforme Portaria MTE)
         'auth'               => \App\Filters\AuthFilter::class,
@@ -223,6 +226,18 @@ class Filters extends BaseConfig
                 'punch-terminal/fingerprint',
                 'timesheet/punch/face/kiosk',
             ],
+        ],
+    ];
+
+    public array $required = [
+        'before' => [
+            'forcehttps',
+            'pagecache',
+        ],
+        'after' => [
+            'pagecache',
+            'performance',
+            'toolbar',
         ],
     ];
 }

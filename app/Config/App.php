@@ -547,4 +547,6 @@ class App extends BaseConfig
      * Content Security Policy
      */
     public bool $CSPEnabled = false;
+
+    public string $permittedURIChars = 'a-z 0-9~%.:_\-';
 }

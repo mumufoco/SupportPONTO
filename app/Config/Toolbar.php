@@ -119,4 +119,10 @@ class Toolbar extends BaseConfig
     public array $watchedExtensions = [
         'php', 'css', 'js', 'html', 'svg', 'json', 'env',
     ];
+
+    public array $disableOnHeaders = [
+        'X-Requested-With' => 'xmlhttprequest',
+        'HX-Request'       => 'true',
+        'X-Up-Version'     => null,
+    ];
 }

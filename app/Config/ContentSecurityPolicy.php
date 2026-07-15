@@ -138,4 +138,16 @@ class ContentSecurityPolicy extends BaseConfig
 
         return array_values(array_filter(array_map(static fn (string $item): string => trim($item), $parts)));
     }
+
+    public ?string $reportTo = null;
+
+    public array|string $scriptSrcElem = 'self';
+
+    public array|string $scriptSrcAttr = 'self';
+
+    public array|string $styleSrcElem = 'self';
+
+    public array|string $styleSrcAttr = 'self';
+
+    public array|string $workerSrc = [];
 }
