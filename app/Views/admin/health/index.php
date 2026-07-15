@@ -19,7 +19,9 @@ $modules = $details['modules'] ?? [];
         'subtitle' => 'Diagnóstico operacional de banco, permissões, migrations, versão, filas, DeepFace e logs, sem expor segredos sensíveis.',
         'icon' => 'bi bi-heart-pulse-fill',
         'actions' => [
-                                            ],
+            ['label' => 'Métricas', 'icon' => 'bi bi-bar-chart-fill', 'url' => route_to('admin.metrics')],
+            ['label' => 'Diagnóstico', 'icon' => 'bi bi-activity', 'url' => route_to('admin.health.diagnostics')],
+        ],
     ]) ?>
 
     <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">

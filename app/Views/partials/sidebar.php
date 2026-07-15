@@ -123,8 +123,6 @@ $menuStructure = [
                 ['label' => 'Segurança',          'icon' => 'shield-alert', 'url' => route_to('admin.settings.security')],
                 ['label' => 'Níveis de acesso',   'icon' => 'users',        'url' => route_to('settings.roles')],
                 ['label' => 'Saúde do sistema',   'icon' => 'activity',     'url' => route_to('admin.health')],
-                ['label' => 'Métricas',            'icon' => 'bar-chart',   'url' => route_to('admin.metrics')],
-                ['label' => 'Diagnóstico',        'icon' => 'search',       'url' => route_to('admin.health.diagnostics')],
             ],
         ],
     ],
