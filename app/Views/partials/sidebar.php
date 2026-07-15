@@ -368,7 +368,6 @@ $chevronSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" vi
         <nav class="app-nav">
             <?php foreach ($items as $item): ?>
                 <?php if (($item['type'] ?? 'link') === 'section'): ?>
-                    <div class="app-nav-title app-nav-label"><?= esc($item['label']) ?></div>
                 <?php else: ?>
                     <?php $active = $isActive($item, $currentUri); ?>
                     <?php if (!empty($item['submenu'])): ?>
@@ -415,9 +414,5 @@ $chevronSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" vi
             <?= $icon('chevron-left') ?>
             <span class="app-nav-label">Recolher menu</span>
         </button>
-        <div class="app-user-card">
-            <div class="user-name"><?= esc($employee['name'] ?? 'Usuário') ?></div>
-            <div class="user-role app-nav-label"><?= esc($userRoleLabel) ?></div>
-        </div>
     </div>
 </aside>
