@@ -2,8 +2,9 @@
 declare(strict_types=1);
 namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
-use App\Models\SettingModel;
-use App\Services\Security\TwoFactorAuthService;
+use App\Models\EmployeeModel;
+use App\Services\Auth\TwoFactorManagerService;
+use App\Services\Security\TwoFactorPolicyService;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Services;
@@ -11,30 +12,45 @@ use Psr\Log\LoggerInterface;
 
 class TwoFactorController extends BaseController
 {
-    protected SettingModel $settingModel;
-    protected TwoFactorAuthService $twoFactorService;
+    protected EmployeeModel $employeeModel;
+    protected TwoFactorPolicyService $policyService;
+    protected TwoFactorManagerService $twoFactorManagerService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->settingModel = model(SettingModel::class);
-        $this->twoFactorService = Services::twoFactorAuthService();
+        $this->employeeModel = model(EmployeeModel::class);
+        $this->policyService = new TwoFactorPolicyService();
+        $this->twoFactorManagerService = Services::twoFactorManagerService();
     }
 
     public function index()
     {
         $this->requireRole('admin');
-        $settings = $this->settingModel->getByGroupMap('authentication') ?? [];
 
-        try {
-            $db = \Config\Database::connect();
-            $recentEvents = $db->table('audit_logs')
-                ->whereIn('action', ['2fa_success', '2fa_failure', '2fa_setup', '2fa_disabled'])
-                ->orderBy('created_at', 'DESC')
-                ->limit(20)
-                ->get()->getResultArray();
-        } catch (\Throwable $e) {
-            $recentEvents = [];
+        $totalUsers = $this->employeeModel->where('active', true)->countAllResults();
+        $enabledUsers = $this->employeeModel->where('active', true)->where('two_factor_enabled', true)->countAllResults();
+        $confirmedUsers = $this->employeeModel->where('active', true)
+            ->where('two_factor_enabled', true)
+            ->where('two_factor_verified_at IS NOT NULL', null, false)
+            ->countAllResults();
+
+        $stats = [
+            'enabled' => $enabledUsers,
+            'confirmed' => $confirmedUsers,
+            'total_users' => $totalUsers,
+            'coverage' => $totalUsers > 0 ? (int) round($enabledUsers / $totalUsers * 100) : 0,
+        ];
+
+        $usersWithTwoFactor = $this->employeeModel
+            ->where('two_factor_enabled', true)
+            ->orderBy('two_factor_verified_at', 'DESC')
+            ->limit(20)
+            ->find();
+
+        $recoveryCodesLeft = [];
+        foreach ($usersWithTwoFactor as $employee) {
+            $recoveryCodesLeft[$employee->id] = $this->twoFactorManagerService->countRemainingBackupCodes($employee);
         }
 
         return view('admin/settings/two_factor', [
@@ -44,8 +60,11 @@ class TwoFactorController extends BaseController
                 ['label' => 'Autenticação', 'url' => route_to('admin.settings.authentication')],
                 ['label' => '2FA', 'url' => ''],
             ],
-            'settings' => $settings,
-            'recent_events' => $recentEvents,
+            'currentMode' => $this->policyService->getMode(),
+            'modes' => TwoFactorPolicyService::MODES,
+            'stats' => $stats,
+            'usersWithTwoFactor' => $usersWithTwoFactor,
+            'recoveryCodesLeft' => $recoveryCodesLeft,
         ]);
     }
 
@@ -56,73 +75,40 @@ class TwoFactorController extends BaseController
             return redirect()->back()->with('error', 'Método inválido');
         }
 
-        $rules = [
-            '2fa_method' => 'permit_empty|in_list[totp,email]',
-            '2fa_backup_codes_count' => 'permit_empty|is_natural_no_zero|greater_than_equal_to[4]|less_than_equal_to[20]',
-        ];
-        if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        $mode = (string) $this->request->getPost('mode');
+        if (! $this->policyService->setMode($mode)) {
+            return redirect()->back()->with('error', 'Modo de política de 2FA inválido.');
         }
 
-        $data = security_sanitize($this->request->getPost() ?? []);
-        $boolFields = ['enable_2fa', '2fa_force_all_users'];
-        foreach ($boolFields as $f) {
-            $data[$f] = array_key_exists($f, $data) ? '1' : '0';
-        }
-        try {
-            $save = array_filter($data, fn($k) => in_array($k, ['enable_2fa', '2fa_method', '2fa_force_all_users', '2fa_backup_codes_count']), ARRAY_FILTER_USE_KEY);
-            $this->settingModel->setMultiple($save, 'authentication');
-            $this->settingModel->clearCache();
-            return redirect()->back()->with('success', 'Configurações de 2FA salvas.');
-        } catch (\Throwable $e) {
-            log_message('error', 'TwoFactorController::update ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao salvar configurações de 2FA.');
-        }
+        return redirect()->back()->with('success', 'Configuração de 2FA salva com sucesso.');
     }
 
-    public function generateQr()
+    public function resetUser(int $id)
     {
         $this->requireRole('admin');
+        if (!$this->request->is('post')) {
+            return redirect()->back()->with('error', 'Método inválido');
+        }
+
+        $employee = $this->employeeModel->find($id);
+        if (! $employee) {
+            return redirect()->back()->with('error', 'Colaborador não encontrado.');
+        }
+
         try {
-            $secret = $this->twoFactorService->generateSecret();
-            $accountName = (string) session()->get('user_email');
-            $qrDataUri = $this->twoFactorService->getQRCodeDataUri($secret, $accountName);
-            $otpauthUrl = $this->twoFactorService->getOTPAuthURL($secret, $accountName);
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'QR Code gerado. Use Google Authenticator, Authy ou similar para escanear.',
-                'secret' => $secret,
-                'qr_url' => $qrDataUri,
-                'otpauth_url' => $otpauthUrl, 'csrf_hash' => csrf_hash(),
+            $this->twoFactorManagerService->disableForEmployee($id);
+
+            helper('observability');
+            $actorId = (int) ($this->currentUser->id ?? session()->get('user_id') ?? 0);
+            log_structured('warning', 'admin.two_factor.user_reset', [
+                'actor_id' => $actorId,
+                'target_employee_id' => $id,
             ]);
+
+            return redirect()->back()->with('success', 'O 2FA do colaborador "' . $employee->name . '" foi redefinido.');
         } catch (\Throwable $e) {
-            log_message('error', 'TwoFactorController::generateQr ' . $e->getMessage());
-            return $this->response->setJSON(['success' => false, 'message' => 'Erro ao gerar QR Code: ' . $e->getMessage()]);
-        }
-    }
-
-    public function verify()
-    {
-        $this->requireRole('admin');
-        $code = (string)($this->request->getPost('code') ?? '');
-        $secret = (string)($this->request->getPost('secret') ?? '');
-
-        if (strlen($code) !== 6 || !ctype_digit($code)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Código inválido. Informe os 6 dígitos.']);
-        }
-
-        if ($secret === '') {
-            return $this->response->setJSON(['success' => false, 'message' => 'Segredo não informado.']);
-        }
-
-        try {
-            $valid = $this->twoFactorService->verifyCode($secret, $code);
-            if ($valid) {
-                return $this->response->setJSON(['success' => true, 'message' => '2FA verificado com sucesso.', 'csrf_hash' => csrf_hash()]);
-            }
-            return $this->response->setJSON(['success' => false, 'message' => 'Código inválido ou expirado.', 'csrf_hash' => csrf_hash()]);
-        } catch (\Throwable $e) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Erro ao verificar: ' . $e->getMessage()]);
+            log_message('error', 'TwoFactorController::resetUser ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao redefinir o 2FA do colaborador.');
         }
     }
 }

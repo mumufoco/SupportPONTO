@@ -90,6 +90,11 @@ class LoginController extends BaseController
             return redirect()->to(site_url('auth/first-access-password'));
         }
 
+        if ((bool) ($result['must_setup_2fa'] ?? false)) {
+            $this->setSuccess("Bem-vindo(a), {$user->name}! A política de segurança exige 2FA para o seu perfil. Configure agora para continuar.");
+            return redirect()->to(site_url('auth/2fa/setup'));
+        }
+
         if ((bool) ($result['requires_2fa'] ?? false)) {
             $this->setSuccess('Credenciais confirmadas. Conclua a autenticação em duas etapas para entrar.');
             return redirect()->to(site_url('auth/2fa/verify'));

@@ -6,6 +6,7 @@ use App\Support\BootstrapEnv;
 use App\Models\AuditModel;
 use App\Models\EmployeeModel;
 use App\Services\Security\RateLimitService;
+use App\Services\Security\TwoFactorPolicyService;
 use App\Services\Auth\SessionSecurityService;
 use Config\Services;
 use CodeIgniter\HTTP\RequestInterface;
@@ -18,19 +19,22 @@ class WebAuthService
     protected RateLimitService $rateLimitService;
     protected RememberMeService $rememberMeService;
     protected SessionSecurityService $sessionSecurityService;
+    protected TwoFactorPolicyService $twoFactorPolicyService;
 
     public function __construct(
         ?EmployeeModel $employeeModel = null,
         ?AuditModel $auditModel = null,
         ?RateLimitService $rateLimitService = null,
         ?RememberMeService $rememberMeService = null,
-        ?SessionSecurityService $sessionSecurityService = null
+        ?SessionSecurityService $sessionSecurityService = null,
+        ?TwoFactorPolicyService $twoFactorPolicyService = null
     ) {
         $this->employeeModel = $employeeModel ?? Services::employeeModel();
         $this->auditModel = $auditModel ?? Services::auditModel();
         $this->rateLimitService = $rateLimitService ?? Services::rateLimitService();
         $this->rememberMeService = $rememberMeService ?? Services::rememberMeService();
         $this->sessionSecurityService = $sessionSecurityService ?? Services::sessionSecurityService();
+        $this->twoFactorPolicyService = $twoFactorPolicyService ?? new TwoFactorPolicyService();
     }
 
     public function authenticate(string $email, string $password, bool $remember, Session $session, RequestInterface $request): array
@@ -74,11 +78,13 @@ class WebAuthService
         );
 
         $requiresTwoFactor = (bool) ($user->two_factor_enabled ?? false);
+        $mustSetupTwoFactor = false;
         if ($requiresTwoFactor) {
             $this->markSessionAsPendingTwoFactor($user, $session);
         } else {
             $session->remove(['2fa_pending_user_id', '2fa_pending_redirect']);
             $session->set('2fa_verified', false);
+            $mustSetupTwoFactor = $this->twoFactorPolicyService->isRequiredForRole((string) ($user->role ?? ''));
         }
 
         return [
@@ -86,6 +92,7 @@ class WebAuthService
             'user' => $user,
             'must_change_password' => in_array($user->must_change_password ?? null, [true, 't', '1', 1], true),
             'requires_2fa' => $requiresTwoFactor,
+            'must_setup_2fa' => $mustSetupTwoFactor,
         ];
     }
 

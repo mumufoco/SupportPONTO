@@ -157,8 +157,7 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->post('pwa/icons/(:num)/delete', 'Admin\PwaController::deleteIcon/$1', ['as' => 'admin.settings.pwa.icon.delete']);
     $routes->get('two-factor', 'Admin\TwoFactorController::index', ['as' => 'admin.settings.two-factor']);
     $routes->post('two-factor/update', 'Admin\TwoFactorController::update', ['as' => 'admin.settings.two-factor.update']);
-    $routes->post('two-factor/generate-qr', 'Admin\TwoFactorController::generateQr', ['as' => 'admin.settings.two-factor.generate-qr']);
-    $routes->post('two-factor/verify', 'Admin\TwoFactorController::verify', ['as' => 'admin.settings.two-factor.verify']);
+    $routes->post('two-factor/users/(:num)/reset', 'Admin\TwoFactorController::resetUser/$1', ['as' => 'admin.settings.two-factor.user.reset']);
 });
 
 $routes->group('geofence', ['filter' => ['auth', 'admin']], static function ($routes) {
