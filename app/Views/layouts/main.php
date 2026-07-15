@@ -102,6 +102,9 @@ $isAuthenticated = sp_session_is_authenticated();
 
 </head>
 <body>
+<!-- Bootstrap JS carregado cedo (antes do conteudo da pagina) para que scripts
+     inline de paginas (ex.: new bootstrap.Modal(...)) nao rodem antes dele existir -->
+<script <?= csp_script_nonce_attr() ?> src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <a class="sp-skip-link" href="#sp-main-content">Ir para o conteúdo principal</a>
 <?php if ($isAuthenticated): ?>
     <div class="app-shell">
@@ -143,7 +146,6 @@ $isAuthenticated = sp_session_is_authenticated();
     <?= $this->renderSection('content') ?>
 <?php endif; ?>
 
-<script <?= csp_script_nonce_attr() ?> src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script <?= csp_script_nonce_attr() ?> src="<?= sp_safe_url(asset_url('js/supportponto.js')) ?>"></script>
 <?= $this->renderSection('scripts') ?>
 </body>
