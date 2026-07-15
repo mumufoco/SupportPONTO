@@ -36,44 +36,56 @@ class SecuritySettingsService
         return $this->databaseBackupService ?? new DatabaseBackupService();
     }
 
+    /**
+     * Campos booleanos (checkboxes) do formulário de segurança. Checkboxes
+     * desmarcados não são enviados pelo navegador, então update() precisa
+     * normalizar explicitamente cada um destes para '0' quando ausente do
+     * POST — senão o valor antigo nunca é sobrescrito e a configuração
+     * parece "não salvar" quando o admin desmarca uma opção.
+     *
+     * @var list<string>
+     */
+    private const BOOLEAN_FIELDS = [
+        'password_require_uppercase', 'password_require_lowercase',
+        'password_require_numbers', 'password_require_special',
+        'force_https', 'regenerate_session_id', 'enable_xss_filter',
+        'enable_audit_log', 'log_logins', 'log_data_changes',
+        'log_deletions', 'log_settings_changes',
+        'enable_data_anonymization', 'allow_data_export',
+    ];
+
+    /**
+     * Regras alinhadas aos campos reais de app/Views/admin/settings/security.php.
+     */
     public function rules(): array
     {
         return [
             'password_min_length' => 'required|integer|greater_than[5]|less_than[129]',
+            'password_expiry_days' => 'permit_empty|integer|greater_than_equal_to[0]',
             'password_require_uppercase' => 'permit_empty|in_list[0,1]',
             'password_require_lowercase' => 'permit_empty|in_list[0,1]',
             'password_require_numbers' => 'permit_empty|in_list[0,1]',
             'password_require_special' => 'permit_empty|in_list[0,1]',
-            'password_expiry_days' => 'permit_empty|integer|greater_than[0]',
+            'force_https' => 'permit_empty|in_list[0,1]',
+            'regenerate_session_id' => 'permit_empty|in_list[0,1]',
+            'enable_xss_filter' => 'permit_empty|in_list[0,1]',
             'enable_audit_log' => 'permit_empty|in_list[0,1]',
             'audit_log_retention_days' => 'required|integer|greater_than[0]',
-            'enable_auto_backup' => 'permit_empty|in_list[0,1]',
-            'backup_frequency' => 'permit_empty|in_list[daily,weekly,monthly]',
-            'backup_retention_days' => 'permit_empty|integer|greater_than[0]',
-            // Additional security fields
-            'xss_protection_enabled' => 'permit_empty|in_list[0,1]',
-            'input_sanitization_level' => 'permit_empty|in_list[basico,estrito,paranoico]',
-            'csp_enabled' => 'permit_empty|in_list[0,1]',
-            'csp_policy' => 'permit_empty',
-            'hsts_enabled' => 'permit_empty|in_list[0,1]',
-            'cors_allowed_origins' => 'permit_empty',
-            'rate_limit_enabled' => 'permit_empty|in_list[0,1]',
-            'rate_limit_max_requests' => 'permit_empty|integer|greater_than[0]',
-            'rate_limit_window_seconds' => 'permit_empty|integer|greater_than[0]',
+            'log_logins' => 'permit_empty|in_list[0,1]',
+            'log_data_changes' => 'permit_empty|in_list[0,1]',
+            'log_deletions' => 'permit_empty|in_list[0,1]',
+            'log_settings_changes' => 'permit_empty|in_list[0,1]',
+            'enable_data_anonymization' => 'permit_empty|in_list[0,1]',
+            'anonymization_period_days' => 'permit_empty|integer|greater_than_equal_to[30]',
+            'allow_data_export' => 'permit_empty|in_list[0,1]',
         ];
     }
 
     public function update(array $data, ?int $userId = null): array
     {
         try {
-            // Normalize unchecked checkboxes
-            $booleanFields = [
-                'password_require_uppercase', 'password_require_lowercase',
-                'password_require_numbers', 'password_require_special',
-                'enable_audit_log', 'enable_auto_backup',
-                'xss_protection_enabled', 'csp_enabled', 'hsts_enabled', 'rate_limit_enabled',
-            ];
-            foreach ($booleanFields as $field) {
+            // Normaliza checkboxes desmarcados (ausentes do POST) para '0'
+            foreach (self::BOOLEAN_FIELDS as $field) {
                 if (!array_key_exists($field, $data)) {
                     $data[$field] = '0';
                 }
@@ -239,15 +251,38 @@ class SecuritySettingsService
         ];
     }
 
+    /**
+     * Restaura todas as configurações de segurança para os valores padrão.
+     * Precisa cobrir TODOS os campos do formulário — deleteGroup() apaga o
+     * grupo inteiro antes de regravar, então qualquer campo omitido aqui
+     * fica sem valor algum (nem o padrão) até o admin salvar manualmente.
+     */
     public function resetDefaults(): array
     {
         try {
             $this->settings()->deleteGroup('security');
             $this->settings()->setMultiple([
                 'password_min_length' => 8,
-                'password_require_special' => true,
-                'enable_audit_log' => true,
+                'password_expiry_days' => 0,
+                'password_require_uppercase' => 1,
+                'password_require_lowercase' => 1,
+                'password_require_numbers' => 1,
+                'password_require_special' => 1,
+                'force_https' => 1,
+                'regenerate_session_id' => 1,
+                'enable_xss_filter' => 1,
+                'enable_audit_log' => 1,
+                'audit_log_retention_days' => 90,
+                'log_logins' => 1,
+                'log_data_changes' => 1,
+                'log_deletions' => 1,
+                'log_settings_changes' => 1,
+                'enable_data_anonymization' => 1,
+                'anonymization_period_days' => 365,
+                'allow_data_export' => 1,
             ], 'security');
+
+            $this->settings()->clearCache();
 
             return ['success' => true, 'message' => 'Configurações de segurança resetadas para o padrão'];
         } catch (\Throwable $e) {

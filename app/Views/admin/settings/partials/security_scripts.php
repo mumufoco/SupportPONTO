@@ -6,20 +6,13 @@ function escHtml(str) {
     return div.innerHTML;
 }
 
-// Toggle backup options
-document.getElementById('enable_auto_backup').addEventListener('change', function() {
-    const display = this.checked ? 'block' : 'none';
-    document.getElementById('backup_options').style.display = display;
-    document.getElementById('backup_retention_group').style.display = display;
-});
-
 // Test password
 function testPassword() {
     const password = document.getElementById('test_password').value;
     const resultDiv = document.getElementById('passwordTestResult');
 
     if (!password) {
-        Toast.warning('Digite uma senha para testar');
+        alert('Digite uma senha para testar');
         return;
     }
 
@@ -75,6 +68,12 @@ function testPassword() {
 // View audit logs
 function viewAuditLogs() {
     const container = document.getElementById('auditLogsContainer');
+    const isOpen = container.style.display !== 'none';
+    if (isOpen) {
+        container.style.display = 'none';
+        return;
+    }
+
     container.style.display = 'block';
     container.innerHTML = '<div class="sp-state-loading"><div class="spinner"></div></div>';
 
@@ -84,7 +83,7 @@ function viewAuditLogs() {
             if (data.success && data.logs.length > 0) {
                 container.innerHTML = `
                     <div class="table-responsive">
-                        <table class="table table-modern">
+                        <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
                                     <th>Usuário</th>
@@ -102,7 +101,7 @@ function viewAuditLogs() {
                                         <td><code>${escHtml(log.ip)}</code></td>
                                         <td>${escHtml(log.timestamp)}</td>
                                         <td>
-                                            <span class="badge badge-${log.status === 'success' ? 'success' : 'danger'}">
+                                            <span class="badge text-bg-${log.status === 'success' ? 'success' : 'danger'}">
                                                 ${escHtml(log.status)}
                                             </span>
                                         </td>
@@ -111,22 +110,21 @@ function viewAuditLogs() {
                             </tbody>
                         </table>
                     </div>
-                    <p class="sp-text-center-muted">
+                    <p class="text-muted small text-center mb-0">
                         Mostrando ${parseInt(data.total) || 0} logs mais recentes
                     </p>
                 `;
             } else {
                 container.innerHTML = `
-                    <div class="sp-state-empty">
-                        <i class="fas fa-inbox sp-state-empty__icon"></i>
-                        <p>Nenhum log de auditoria encontrado</p>
+                    <div class="text-muted small text-center py-3">
+                        Nenhum log de auditoria encontrado
                     </div>
                 `;
             }
         })
         .catch(error => {
             container.innerHTML = `
-                <div class="sp-feedback-box--danger-md">
+                <div class="sp-feedback-box sp-feedback-box--danger">
                     <strong>Erro ao carregar logs</strong>
                 </div>
             `;
@@ -136,67 +134,54 @@ function viewAuditLogs() {
 
 // Create backup
 function createBackup() {
-    Confirm.show({
-        title: 'Criar Backup',
-        message: 'Deseja criar um backup do banco de dados agora?',
-        icon: 'info',
-        buttonText: 'Criar Backup',
-        buttonClass: 'btn-modal-primary',
-        onConfirm: function() {
-            showLoading();
-            const currentPassword = prompt('Confirme sua senha atual para criar o backup:');
-            if (currentPassword === null) { hideLoading(); return; }
-            const formData = new FormData();
-            formData.append('current_password', currentPassword);
-            spFetch('<?= sp_route_url('admin.settings.security.backup') ?>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                if (data.success && data.queued) {
-                    Toast.success('Backup enfileirado. Acompanhe o status até a liberação do download.');
-                    if (data.status_url) {
-                        window.open(data.status_url, '_blank');
-                    }
-                } else if (data.success) {
-                    Toast.success(data.message || 'Backup criado com sucesso.');
-                } else {
-                    Toast.error(data.message);
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                Toast.error('Erro ao criar backup');
-                console.error(error);
-            });
+    if (!confirm('Criar snapshot de segurança do banco de dados agora?')) return;
+
+    const currentPassword = prompt('Confirme sua senha atual para criar o backup:');
+    if (currentPassword === null) return;
+
+    const formData = new FormData();
+    formData.append('current_password', currentPassword);
+
+    spFetch('<?= sp_route_url('admin.settings.security.backup') ?>', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.queued) {
+            alert('Backup enfileirado. Acompanhe o status até a liberação do download.');
+            if (data.status_url) {
+                window.open(data.status_url, '_blank');
+            }
+        } else if (data.success) {
+            alert(data.message || 'Backup criado com sucesso.');
+        } else {
+            alert(data.message || 'Não foi possível criar o backup.');
         }
+    })
+    .catch(error => {
+        alert('Erro ao criar backup');
+        console.error(error);
     });
 }
 
 // Reset to defaults
 function resetToDefaults() {
-    Confirm.show({
-        title: 'Restaurar Padrão',
-        message: 'Deseja restaurar todas as configurações de segurança para o padrão? Esta ação não pode ser desfeita.',
-        icon: 'danger',
-        buttonText: 'Restaurar',
-        onConfirm: function() {
-            const currentPassword = prompt('Confirme sua senha atual para restaurar as configurações de segurança:');
-            if (currentPassword === null) { return; }
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '<?= sp_route_url('admin.settings.security.reset') ?>';
-            form.innerHTML = '<?= csrf_field() ?>';
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'current_password';
-            input.value = currentPassword;
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
+    if (!confirm('Deseja restaurar todas as configurações de segurança para o padrão? Esta ação não pode ser desfeita.')) return;
+
+    const currentPassword = prompt('Confirme sua senha atual para restaurar as configurações de segurança:');
+    if (currentPassword === null) return;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= sp_route_url('admin.settings.security.reset') ?>';
+    form.innerHTML = '<?= csrf_field() ?>';
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'current_password';
+    input.value = currentPassword;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>

@@ -70,14 +70,17 @@
                 </div>
                 <div class="mt-3 pt-3" style="border-top:1px solid var(--sp-border)">
                     <label class="form-label fw-semibold small d-block">Testar política de senha</label>
-                    <div class="d-flex gap-2 align-items-center">
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
                         <input type="password" class="form-control form-control-sm" id="test_password"
                                placeholder="Digite uma senha..." style="max-width:280px">
-                        <a href="<?= sp_safe_url(sp_route_url('admin.settings.security.audit-logs')) ?>"
-                           class="btn btn-sm btn-outline-secondary">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="testPassword()">
+                            <i class="bi bi-shield-check me-1"></i>Testar
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewAuditLogs()">
                             <i class="bi bi-list-ul me-1"></i>Logs de auditoria
-                        </a>
+                        </button>
                     </div>
+                    <div id="passwordTestResult" class="mt-2"></div>
                 </div>
             </div>
         </div>
@@ -170,6 +173,7 @@
                         </div>
                     </div>
                 </div>
+                <div id="auditLogsContainer" class="mt-3" style="display:none"></div>
             </div>
         </div>
 
@@ -211,12 +215,15 @@
 
         <!-- Botões -->
         <div class="sp-card">
-            <div class="sp-card-body d-flex gap-2 justify-content-between align-items-center">
-                <a href="<?= sp_safe_url(sp_route_url('admin.settings.security.backup')) ?>"
-                   class="btn btn-outline-danger btn-sm"
-                   onclick="return confirm('Criar snapshot de segurança agora?')">
-                    <i class="bi bi-archive me-1"></i>Snapshot de segurança
-                </a>
+            <div class="sp-card-body d-flex gap-2 justify-content-between align-items-center flex-wrap">
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="createBackup()">
+                        <i class="bi bi-archive me-1"></i>Snapshot de segurança
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="resetToDefaults()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Restaurar padrão
+                    </button>
+                </div>
                 <div class="d-flex gap-2">
                     <a href="<?= sp_safe_url(route_to('admin.settings')) ?>" class="btn btn-outline-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">
@@ -228,4 +235,6 @@
 
     </form>
 </div>
+
+<?= view('admin/settings/partials/security_scripts') ?>
 <?= $this->endSection() ?>
