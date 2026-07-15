@@ -11,7 +11,6 @@ class CreateAuditLogsTable extends Migration
         $this->forge->addField([
             'id' => [
                 'type'           => 'SERIAL',
-                'constraint'     => 11,
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
