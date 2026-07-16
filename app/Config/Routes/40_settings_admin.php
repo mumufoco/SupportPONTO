@@ -145,7 +145,10 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->get('integrations', 'Admin\IntegrationsController::index', ['as' => 'admin.settings.integrations']);
     $routes->post('integrations/update', 'Admin\IntegrationsController::update', ['as' => 'admin.settings.integrations.update']);
     $routes->get('backup', 'Admin\BackupController::index', ['as' => 'admin.settings.backup']);
-    $routes->post('backup/update', 'Admin\BackupController::update', ['as' => 'admin.settings.backup.update']);
+    $routes->post('backup/retention', 'Admin\BackupController::updateRetention', ['as' => 'admin.settings.backup.retention']);
+    $routes->post('backup/check', 'Admin\BackupController::check', ['as' => 'admin.settings.backup.check']);
+    $routes->post('backup/restore-test', 'Admin\BackupController::recordRestoreTest', ['as' => 'admin.settings.backup.restore-test', 'filter' => ['auth', 'admin', 'stepup:back']]);
+    $routes->post('backup/download/(:any)', 'Admin\BackupController::downloadFile/$1', ['as' => 'admin.settings.backup.download-file', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->get('pwa', 'Admin\PwaController::index', ['as' => 'admin.settings.pwa']);
     $routes->post('pwa/update', 'Admin\PwaController::update', ['as' => 'admin.settings.pwa.update']);
     // Ícones 192/512 (mínimo para o PWA ser instalável) — substitui o antigo upload-image

@@ -7,6 +7,7 @@ use App\Services\Notification\Push\PushFailureProcessor;
 use App\Services\Notification\Push\PushPayloadBuilder;
 use App\Services\Notification\Push\PushTemplateCatalog;
 use App\Services\Notification\Push\PushTokenRepository;
+use App\Models\SettingModel;
 use App\Support\BootstrapEnv;
 use CodeIgniter\Config\Services;
 use CodeIgniter\Database\ConnectionInterface;
@@ -26,7 +27,10 @@ class PushNotificationService
     {
         $dbService = Services::database();
         $this->db = $dbService ? $dbService->connect() : \Config\Database::connect();
-        $this->fcmServerKey = BootstrapEnv::get('FCM_SERVER_KEY', '') ?? '';
+        // Prioriza a env (infra) mas cai pra settings (admin > integracoes) quando
+        // nao configurada por env -- mesmo padrao ja usado por DeepFaceApiClient
+        // pra deepface_api_key/deepface_internal_token.
+        $this->fcmServerKey = BootstrapEnv::get('FCM_SERVER_KEY') ?: (string) (new SettingModel())->get('fcm_server_key', '');
 
         $this->templates = new PushTemplateCatalog();
         $this->payloadBuilder = new PushPayloadBuilder();

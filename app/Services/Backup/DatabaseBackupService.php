@@ -31,6 +31,7 @@ class DatabaseBackupService
         }
 
         $this->processSafety = config(ProcessSafety::class);
+        $this->daysToKeep = $this->resolveRetentionDays();
 
         $db = $connection ?? Database::connect();
         $this->driver = (string) ($db->DBDriver ?? 'Postgre');
@@ -243,6 +244,25 @@ class DatabaseBackupService
 
         fclose($file);
         gzclose($zipped);
+    }
+
+    /**
+     * Le a retencao configurada em Admin > Backup (backup_retention_days),
+     * com fallback pro default hardcoded quando a setting nao existe ainda
+     * ou o banco esta indisponivel (ex.: bootstrap/instalacao).
+     */
+    protected function resolveRetentionDays(): int
+    {
+        try {
+            $configured = (int) (model(\App\Models\SettingModel::class)->get('backup_retention_days') ?? 0);
+            if ($configured > 0) {
+                return $configured;
+            }
+        } catch (\Throwable $e) {
+            // Settings indisponiveis -- mantem o default hardcoded.
+        }
+
+        return 30;
     }
 
     public function cleanOldBackups(): int

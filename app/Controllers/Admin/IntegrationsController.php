@@ -10,8 +10,49 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Integracoes
+ *
+ * Reproduz o catalogo de integracoes do SupportCHECK (nome + campos tipados +
+ * marcacao do que e sensivel), mas populado apenas com as integracoes REAIS
+ * do SupportPONTO -- confirmado por grep em todo o app/ antes de escrever
+ * esta tela:
+ *
+ * - DeepFace (biometria facial): deepface_api_url/timeout/retry_attempts/
+ *   api_key/internal_token/model/threshold, todos lidos de verdade em
+ *   DeepFaceApiClient/DeepFaceService; e facial_recognition_threshold, lido
+ *   em FaceRecognitionService/TimePunchFlowService (limiar de aceitacao do
+ *   PONTO, DIFERENTE do deepface_threshold que e enviado como parametro ao
+ *   microservico DeepFace).
+ * - FCM (notificacoes push): fcm_server_key.
+ *
+ * Removidos os campos que a tela antiga tinha mas nunca eram lidos em
+ * nenhum lugar do codigo real (confirmado por grep): biometry_enabled,
+ * facial_recognition_enabled, fingerprint_enabled, geolocation_enabled/
+ * radius/strict, googlemaps_*, mapbox_*, backup_s3_*, backup_gcs_*,
+ * backup_onedrive_*, api_facial_key/api_biometry_key/api_geolocation_key/
+ * api_fcm_key.
+ *
+ * SupportCheck (sincronizacao com o SupportCHECK) fica de fora -- ja tem
+ * tela propria em Settings\SupportCheckSettingsController.
+ */
 class IntegrationsController extends BaseController
 {
+    /**
+     * @var list<string>
+     */
+    private const DEEPFACE_FIELDS = [
+        'deepface_api_url', 'deepface_timeout', 'deepface_retry_attempts',
+        'deepface_api_key', 'deepface_internal_token', 'deepface_model',
+        'deepface_threshold', 'facial_recognition_threshold',
+    ];
+
+    private const DEEPFACE_SENSITIVE = ['deepface_api_key', 'deepface_internal_token'];
+
+    private const FCM_FIELDS = ['fcm_server_key'];
+
+    private const FCM_SENSITIVE = ['fcm_server_key'];
+
     protected SettingModel $settingModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -24,18 +65,18 @@ class IntegrationsController extends BaseController
     {
         $this->requireRole('admin');
 
-        $apis    = $this->settingModel->getByGroupMap('apis')          ?? [];
-        $bio     = $this->settingModel->getByGroupMap('biometry')      ?? [];
-        $geo     = $this->settingModel->getByGroupMap('geolocation')   ?? [];
-        $intg    = $this->settingModel->getByGroupMap('integrations')  ?? [];
+        $settings = [];
+        foreach (array_merge(self::DEEPFACE_FIELDS, self::FCM_FIELDS) as $field) {
+            $settings[$field] = $this->settingModel->get($field);
+        }
 
         return view('admin/settings/integrations', [
-            'title'       => 'Integracoes',
+            'title'       => 'Integrações',
             'breadcrumbs' => [
-                ['label' => 'Configuracoes', 'url' => sp_admin_settings_index_url()],
-                ['label' => 'Integracoes',   'url' => ''],
+                ['label' => 'Configurações', 'url' => sp_admin_settings_index_url()],
+                ['label' => 'Integrações',   'url' => ''],
             ],
-            'settings' => array_merge($geo, $bio, $apis, $intg),
+            'settings' => $settings,
         ]);
     }
 
@@ -44,81 +85,47 @@ class IntegrationsController extends BaseController
         $this->requireRole('admin');
 
         if (! $this->request->is('post')) {
-            return redirect()->back()->with('error', 'Metodo invalido');
+            return redirect()->back()->with('error', 'Método inválido');
         }
 
-        $data            = security_sanitize($this->request->getPost() ?? []);
-        $biometryFields  = ['biometry_enabled', 'facial_recognition_enabled', 'facial_recognition_threshold', 'fingerprint_enabled'];
-        $geolFields      = ['geolocation_enabled', 'geolocation_radius', 'geolocation_strict'];
-        $apisEncrypted   = ['api_facial_key', 'api_biometry_key', 'api_geolocation_key', 'api_fcm_key'];
-
-        // Normalize unchecked checkboxes to '0' (HTML doesn't POST unchecked checkboxes)
-        $allBoolFields = [
-            'biometry_enabled', 'facial_recognition_enabled', 'fingerprint_enabled',
-            'geolocation_enabled', 'geolocation_strict',
-            'googlemaps_enabled', 'mapbox_enabled',
-            'backup_s3_enabled', 'backup_gcs_enabled', 'backup_onedrive_enabled',
-        ];
-        foreach ($allBoolFields as $bf) {
-            if (!array_key_exists($bf, $data)) {
-                $data[$bf] = '0';
-            }
-        };
-
-        // New: geo provider fields
-        $geoProviderFields = [
-            'googlemaps_enabled', 'googlemaps_api_key', 'googlemaps_endpoint',
-            'mapbox_enabled', 'mapbox_api_key', 'mapbox_endpoint',
-        ];
-
-        // New: backup provider fields
-        $backupFields = [
-            'backup_s3_enabled', 'backup_s3_key', 'backup_s3_secret', 'backup_s3_bucket', 'backup_s3_region', 'backup_s3_retention', 'backup_s3_frequency',
-            'backup_gcs_enabled', 'backup_gcs_key', 'backup_gcs_bucket', 'backup_gcs_folder', 'backup_gcs_retention', 'backup_gcs_frequency',
-            'backup_onedrive_enabled', 'backup_onedrive_client_id', 'backup_onedrive_client_secret', 'backup_onedrive_folder', 'backup_onedrive_retention', 'backup_onedrive_frequency',
-        ];
+        $data = security_sanitize($this->request->getPost() ?? []);
 
         try {
-            $bSave = [];
-            foreach ($biometryFields as $f) {
-                if (array_key_exists($f, $data)) $bSave[$f] = $data[$f];
-            }
-            if ($bSave) $this->settingModel->setMultiple($bSave, 'biometry');
-
-            $gSave = [];
-            foreach ($geolFields as $f) {
-                if (array_key_exists($f, $data)) $gSave[$f] = $data[$f];
-            }
-            if ($gSave) $this->settingModel->setMultiple($gSave, 'geolocation');
-
-            foreach ($apisEncrypted as $f) {
-                if (! empty($data[$f])) {
-                    $this->settingModel->setSetting($f, $data[$f], 'string', 'apis', true);
-                }
-            }
-
-            // Save geo provider + backup fields to integrations group
-            // Sensitive credential fields: only save if non-empty (preserve existing keys)
-            $sensitiveFields = [
-                'googlemaps_api_key', 'mapbox_api_key',
-                'backup_s3_key', 'backup_s3_secret',
-                'backup_gcs_key',
-                'backup_onedrive_client_id', 'backup_onedrive_client_secret',
-            ];
-            $intgSave = [];
-            foreach (array_merge($geoProviderFields, $backupFields) as $f) {
-                if (!array_key_exists($f, $data)) continue;
-                if (in_array($f, $sensitiveFields, true) && $data[$f] === '') continue; // preserve existing
-                $intgSave[$f] = $data[$f];
-            }
-            if ($intgSave) $this->settingModel->setMultiple($intgSave, 'integrations');
+            $this->saveGroup($data, self::DEEPFACE_FIELDS, self::DEEPFACE_SENSITIVE, 'biometria');
+            $this->saveGroup($data, self::FCM_FIELDS, self::FCM_SENSITIVE, 'integrations');
 
             $this->settingModel->clearCache();
 
-            return redirect()->back()->with('success', 'Integracoes salvas com sucesso.');
+            return redirect()->back()->with('success', 'Integrações salvas com sucesso.');
         } catch (\Throwable $e) {
             log_message('error', 'IntegrationsController::update ' . $e->getMessage());
+
             return redirect()->back()->withInput()->with('error', 'Erro ao salvar.');
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param list<string> $fields
+     * @param list<string> $sensitiveFields
+     */
+    private function saveGroup(array $data, array $fields, array $sensitiveFields, string $group): void
+    {
+        $save = [];
+        foreach ($fields as $field) {
+            if (! array_key_exists($field, $data)) {
+                continue;
+            }
+            // Campo sensivel em branco = manter valor ja salvo (nao sobrescrever
+            // com vazio so porque o admin nao redigitou o segredo).
+            if (in_array($field, $sensitiveFields, true) && trim((string) $data[$field]) === '') {
+                continue;
+            }
+            $save[$field] = $data[$field];
+        }
+
+        if ($save !== []) {
+            $this->settingModel->setMultiple($save, $group);
         }
     }
 }
