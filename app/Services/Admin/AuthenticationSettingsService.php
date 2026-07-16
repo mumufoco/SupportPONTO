@@ -10,6 +10,17 @@ use App\Models\SettingModel;
 
 class AuthenticationSettingsService
 {
+    private const BOOLEAN_FIELDS = ['enable_remember_me', 'self_registration_enabled'];
+
+    private const DEFAULTS = [
+        'session_timeout' => 3600,
+        'max_login_attempts' => 5,
+        'lockout_duration' => 900,
+        'enable_remember_me' => '0',
+        'remember_me_duration' => 2592000,
+        'self_registration_enabled' => '0',
+    ];
+
     public function __construct(private readonly ?SettingModel $settingModel = null)
     {
     }
@@ -32,25 +43,8 @@ class AuthenticationSettingsService
             'session_timeout' => 'permit_empty|integer|greater_than[0]',
             'max_login_attempts' => 'permit_empty|integer|greater_than[0]|less_than[100]',
             'lockout_duration' => 'permit_empty|integer|greater_than[0]',
-            'enable_2fa' => 'permit_empty|in_list[0,1]',
             'enable_remember_me' => 'permit_empty|in_list[0,1]',
             'remember_me_duration' => 'permit_empty|integer|greater_than[0]',
-            'password_reset_expiry' => 'permit_empty|integer|greater_than[0]',
-            'enable_email_verification' => 'permit_empty|in_list[0,1]',
-            'enable_login_notifications' => 'permit_empty|in_list[0,1]',
-            // Social + SMS auth fields
-            'social_google_enabled' => 'permit_empty|in_list[0,1]',
-            'social_google_client_id' => 'permit_empty',
-            'social_google_client_secret' => 'permit_empty',
-            'social_apple_enabled' => 'permit_empty|in_list[0,1]',
-            'social_apple_client_id' => 'permit_empty',
-            'social_apple_client_secret' => 'permit_empty',
-            'social_facebook_enabled' => 'permit_empty|in_list[0,1]',
-            'social_facebook_client_id' => 'permit_empty',
-            'social_facebook_client_secret' => 'permit_empty',
-            'sms_auth_enabled' => 'permit_empty|in_list[0,1]',
-            'sms_provider' => 'permit_empty|in_list[twilio,vonage,zenvia]',
-            'allowed_ip_addresses' => 'permit_empty|max_length[500]',
             'self_registration_enabled' => 'permit_empty|in_list[0,1]',
         ];
     }
@@ -60,8 +54,7 @@ class AuthenticationSettingsService
     {
         try {
             // Normalize unchecked checkboxes (HTML doesn't send unchecked checkboxes)
-            $booleanFields = ['enable_2fa', 'enable_remember_me', 'enable_email_verification', 'enable_login_notifications', 'social_google_enabled', 'social_apple_enabled', 'social_facebook_enabled', 'sms_auth_enabled', 'self_registration_enabled', 'enable_captcha'];
-            foreach ($booleanFields as $field) {
+            foreach (self::BOOLEAN_FIELDS as $field) {
                 if (!array_key_exists($field, $data)) {
                     $data[$field] = '0';
                 }
@@ -90,60 +83,20 @@ class AuthenticationSettingsService
         }
     }
 
-    /** @return array<string,mixed> */
-    public function twoFactorTestPayload(): array
+    /** @return array{success:bool,message:string} */
+    public function resetDefaults(): array
     {
         try {
-            $twoFactorService = \Config\Services::twoFactorAuthService();
-            $secret = $twoFactorService->generateSecret();
-            $accountName = (string) session()->get('user_email');
-            $qrDataUri = $twoFactorService->getQRCodeDataUri($secret, $accountName);
-            return [
-                'success' => true,
-                'message' => '2FA configurado corretamente',
-                'qr_code' => $qrDataUri,
-                'secret' => $secret,
-            ];
+            if (!$this->settings()->setMultiple(self::DEFAULTS, 'authentication')) {
+                throw new \RuntimeException('Failed to reset authentication settings');
+            }
+
+            $this->settings()->clearCache();
+
+            return ['success' => true, 'message' => 'Configurações de autenticação resetadas para o padrão'];
         } catch (\Throwable $e) {
-            log_message('error', 'twoFactorTestPayload: ' . $e->getMessage());
-            return [
-                'success' => false,
-                'message' => 'Erro ao gerar QR Code: ' . $e->getMessage(),
-            ];
+            log_message('error', 'Error resetting authentication settings: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Erro ao resetar autenticação.'];
         }
-    }
-
-    /** @return array<string,mixed> */
-    public function loginStatsPayload(): array
-    {
-        return [
-            'success' => true,
-            'stats' => [
-                'total_logins_today' => 0,
-                'failed_attempts_today' => 0,
-                'locked_accounts' => 0,
-                'active_sessions' => 0,
-            ],
-        ];
-    }
-
-    /** @return array<string,mixed> */
-    public function clearLockedAccountsPayload(): array
-    {
-        return [
-            'success' => true,
-            'message' => 'Todas as contas foram desbloqueadas',
-            'unlocked_count' => 0,
-        ];
-    }
-
-    /** @return array<string,mixed> */
-    public function testEmail(string $email): array
-    {
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ['success' => false, 'message' => 'Email inválido'];
-        }
-
-        return ['success' => true, 'message' => 'Email de teste enviado com sucesso'];
     }
 }

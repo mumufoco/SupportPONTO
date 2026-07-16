@@ -23,7 +23,35 @@ class RateLimitPolicyService
             'general' => ['max_attempts' => 100, 'decay_minutes' => 1],
         ];
 
+        $this->applyConfiguredLoginLimit();
         $this->whitelist = $this->loadWhitelist();
+    }
+
+    /**
+     * Sobrescreve o limite de tentativas de login com os valores configurados
+     * em Admin > Configuracoes > Autenticacao (max_login_attempts / lockout_duration),
+     * quando definidos. Mantem o default hardcoded como fallback -- nunca falha
+     * a construcao do servico se as settings nao estiverem disponiveis.
+     */
+    private function applyConfiguredLoginLimit(): void
+    {
+        try {
+            $settings = \Config\Services::settings(false);
+            $maxAttempts = (int) ($settings->get('max_login_attempts') ?? 0);
+            $lockoutSeconds = (int) ($settings->get('lockout_duration') ?? 0);
+
+            if ($maxAttempts <= 0 && $lockoutSeconds <= 0) {
+                return;
+            }
+
+            $current = $this->limits['login'];
+            $this->limits['login'] = [
+                'max_attempts' => $maxAttempts > 0 ? $maxAttempts : $current['max_attempts'],
+                'decay_minutes' => $lockoutSeconds > 0 ? max(1, (int) round($lockoutSeconds / 60)) : $current['decay_minutes'],
+            ];
+        } catch (\Throwable $e) {
+            // Settings indisponiveis (ex.: durante bootstrap/CLI sem DB) -- mantem o default hardcoded.
+        }
     }
 
     public function getLimit(string $type): array

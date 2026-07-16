@@ -96,9 +96,28 @@ class AuthFilter implements FilterInterface
     protected function isSessionExpired($session): bool
     {
         $lastActivity = (int) ($session->get('last_activity') ?? 0);
-        $idleTimeout = (int) env('session.idleTimeout', 1800);
+        $idleTimeout = $this->resolveIdleTimeout();
 
         return $lastActivity > 0 && $idleTimeout > 0 && (time() - $lastActivity) > $idleTimeout;
+    }
+
+    /**
+     * Le o tempo de sessao configurado em Admin > Configuracoes > Autenticacao
+     * (session_timeout), com fallback para session.idleTimeout do .env quando a
+     * setting nao estiver definida ou o banco estiver indisponivel.
+     */
+    protected function resolveIdleTimeout(): int
+    {
+        try {
+            $configured = (int) (Services::settings(false)->get('session_timeout') ?? 0);
+            if ($configured > 0) {
+                return $configured;
+            }
+        } catch (\Throwable $e) {
+            // Settings indisponiveis -- mantem o fallback do .env abaixo.
+        }
+
+        return (int) env('session.idleTimeout', 1800);
     }
 
     protected function hasSessionFingerprintMismatch(RequestInterface $request, $session): bool

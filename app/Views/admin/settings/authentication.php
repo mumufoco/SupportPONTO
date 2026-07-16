@@ -7,11 +7,10 @@
 
     <?= view('components/page_header', [
         'title'    => 'Configurações de Autenticação',
-        'subtitle' => 'Sessão, proteção de login, 2FA e políticas de senha.',
+        'subtitle' => 'Sessão, proteção de login e auto-cadastro.',
         'icon'     => 'bi bi-key-fill',
         'actions'  => [
-            ['label' => '2FA Avançado', 'icon' => 'bi bi-shield-lock-fill', 'url' => route_to('admin.settings.two-factor')],
-            ['label' => 'Segurança',    'icon' => 'bi bi-shield-fill',      'url' => route_to('admin.settings.security')],
+            ['label' => 'Segurança', 'icon' => 'bi bi-shield-fill', 'url' => route_to('admin.settings.security')],
         ],
     ]) ?>
 
@@ -81,104 +80,7 @@
             </div>
         </div>
 
-        <!-- 3. Autenticação em Duas Etapas (2FA) -->
-        <div class="sp-data-card mb-4">
-            <div class="sp-data-card__header">
-                <h2 class="sp-data-card__title"><i class="bi bi-phone-fill"></i>Autenticação em Duas Etapas (2FA)</h2>
-                <a href="<?= sp_safe_url(route_to('admin.settings.two-factor')) ?>" class="btn btn-sm btn-outline-primary ms-auto">
-                    <i class="bi bi-box-arrow-up-right me-1"></i>Configuração avançada
-                </a>
-            </div>
-            <div class="sp-data-card__body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="form-check form-switch mb-1">
-                            <input class="form-check-input" type="checkbox"
-                                   id="enable_2fa" name="enable_2fa" value="1"
-                                   <?= ($settings['enable_2fa'] ?? '0') === '1' ? 'checked' : '' ?>>
-                            <label class="form-check-label fw-semibold" for="enable_2fa">Habilitar 2FA</label>
-                        </div>
-                        <div class="form-text">TOTP (Google Authenticator, Authy) ou e-mail.</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="2fa_method" class="form-label fw-semibold">Método</label>
-                        <select class="form-select" id="2fa_method" name="2fa_method">
-                            <option value="totp"  <?= ($settings['2fa_method'] ?? 'totp') === 'totp'  ? 'selected' : '' ?>>TOTP — App autenticador</option>
-                            <option value="email" <?= ($settings['2fa_method'] ?? '') === 'email' ? 'selected' : '' ?>>E-mail</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. Política de Senha -->
-        <div class="sp-data-card mb-4">
-            <div class="sp-data-card__header">
-                <h2 class="sp-data-card__title"><i class="bi bi-lock-fill"></i>Política de Senha</h2>
-            </div>
-            <div class="sp-data-card__body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="password_min_length" class="form-label fw-semibold">Tamanho mínimo de senha</label>
-                        <input type="number" class="form-control" id="password_min_length" name="password_min_length"
-                               value="<?= esc($settings['password_min_length'] ?? 8) ?>"
-                               min="6" max="64">
-                        <div class="form-text">Mínimo recomendado: 8 caracteres.</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="password_reset_expiry" class="form-label fw-semibold">Expiração do link de reset (segundos)</label>
-                        <input type="number" class="form-control" id="password_reset_expiry" name="password_reset_expiry"
-                               value="<?= esc($settings['password_reset_expiry'] ?? 3600) ?>"
-                               min="300" max="86400">
-                        <div class="form-text">Padrão: 3600 = 1 hora.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. CAPTCHA -->
-        <div class="sp-data-card mb-4">
-            <div class="sp-data-card__header">
-                <h2 class="sp-data-card__title"><i class="bi bi-puzzle-fill"></i>CAPTCHA no Login</h2>
-            </div>
-            <div class="sp-data-card__body">
-                <div class="mb-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox"
-                               id="enable_captcha" name="enable_captcha" value="1"
-                               <?= ($settings['enable_captcha'] ?? '0') === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label fw-semibold" for="enable_captcha">Habilitar CAPTCHA</label>
-                    </div>
-                    <div class="form-text">Exige verificação humana após tentativas suspeitas de login.</div>
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold small">Provedor</label>
-                        <select class="form-select" name="captcha_provider">
-                            <option value="recaptcha_v2" <?= ($settings['captcha_provider'] ?? '') === 'recaptcha_v2' ? 'selected' : '' ?>>Google reCAPTCHA v2</option>
-                            <option value="recaptcha_v3" <?= ($settings['captcha_provider'] ?? '') === 'recaptcha_v3' ? 'selected' : '' ?>>Google reCAPTCHA v3</option>
-                            <option value="hcaptcha"     <?= ($settings['captcha_provider'] ?? '') === 'hcaptcha'     ? 'selected' : '' ?>>hCaptcha</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="captcha_site_key" class="form-label fw-semibold small">Site Key</label>
-                        <input type="text" class="form-control form-control-sm" id="captcha_site_key"
-                               name="captcha_site_key"
-                               value="<?= esc($settings['captcha_site_key'] ?? '') ?>"
-                               placeholder="Chave pública do CAPTCHA">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="captcha_secret_key" class="form-label fw-semibold small">Secret Key</label>
-                        <input type="password" class="form-control form-control-sm" id="captcha_secret_key"
-                               name="captcha_secret_key"
-                               placeholder="<?= !empty($settings['captcha_secret_key']) ? '••••• configurada' : 'Chave privada' ?>">
-                        <div class="form-text">Deixe em branco para manter a chave atual.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. Auto-Cadastro -->
+        <!-- 3. Auto-Cadastro -->
         <div class="sp-data-card mb-4">
             <div class="sp-data-card__header">
                 <h2 class="sp-data-card__title"><i class="bi bi-person-plus-fill"></i>Auto-Cadastro de Funcionários</h2>
@@ -209,16 +111,44 @@
 
         <!-- Botões -->
         <div class="sp-data-card mb-4">
-            <div class="sp-data-card__body d-flex gap-2 justify-content-end">
-                <a href="<?= sp_safe_url(sp_settings_center_url()) ?>" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>Cancelar
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-floppy-fill me-1"></i>Salvar configurações
+            <div class="sp-data-card__body d-flex gap-2 justify-content-between align-items-center flex-wrap">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="resetAuthenticationDefaults()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Restaurar padrão
                 </button>
+                <div class="d-flex gap-2">
+                    <a href="<?= sp_safe_url(sp_settings_center_url()) ?>" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-floppy-fill me-1"></i>Salvar configurações
+                    </button>
+                </div>
             </div>
         </div>
 
     </form>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+function resetAuthenticationDefaults() {
+    if (!confirm('Deseja restaurar as configurações de autenticação para o padrão? Esta ação não pode ser desfeita.')) return;
+
+    const currentPassword = prompt('Confirme sua senha atual para restaurar as configurações:');
+    if (currentPassword === null) return;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= sp_route_url('admin.settings.authentication.reset') ?>';
+    form.innerHTML = '<?= csrf_field() ?>';
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'current_password';
+    input.value = currentPassword;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
 <?= $this->endSection() ?>

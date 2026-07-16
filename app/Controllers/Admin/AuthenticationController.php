@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Authentication Settings Controller
  *
- * Manages authentication, session, 2FA, and password policies
+ * Manages session and login-protection settings.
  */
 class AuthenticationController extends BaseController
 {
@@ -27,7 +27,7 @@ class AuthenticationController extends BaseController
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        
+
         $this->authenticationService = Services::authenticationSettingsService(false);
         $this->sessionSecurityService = Services::sessionSecurityService();
         $this->settingsSafetyService = new SettingsSafetyService();
@@ -80,59 +80,6 @@ class AuthenticationController extends BaseController
     }
 
     /**
-     * Test 2FA configuration
-     */
-    public function test2FA()
-    {
-        if (!$this->request->is('post')) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Método inválido'
-            ]);
-        }
-
-        return $this->response->setJSON($this->authenticationService->twoFactorTestPayload());
-    }
-
-    /**
-     * Get login statistics
-     */
-    public function loginStats()
-    {
-        return $this->response->setJSON($this->authenticationService->loginStatsPayload());
-    }
-
-    /**
-     * Clear locked accounts
-     */
-    public function clearLockedAccounts()
-    {
-        if (!$this->request->is('post')) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Método inválido'
-            ]);
-        }
-
-        return $this->response->setJSON($this->authenticationService->clearLockedAccountsPayload());
-    }
-
-    /**
-     * Test email configuration for notifications
-     */
-    public function testEmail()
-    {
-        if (!$this->request->is('post')) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Método inválido'
-            ]);
-        }
-
-        return $this->response->setJSON($this->authenticationService->testEmail((string) $this->request->getPost('email')));
-    }
-
-    /**
      * Reset authentication settings to defaults
      */
     public function reset()
@@ -146,37 +93,24 @@ class AuthenticationController extends BaseController
             return redirect()->back()->with('error', $guard['message'] ?? 'Confirme sua senha para resetar autenticação.');
         }
 
-        try {
-            $settingsModel = Services::settings(false);
-            $snapshot = $this->settingsSafetyService->createPreDestructiveSnapshot(
-                'authentication_reset',
-                (int) ($this->currentUser->id ?? session()->get('user_id') ?? 0) ?: null,
-                ['authentication'],
-                ['controller' => 'Admin\AuthenticationController']
-            );
+        $snapshot = $this->settingsSafetyService->createPreDestructiveSnapshot(
+            'authentication_reset',
+            (int) ($this->currentUser->id ?? session()->get('user_id') ?? 0) ?: null,
+            ['authentication'],
+            ['controller' => 'Admin\AuthenticationController']
+        );
 
-            $settingsModel->deleteGroup('authentication');
+        $result = $this->authenticationService->resetDefaults();
 
-            $defaultSettings = [
-                'session_timeout' => 3600,
-                'max_login_attempts' => 5,
-                'enable_2fa' => false,
-            ];
-
-            $settingsModel->setMultiple($defaultSettings, 'authentication');
-            $settingsModel->clearCache();
-
-            $message = 'Configurações de autenticação resetadas para o padrão';
-            if (($snapshot['success'] ?? false) && ! empty($snapshot['relative_path'])) {
-                $message .= ' Snapshot preventivo: ' . $snapshot['relative_path'];
-            }
-
-            return redirect()->back()->with('success', $message);
-
-        } catch (\Throwable $e) {
-            helper('observability');
-            supportponto_log_exception('admin.authentication', 'reset', $e);
-            return redirect()->back()->with('error', supportponto_public_error_message('Erro ao resetar autenticação.'));
+        if (!($result['success'] ?? false)) {
+            return redirect()->back()->with('error', $result['message']);
         }
+
+        $message = $result['message'];
+        if (($snapshot['success'] ?? false) && ! empty($snapshot['relative_path'])) {
+            $message .= ' Snapshot preventivo: ' . $snapshot['relative_path'];
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 }

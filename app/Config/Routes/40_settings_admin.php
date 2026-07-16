@@ -113,10 +113,6 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->post('appearance/preview', 'Admin\AppearanceController::preview', ['as' => 'admin.settings.appearance.preview']);
     $routes->get('authentication', 'Admin\AuthenticationController::index', ['as' => 'admin.settings.authentication']);
     $routes->post('authentication/update', 'Admin\AuthenticationController::update', ['as' => 'admin.settings.authentication.update']);
-    $routes->post('authentication/test-2fa', 'Admin\AuthenticationController::test2FA', ['as' => 'admin.settings.authentication.test-2fa']);
-    $routes->get('authentication/login-stats', 'Admin\AuthenticationController::loginStats', ['as' => 'admin.settings.authentication.login-stats']);
-    $routes->post('authentication/clear-locked', 'Admin\AuthenticationController::clearLockedAccounts', ['as' => 'admin.settings.authentication.clear-locked', 'filter' => ['auth', 'admin', 'stepup:back']]);
-    $routes->post('authentication/test-email', 'Admin\AuthenticationController::testEmail', ['as' => 'admin.settings.authentication.test-email']);
     $routes->post('authentication/reset', 'Admin\AuthenticationController::reset', ['as' => 'admin.settings.authentication.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->get('system', 'Admin\SystemController::index', ['as' => 'admin.settings.system']);
     $routes->post('system/update', 'Admin\SystemController::update', ['as' => 'admin.settings.system.update']);
