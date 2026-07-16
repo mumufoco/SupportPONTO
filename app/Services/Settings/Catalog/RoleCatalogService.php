@@ -168,10 +168,17 @@ class RoleCatalogService
             return null;
         }
 
-        $active = filter_var($role->active ?? false, FILTER_VALIDATE_BOOLEAN) ? 'false' : 'true';
-        $this->model->update($id, ['active' => $active]);
+        // BUG CORRIGIDO: a versao anterior fazia "return $active;" com $active
+        // sendo a STRING 'true'/'false' usada pra gravar no banco -- como o retorno
+        // e tipado ?bool, PHP coagia qualquer string nao-vazia (inclusive 'false')
+        // pra true, entao o toggle sempre respondia active=true no JSON pro
+        // front-end, mesmo quando o banco realmente virava false. Mesmo padrao
+        // ja usado (correto) em DepartmentCatalogService/PositionCatalogService/
+        // WorkUnitCatalogService: bool real primeiro, string derivada dele depois.
+        $newActive = !($role->active === true || $role->active === 't');
+        $this->model->update($id, ['active' => $newActive ? 'true' : 'false']);
         $this->bustCache();
 
-        return $active;
+        return $newActive;
     }
 }
