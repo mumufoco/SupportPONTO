@@ -126,12 +126,10 @@ class RoleCatalogService
 
 
     /**
-     * Admin tem acesso total — pode excluir qualquer role.
-     * Só é bloqueado se houver colaboradores ativos vinculados.
-     * @var list<string>
+     * Qualquer nivel de acesso pode ser excluido -- nao ha distincao de
+     * 'role nativo/protegido'. So e bloqueado se houver colaboradores
+     * ativos vinculados (integridade referencial), nunca pelo nome do role.
      */
-    private const SYSTEM_ROLES = ['admin', 'gestor', 'funcionario', 'rh', 'dpo', 'auditor'];
-
     public function delete(int $id): array
     {
         $role = $this->find($id);

@@ -70,23 +70,18 @@
                             </tr>
                         <?php else: ?>
                             <?php
-                            $systemRoles = ['admin', 'gestor', 'funcionario', 'rh', 'dpo', 'auditor'];
                             foreach ($roles as $role):
                                 $roleId   = $role->id ?? $role['id'] ?? 0;
                                 $roleName = $role->name ?? $role['name'] ?? '';
                                 $roleDesc = $role->description ?? $role['description'] ?? '-';
-                                $roleActive = filter_var($role->active ?? true, FILTER_VALIDATE_BOOLEAN);
-                                $isSystem = in_array(strtolower($roleName), $systemRoles, true);
+                                $roleActive = ($role->active === true || $role->active === 't');
                                 $permsRaw = $role->permissions ?? $role['permissions'] ?? '[]';
                                 $perms = is_string($permsRaw) ? (json_decode($permsRaw, true) ?: []) : (array) $permsRaw;
                                 $permCount = count($perms);
                             ?>
-                                <tr>
+                                <tr id="row-role-<?= (int) $roleId ?>">
                                     <td>
                                         <strong><?= esc($roleName) ?></strong>
-                                        <?php if ($isSystem): ?>
-                                            <span class="badge bg-light text-muted border ms-1" title="Role nativo do sistema">nativo</span>
-                                        <?php endif; ?>
                                     </td>
                                     <td class="text-muted"><?= esc($roleDesc) ?></td>
                                     <td>
@@ -99,7 +94,7 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge <?= $roleActive ? 'bg-success' : 'bg-secondary' ?>">
+                                        <span class="badge <?= $roleActive ? 'bg-success' : 'bg-secondary' ?> sp-status-badge">
                                             <?= $roleActive ? 'Ativo' : 'Inativo' ?>
                                         </span>
                                     </td>
@@ -109,6 +104,12 @@
                                                class="btn btn-sm btn-outline-secondary" title="Editar">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </a>
+                                            <button type="button"
+                                                    class="btn btn-sm <?= $roleActive ? 'btn-outline-warning' : 'btn-outline-success' ?>"
+                                                    title="<?= $roleActive ? 'Desativar' : 'Ativar' ?>"
+                                                    onclick="catalogToggle(this, '<?= sp_route_url('settings.roles.toggle', $roleId) ?>')">
+                                                <i class="bi <?= $roleActive ? 'bi-toggle-on' : 'bi-toggle-off' ?>"></i>
+                                            </button>
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-danger"
                                                     title="Excluir nível de acesso"
@@ -186,7 +187,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
+<script <?= csp_script_nonce_attr() ?>>
 function confirmDeleteRole(id, name) {
     document.getElementById('deleteRoleName').textContent = name;
     document.getElementById('deleteRoleForm').action = '<?= site_url('settings/roles/') ?>' + id + '/delete';
@@ -218,6 +219,36 @@ function confirmDeleteRole(id, name) {
     };
 
     new bootstrap.Modal(document.getElementById('deleteRoleModal')).show();
+}
+
+async function catalogToggle(btn, url) {
+    const nameEl  = document.querySelector('meta[name="csrf-token-name"]');
+    const hashEl  = document.querySelector('meta[name="csrf-hash"]');
+    if (!nameEl || !hashEl) return;
+    btn.disabled = true;
+    try {
+        const fd = new FormData();
+        fd.append(nameEl.content, hashEl.content);
+        const r    = await fetch(url, { method: 'POST', body: fd });
+        const data = await r.json();
+        if (data.success !== false) {
+            const row    = btn.closest('tr');
+            const badge  = row.querySelector('.sp-status-badge');
+            const active = data.active ?? (data.status === 'active');
+            badge.textContent = active ? 'Ativo' : 'Inativo';
+            badge.className   = 'badge sp-status-badge ' + (active ? 'bg-success' : 'bg-secondary');
+            btn.className     = 'btn btn-sm ' + (active ? 'btn-outline-warning' : 'btn-outline-success');
+            btn.title         = active ? 'Desativar' : 'Ativar';
+            btn.querySelector('i').className = 'bi ' + (active ? 'bi-toggle-on' : 'bi-toggle-off');
+            if (hashEl && data.csrf_hash) { hashEl.content = data.csrf_hash; }
+        } else {
+            alert(data.message ?? 'Erro ao alterar status.');
+        }
+    } catch (e) {
+        alert('Erro de comunicação. Tente novamente.');
+    } finally {
+        btn.disabled = false;
+    }
 }
 </script>
 <?= $this->endSection() ?>

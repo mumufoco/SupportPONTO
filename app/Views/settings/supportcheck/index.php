@@ -92,7 +92,7 @@
     </div>
 </div>
 
-<script>
+<script <?= csp_script_nonce_attr() ?>>
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
 function showFeedback(success, message, details) {
