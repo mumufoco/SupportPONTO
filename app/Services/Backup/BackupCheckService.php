@@ -44,8 +44,28 @@ class BackupCheckService
 
         $risks = [];
 
-        if ($readiness['status'] !== 'ready') {
-            $risks[] = 'Ambiente não está pronto para gerar backup (verifique pg_dump/psql/permissões).';
+        // Os checks 'runtime_policy'/'pg_dump'/'psql'/'proc_open' de proposito
+        // reportam bloqueado quando chamados a partir de uma requisicao web
+        // (ProcessSafety::canRunDatabaseBackupInCurrentRuntime() so libera
+        // execucao de shell via CLI) -- isso e o comportamento de seguranca
+        // CORRETO (o backup de verdade so roda via cron/worker CLI, nunca a
+        // partir do processo web), nao um problema real. So tratamos como
+        // risco de fato quando o check e chamado em contexto CLI (onde o
+        // resultado reflete se o cron consegue rodar) ou quando a causa e
+        // algo independente de runtime (config do banco, caminho do backup).
+        $runtimeGatedLabels = ['runtime_policy', 'pg_dump', 'psql', 'proc_open'];
+        $realFailures = [];
+        foreach (($readiness['checks'] ?? []) as $label => $check) {
+            if (($check['status'] ?? 'error') === 'ok') {
+                continue;
+            }
+            if (!is_cli() && in_array($label, $runtimeGatedLabels, true)) {
+                continue; // esperado a partir da web, nao e risco
+            }
+            $realFailures[] = $label;
+        }
+        if ($realFailures !== []) {
+            $risks[] = 'Ambiente não está pronto para gerar backup (' . implode(', ', $realFailures) . ').';
         }
         if (!$latest) {
             $risks[] = 'Nenhum backup encontrado no destino configurado.';
