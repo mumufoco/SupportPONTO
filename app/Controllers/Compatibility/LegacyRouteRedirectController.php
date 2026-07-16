@@ -21,7 +21,7 @@ final class LegacyRouteRedirectController extends BaseController
 
     public function settingsSecurity(): RedirectResponse
     {
-        return redirect()->to(route_to('admin.settings.security'));
+        return redirect()->to(route_to('admin.settings.controls'));
     }
 
     public function settingsSystem(): RedirectResponse
@@ -31,7 +31,7 @@ final class LegacyRouteRedirectController extends BaseController
 
     public function settingsAuthentication(): RedirectResponse
     {
-        return redirect()->to(route_to('admin.settings.authentication'));
+        return redirect()->to(route_to('admin.settings.controls'));
     }
 
     public function geofencesIndex(): RedirectResponse

@@ -10,8 +10,7 @@
         'subtitle' => 'Dados corporativos, configurações regionais e preferências operacionais.',
         'icon'     => 'bi bi-cpu-fill',
         'actions'  => [
-            ['label' => 'Segurança',    'icon' => 'bi bi-shield-lock-fill', 'url' => route_to('admin.settings.security')],
-            ['label' => 'Autenticação', 'icon' => 'bi bi-key-fill',         'url' => route_to('admin.settings.authentication')],
+            ['label' => 'Controles',    'icon' => 'bi bi-shield-lock-fill', 'url' => route_to('admin.settings.controls')],
         ],
     ]) ?>
 

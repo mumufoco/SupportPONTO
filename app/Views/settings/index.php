@@ -16,7 +16,7 @@
         'actions'  => [
             ['label' => 'Aparência',    'icon' => 'bi bi-palette-fill',    'url' => route_to('admin.settings.appearance')],
             ['label' => 'Sistema',      'icon' => 'bi bi-cpu-fill',        'url' => route_to('admin.settings.system')],
-            ['label' => 'Segurança',    'icon' => 'bi bi-shield-lock-fill','url' => route_to('admin.settings.security')],
+            ['label' => 'Controles',    'icon' => 'bi bi-shield-lock-fill','url' => route_to('admin.settings.controls')],
         ],
     ]) ?>
 
@@ -68,9 +68,8 @@
                     <a href="<?= route_to('admin.settings.personalization') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-brush-fill me-2"></i>Personalização</a>
                     <a href="<?= route_to('admin.settings.information') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-info-circle-fill me-2"></i>Informações</a>
                     <a href="<?= route_to('admin.settings.system') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-cpu-fill me-2"></i>Sistema</a>
-                    <a href="<?= route_to('admin.settings.authentication') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-key-fill me-2"></i>Autenticação</a>
+                    <a href="<?= route_to('admin.settings.controls') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-shield-lock-fill me-2"></i>Controles</a>
                     <a href="<?= route_to('admin.settings.two-factor') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-shield-check me-2"></i>Dois Fatores</a>
-                    <a href="<?= route_to('admin.settings.security') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-shield-lock-fill me-2"></i>Segurança</a>
                     <a href="<?= route_to('admin.settings.certificate') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-award-fill me-2"></i>Certificado ICP</a>
                     <a href="<?= route_to('admin.settings.email') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-envelope-at-fill me-2"></i>Email</a>
                     <a href="<?= route_to('admin.settings.email-templates') ?>" class="nav-link text-start py-2 px-2 text-secondary small"><i class="bi bi-envelope-paper-fill me-2"></i>Templates de Email</a>

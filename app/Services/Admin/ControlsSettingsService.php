@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Admin;
 
 use App\Models\AuditModel;
@@ -7,8 +9,65 @@ use App\Models\SettingModel;
 use App\Services\Backup\DatabaseBackupService;
 use Config\Services;
 
-class SecuritySettingsService
+/**
+ * Controles (Segurança + Autenticação)
+ *
+ * Une as antigas telas /admin/settings/security e /admin/settings/authentication
+ * em uma única página. As duas continuam persistidas em grupos de settings
+ * separados ('security' e 'authentication') -- unificar apenas o grupo tambem
+ * exigiria migrar as linhas ja salvas no banco, sem nenhum ganho visivel para
+ * quem usa a tela; o que o admin realmente pedia era uma pagina/form/botao
+ * unicos, que e o que esta classe entrega.
+ */
+class ControlsSettingsService
 {
+    /**
+     * Checkboxes desmarcados nao sao enviados pelo navegador -- update()
+     * precisa normalizar cada um destes para '0' quando ausente do POST.
+     *
+     * @var list<string>
+     */
+    private const SECURITY_BOOLEAN_FIELDS = [
+        'password_require_uppercase', 'password_require_lowercase',
+        'password_require_numbers', 'password_require_special',
+        'force_https', 'regenerate_session_id', 'enable_xss_filter',
+        'enable_audit_log', 'log_logins', 'log_data_changes',
+        'log_deletions', 'log_settings_changes',
+        'enable_data_anonymization', 'allow_data_export',
+    ];
+
+    private const AUTHENTICATION_BOOLEAN_FIELDS = ['enable_remember_me', 'self_registration_enabled'];
+
+    private const SECURITY_DEFAULTS = [
+        'password_min_length' => 8,
+        'password_expiry_days' => 0,
+        'password_require_uppercase' => 1,
+        'password_require_lowercase' => 1,
+        'password_require_numbers' => 1,
+        'password_require_special' => 1,
+        'force_https' => 1,
+        'regenerate_session_id' => 1,
+        'enable_xss_filter' => 1,
+        'enable_audit_log' => 1,
+        'audit_log_retention_days' => 90,
+        'log_logins' => 1,
+        'log_data_changes' => 1,
+        'log_deletions' => 1,
+        'log_settings_changes' => 1,
+        'enable_data_anonymization' => 1,
+        'anonymization_period_days' => 365,
+        'allow_data_export' => 1,
+    ];
+
+    private const AUTHENTICATION_DEFAULTS = [
+        'session_timeout' => 3600,
+        'max_login_attempts' => 5,
+        'lockout_duration' => 900,
+        'enable_remember_me' => '0',
+        'remember_me_duration' => 2592000,
+        'self_registration_enabled' => '0',
+    ];
+
     public function __construct(
         private readonly ?SettingModel $settingModel = null,
         private readonly ?AuditModel $auditModel = null,
@@ -16,9 +75,15 @@ class SecuritySettingsService
     ) {
     }
 
+    /** @return array<string,mixed> */
     public function pageData(): array
     {
-        return ['settings' => $this->settings()->getByGroupMap('security')];
+        return [
+            'settings' => array_merge(
+                $this->settings()->getByGroupMap('security'),
+                $this->settings()->getByGroupMap('authentication')
+            ),
+        ];
     }
 
     private function settings(): SettingModel
@@ -37,29 +102,12 @@ class SecuritySettingsService
     }
 
     /**
-     * Campos booleanos (checkboxes) do formulário de segurança. Checkboxes
-     * desmarcados não são enviados pelo navegador, então update() precisa
-     * normalizar explicitamente cada um destes para '0' quando ausente do
-     * POST — senão o valor antigo nunca é sobrescrito e a configuração
-     * parece "não salvar" quando o admin desmarca uma opção.
-     *
-     * @var list<string>
-     */
-    private const BOOLEAN_FIELDS = [
-        'password_require_uppercase', 'password_require_lowercase',
-        'password_require_numbers', 'password_require_special',
-        'force_https', 'regenerate_session_id', 'enable_xss_filter',
-        'enable_audit_log', 'log_logins', 'log_data_changes',
-        'log_deletions', 'log_settings_changes',
-        'enable_data_anonymization', 'allow_data_export',
-    ];
-
-    /**
-     * Regras alinhadas aos campos reais de app/Views/admin/settings/security.php.
+     * Regras alinhadas aos campos reais de app/Views/admin/settings/controls.php.
      */
     public function rules(): array
     {
         return [
+            // Segurança
             'password_min_length' => 'required|integer|greater_than[5]|less_than[129]',
             'password_expiry_days' => 'permit_empty|integer|greater_than_equal_to[0]',
             'password_require_uppercase' => 'permit_empty|in_list[0,1]',
@@ -78,24 +126,42 @@ class SecuritySettingsService
             'enable_data_anonymization' => 'permit_empty|in_list[0,1]',
             'anonymization_period_days' => 'permit_empty|integer|greater_than_equal_to[30]',
             'allow_data_export' => 'permit_empty|in_list[0,1]',
+            // Autenticação
+            'session_timeout' => 'permit_empty|integer|greater_than[0]',
+            'max_login_attempts' => 'permit_empty|integer|greater_than[0]|less_than[100]',
+            'lockout_duration' => 'permit_empty|integer|greater_than[0]',
+            'enable_remember_me' => 'permit_empty|in_list[0,1]',
+            'remember_me_duration' => 'permit_empty|integer|greater_than[0]',
+            'self_registration_enabled' => 'permit_empty|in_list[0,1]',
         ];
     }
 
+    /** @param array<string,mixed> $data @return array{success:bool,message:string} */
     public function update(array $data, ?int $userId = null): array
     {
         try {
-            // Normaliza checkboxes desmarcados (ausentes do POST) para '0'
-            foreach (self::BOOLEAN_FIELDS as $field) {
+            foreach (self::SECURITY_BOOLEAN_FIELDS as $field) {
+                if (!array_key_exists($field, $data)) {
+                    $data[$field] = '0';
+                }
+            }
+            foreach (self::AUTHENTICATION_BOOLEAN_FIELDS as $field) {
                 if (!array_key_exists($field, $data)) {
                     $data[$field] = '0';
                 }
             }
 
+            $securityData = array_intersect_key($data, self::SECURITY_DEFAULTS);
+            $authenticationData = array_intersect_key($data, self::AUTHENTICATION_DEFAULTS);
+
             $db = \Config\Database::connect();
             $db->transStart();
 
-            if (! $this->settings()->setMultiple($data, 'security')) {
+            if (!$this->settings()->setMultiple($securityData, 'security')) {
                 throw new \RuntimeException('Failed to save security settings');
+            }
+            if (!$this->settings()->setMultiple($authenticationData, 'authentication')) {
+                throw new \RuntimeException('Failed to save authentication settings');
             }
 
             $db->transComplete();
@@ -104,11 +170,11 @@ class SecuritySettingsService
             }
 
             $this->settings()->clearCache();
-            log_message('info', 'Security settings updated successfully', ['user' => $userId, 'settings' => array_keys($data)]);
+            log_message('info', 'Controls settings updated successfully', ['user' => $userId, 'settings' => array_keys($data)]);
 
-            return ['success' => true, 'message' => 'Configurações de segurança atualizadas com sucesso'];
+            return ['success' => true, 'message' => 'Configurações de controles atualizadas com sucesso'];
         } catch (\Throwable $e) {
-            log_message('error', 'Error updating security settings: ' . $e->getMessage(), [
+            log_message('error', 'Error updating controls settings: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'user' => $userId,
             ]);
@@ -165,10 +231,6 @@ class SecuritySettingsService
         $logs = array_map(static function ($row): array {
             $level = (string) ($row->level ?? 'info');
             $action = (string) ($row->action ?? '');
-            // O 'level' sozinho não basta: eventos como LOGIN_FAILED são gravados
-            // com level='warning' (não está na lista de níveis de erro), o que
-            // fazia a UI mostrar 'success' para uma tentativa de login que falhou.
-            // Complementamos olhando o sufixo da própria ação.
             $isFailureAction = (bool) preg_match('/_(FAILED|DENIED|REJECTED|BLOCKED|ERROR)$/', $action);
             $isFailureLevel = in_array($level, ['error', 'critical', 'alert', 'emergency'], true);
 
@@ -259,42 +321,21 @@ class SecuritySettingsService
     }
 
     /**
-     * Restaura todas as configurações de segurança para os valores padrão.
-     * Precisa cobrir TODOS os campos do formulário — deleteGroup() apaga o
-     * grupo inteiro antes de regravar, então qualquer campo omitido aqui
-     * fica sem valor algum (nem o padrão) até o admin salvar manualmente.
+     * Restaura Segurança e Autenticação para os valores padrão em uma única ação.
      */
     public function resetDefaults(): array
     {
         try {
             $this->settings()->deleteGroup('security');
-            $this->settings()->setMultiple([
-                'password_min_length' => 8,
-                'password_expiry_days' => 0,
-                'password_require_uppercase' => 1,
-                'password_require_lowercase' => 1,
-                'password_require_numbers' => 1,
-                'password_require_special' => 1,
-                'force_https' => 1,
-                'regenerate_session_id' => 1,
-                'enable_xss_filter' => 1,
-                'enable_audit_log' => 1,
-                'audit_log_retention_days' => 90,
-                'log_logins' => 1,
-                'log_data_changes' => 1,
-                'log_deletions' => 1,
-                'log_settings_changes' => 1,
-                'enable_data_anonymization' => 1,
-                'anonymization_period_days' => 365,
-                'allow_data_export' => 1,
-            ], 'security');
+            $this->settings()->setMultiple(self::SECURITY_DEFAULTS, 'security');
+            $this->settings()->setMultiple(self::AUTHENTICATION_DEFAULTS, 'authentication');
 
             $this->settings()->clearCache();
 
-            return ['success' => true, 'message' => 'Configurações de segurança resetadas para o padrão'];
+            return ['success' => true, 'message' => 'Configurações de controles resetadas para o padrão'];
         } catch (\Throwable $e) {
-            log_message('error', 'Security reset failed: ' . $e->getMessage());
-            return ['success' => false, 'message' => 'Erro ao restaurar as configurações de segurança.'];
+            log_message('error', 'Controls reset failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Erro ao restaurar as configurações.'];
         }
     }
 

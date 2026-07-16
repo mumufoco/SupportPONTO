@@ -3,8 +3,7 @@
 namespace Config\Concerns;
 
 use App\Services\Admin\AppearanceSettingsService;
-use App\Services\Admin\AuthenticationSettingsService;
-use App\Services\Admin\SecuritySettingsService;
+use App\Services\Admin\ControlsSettingsService;
 use App\Services\Admin\SystemSettingsService;
 use App\Services\Biometric\FingerprintSettingsService;
 
@@ -20,23 +19,13 @@ trait AdminServicesTrait
             static::settings(false)
         );
     }
-    public static function authenticationSettingsService(bool $getShared = true): AuthenticationSettingsService
+    public static function controlsSettingsService(bool $getShared = true): ControlsSettingsService
     {
         if ($getShared) {
-            return static::getSharedInstance('authenticationSettingsService');
+            return static::getSharedInstance('controlsSettingsService');
         }
 
-        return new AuthenticationSettingsService(
-            static::settings(false)
-        );
-    }
-    public static function securitySettingsService(bool $getShared = true): SecuritySettingsService
-    {
-        if ($getShared) {
-            return static::getSharedInstance('securitySettingsService');
-        }
-
-        return new SecuritySettingsService(
+        return new ControlsSettingsService(
             static::settings(false)
         );
     }

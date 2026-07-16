@@ -6,7 +6,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Services\Auth\SessionSecurityService;
-use App\Services\Admin\SecuritySettingsService;
+use App\Services\Admin\ControlsSettingsService;
 use App\Services\Queue\AsyncJobService;
 use App\Services\Settings\SettingsSafetyService;
 use Config\Services;
@@ -14,9 +14,16 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
-class SecurityController extends BaseController
+/**
+ * Controles (Segurança + Autenticação)
+ *
+ * Une as antigas telas /admin/settings/security e /admin/settings/authentication
+ * (App\Controllers\Admin\SecurityController e AuthenticationController) em uma
+ * única página/controller, a pedido do admin.
+ */
+class ControlsController extends BaseController
 {
-    protected SecuritySettingsService $securityService;
+    protected ControlsSettingsService $controlsService;
     protected SessionSecurityService $sessionSecurityService;
     protected AsyncJobService $asyncJobService;
     protected SettingsSafetyService $settingsSafetyService;
@@ -24,7 +31,7 @@ class SecurityController extends BaseController
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->securityService = Services::securitySettingsService(false);
+        $this->controlsService = Services::controlsSettingsService(false);
         $this->sessionSecurityService = Services::sessionSecurityService();
         $this->asyncJobService = new AsyncJobService();
         $this->settingsSafetyService = new SettingsSafetyService();
@@ -32,13 +39,13 @@ class SecurityController extends BaseController
 
     public function index()
     {
-        $pageData = $this->securityService->pageData();
+        $pageData = $this->controlsService->pageData();
 
-        return view('admin/settings/security', [
-            'title' => 'Configurações de Segurança',
+        return view('admin/settings/controls', [
+            'title' => 'Controles',
             'breadcrumbs' => [
                 ['label' => 'Configurações', 'url' => 'settings'],
-                ['label' => 'Segurança', 'url' => ''],
+                ['label' => 'Controles', 'url' => ''],
             ],
             'settings' => $pageData['settings'],
         ]);
@@ -50,11 +57,11 @@ class SecurityController extends BaseController
             return redirect()->back()->with('error', 'Método inválido');
         }
 
-        if (!$this->validate($this->securityService->rules())) {
+        if (!$this->validate($this->controlsService->rules())) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $result = $this->securityService->update(
+        $result = $this->controlsService->update(
             security_sanitize($this->request->getPost() ?? []),
             session()->get('user_id') ? (int) session()->get('user_id') : null
         );
@@ -68,7 +75,7 @@ class SecurityController extends BaseController
 
     public function auditLogs()
     {
-        return $this->response->setJSON($this->securityService->auditLogs([
+        return $this->response->setJSON($this->controlsService->auditLogs([
             'page' => $this->request->getGet('page'),
             'per_page' => $this->request->getGet('per_page'),
             'q' => $this->request->getGet('q'),
@@ -109,7 +116,7 @@ class SecurityController extends BaseController
                 'download_url' => sp_async_job_download_url((string) $job['job_id']),
             ])->setStatusCode(202);
         } catch (\Throwable $e) {
-            supportponto_log_exception('admin.security', 'backup', $e);
+            supportponto_log_exception('admin.controls', 'backup', $e);
             return $this->response->setJSON([
                 'success' => false,
                 'message' => supportponto_public_error_message('Erro ao enfileirar backup seguro.'),
@@ -123,7 +130,7 @@ class SecurityController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Método inválido']);
         }
 
-        return $this->response->setJSON($this->securityService->evaluatePassword((string) $this->request->getPost('password')));
+        return $this->response->setJSON($this->controlsService->evaluatePassword((string) $this->request->getPost('password')));
     }
 
     public function reset()
@@ -134,18 +141,18 @@ class SecurityController extends BaseController
 
         $guard = $this->sessionSecurityService->ensureCriticalActionAllowed($this->currentUser, $this->request, $this->session);
         if (! ($guard['success'] ?? false)) {
-            return redirect()->back()->with('error', $guard['message'] ?? 'Confirme sua senha para restaurar padrões de segurança.');
+            return redirect()->back()->with('error', $guard['message'] ?? 'Confirme sua senha para restaurar os controles.');
         }
 
         try {
             $snapshot = $this->settingsSafetyService->createPreDestructiveSnapshot(
-                'security_reset',
+                'controls_reset',
                 (int) ($this->currentUser->id ?? session()->get('user_id') ?? 0) ?: null,
-                ['security'],
-                ['controller' => 'Admin\SecurityController']
+                ['security', 'authentication'],
+                ['controller' => 'Admin\ControlsController']
             );
 
-            $result = $this->securityService->resetDefaults();
+            $result = $this->controlsService->resetDefaults();
             if (($result['success'] ?? false) && ($snapshot['success'] ?? false) && ! empty($snapshot['relative_path'])) {
                 $result['message'] .= ' Snapshot preventivo: ' . $snapshot['relative_path'];
             }
@@ -153,8 +160,8 @@ class SecurityController extends BaseController
             return redirect()->back()->with(($result['success'] ?? false) ? 'success' : 'error', $result['message']);
         } catch (\Throwable $e) {
             helper('observability');
-            supportponto_log_exception('admin.security', 'reset', $e);
-            return redirect()->back()->with('error', supportponto_public_error_message('Erro ao restaurar as configurações de segurança.'));
+            supportponto_log_exception('admin.controls', 'reset', $e);
+            return redirect()->back()->with('error', supportponto_public_error_message('Erro ao restaurar os controles.'));
         }
     }
 }

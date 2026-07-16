@@ -10,7 +10,7 @@
         'subtitle' => 'Controle como o 2FA é exigido no login e acompanhe a adesão dos colaboradores.',
         'icon'     => 'bi bi-shield-lock-fill',
         'actions'  => [
-            ['label' => 'Autenticação', 'icon' => 'bi bi-key-fill', 'url' => sp_route_url('admin.settings.authentication')],
+            ['label' => 'Controles', 'icon' => 'bi bi-key-fill', 'url' => sp_route_url('admin.settings.controls')],
             ['label' => 'Meu 2FA', 'icon' => 'bi bi-person-fill-lock', 'url' => site_url('auth/2fa/manage')],
         ],
     ]) ?>

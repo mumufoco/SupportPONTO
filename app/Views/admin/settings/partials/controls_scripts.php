@@ -18,7 +18,7 @@ function testPassword() {
 
     resultDiv.innerHTML = '<div class="spinner spinner-sm"></div>';
 
-    spFetch('<?= sp_route_url('admin.settings.security.test-password') ?>', {
+    spFetch('<?= sp_route_url('admin.settings.controls.test-password') ?>', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -77,7 +77,7 @@ function viewAuditLogs() {
     container.style.display = 'block';
     container.innerHTML = '<div class="sp-state-loading"><div class="spinner"></div></div>';
 
-    spFetch('<?= sp_route_url('admin.settings.security.audit-logs') ?>')
+    spFetch('<?= sp_route_url('admin.settings.controls.audit-logs') ?>')
         .then(response => response.json())
         .then(data => {
             if (data.success && data.logs.length > 0) {
@@ -142,7 +142,7 @@ function createBackup() {
     const formData = new FormData();
     formData.append('current_password', currentPassword);
 
-    spFetch('<?= sp_route_url('admin.settings.security.backup') ?>', {
+    spFetch('<?= sp_route_url('admin.settings.controls.backup') ?>', {
         method: 'POST',
         body: formData
     })
@@ -167,14 +167,14 @@ function createBackup() {
 
 // Reset to defaults
 function resetToDefaults() {
-    if (!confirm('Deseja restaurar todas as configurações de segurança para o padrão? Esta ação não pode ser desfeita.')) return;
+    if (!confirm('Deseja restaurar todas as configurações de Segurança e Autenticação para o padrão? Esta ação não pode ser desfeita.')) return;
 
-    const currentPassword = prompt('Confirme sua senha atual para restaurar as configurações de segurança:');
+    const currentPassword = prompt('Confirme sua senha atual para restaurar as configurações:');
     if (currentPassword === null) return;
 
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '<?= sp_route_url('admin.settings.security.reset') ?>';
+    form.action = '<?= sp_route_url('admin.settings.controls.reset') ?>';
     form.innerHTML = '<?= csrf_field() ?>';
     const input = document.createElement('input');
     input.type = 'hidden';

@@ -89,7 +89,7 @@ class SettingModel extends Model
      * Invalida todos os caches de configuração do sistema.
      *
      * Mantido público porque é chamado diretamente por controllers e serviços
-     * após gravações de configuração (AppearanceSettingsService, SecuritySettingsService,
+     * após gravações de configuração (AppearanceSettingsService, ControlsSettingsService,
      * BaseSettingsController etc.). A granularidade por chave não é necessária aqui
      * porque alterações de configuração são operações raras e de baixo throughput.
      *

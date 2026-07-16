@@ -111,19 +111,20 @@ $routes->group('admin/settings', ['filter' => ['auth', 'admin']], static functio
     $routes->post('personalization/reset', 'Admin\\PersonalizationController::reset', ['as' => 'admin.settings.personalization.reset']);
     $routes->post('appearance/reset', 'Admin\AppearanceController::reset', ['as' => 'admin.settings.appearance.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->post('appearance/preview', 'Admin\AppearanceController::preview', ['as' => 'admin.settings.appearance.preview']);
-    $routes->get('authentication', 'Admin\AuthenticationController::index', ['as' => 'admin.settings.authentication']);
-    $routes->post('authentication/update', 'Admin\AuthenticationController::update', ['as' => 'admin.settings.authentication.update']);
-    $routes->post('authentication/reset', 'Admin\AuthenticationController::reset', ['as' => 'admin.settings.authentication.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->get('system', 'Admin\SystemController::index', ['as' => 'admin.settings.system']);
     $routes->post('system/update', 'Admin\SystemController::update', ['as' => 'admin.settings.system.update']);
     $routes->post('system/test-timezone', 'Admin\SystemController::testTimezone', ['as' => 'admin.settings.system.test-timezone']);
     $routes->post('system/reset', 'Admin\SystemController::reset', ['as' => 'admin.settings.system.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
-    $routes->get('security', 'Admin\SecurityController::index', ['as' => 'admin.settings.security']);
-    $routes->post('security/update', 'Admin\SecurityController::update', ['as' => 'admin.settings.security.update']);
-    $routes->post('security/test-password', 'Admin\SecurityController::testPassword', ['as' => 'admin.settings.security.test-password']);
-    $routes->get('security/audit-logs', 'Admin\SecurityController::auditLogs', ['as' => 'admin.settings.security.audit-logs']);
-    $routes->post('security/backup', 'Admin\SecurityController::backup', ['as' => 'admin.settings.security.backup', 'filter' => ['auth', 'admin', 'stepup:back']]);
-    $routes->post('security/reset', 'Admin\SecurityController::reset', ['as' => 'admin.settings.security.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
+    $routes->get('controls', 'Admin\ControlsController::index', ['as' => 'admin.settings.controls']);
+    $routes->post('controls/update', 'Admin\ControlsController::update', ['as' => 'admin.settings.controls.update']);
+    $routes->post('controls/test-password', 'Admin\ControlsController::testPassword', ['as' => 'admin.settings.controls.test-password']);
+    $routes->get('controls/audit-logs', 'Admin\ControlsController::auditLogs', ['as' => 'admin.settings.controls.audit-logs']);
+    $routes->post('controls/backup', 'Admin\ControlsController::backup', ['as' => 'admin.settings.controls.backup', 'filter' => ['auth', 'admin', 'stepup:back']]);
+    $routes->post('controls/reset', 'Admin\ControlsController::reset', ['as' => 'admin.settings.controls.reset', 'filter' => ['auth', 'admin', 'stepup:back']]);
+    // Aliases legados -- /admin/settings/security e /admin/settings/authentication
+    // continuam funcionando (bookmarks, links antigos) e mostram a mesma pagina unificada.
+    $routes->get('security', 'Admin\ControlsController::index', ['as' => 'admin.settings.security']);
+    $routes->get('authentication', 'Admin\ControlsController::index', ['as' => 'admin.settings.authentication']);
     $routes->get('clock-adjustments', 'Admin\ClockAdjustmentController::index', ['as' => 'admin.clock-adjustments']);
     $routes->post('clock-adjustments/store', 'Admin\ClockAdjustmentController::store', ['as' => 'admin.clock-adjustments.store']);
     $routes->get('company-record-events', 'Admin\CompanyRecordEventController::index', ['as' => 'admin.company-record-events']);

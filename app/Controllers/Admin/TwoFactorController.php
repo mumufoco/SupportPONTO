@@ -57,7 +57,7 @@ class TwoFactorController extends BaseController
             'title' => 'Autenticação de Dois Fatores (2FA)',
             'breadcrumbs' => [
                 ['label' => 'Configurações', 'url' => sp_admin_settings_index_url()],
-                ['label' => 'Autenticação', 'url' => route_to('admin.settings.authentication')],
+                ['label' => 'Controles', 'url' => route_to('admin.settings.controls')],
                 ['label' => '2FA', 'url' => ''],
             ],
             'currentMode' => $this->policyService->getMode(),

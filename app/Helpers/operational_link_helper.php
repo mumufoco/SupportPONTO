@@ -519,10 +519,10 @@ if (! function_exists('sp_admin_settings_appearance_url')) {
     function sp_admin_settings_appearance_url(): string { return sp_route_url('admin.settings.appearance'); }
 }
 if (! function_exists('sp_admin_settings_authentication_path')) {
-    function sp_admin_settings_authentication_path(): string { return sp_route_path('admin.settings.authentication'); }
+    function sp_admin_settings_authentication_path(): string { return sp_route_path('admin.settings.controls'); }
 }
 if (! function_exists('sp_admin_settings_authentication_url')) {
-    function sp_admin_settings_authentication_url(): string { return sp_route_url('admin.settings.authentication'); }
+    function sp_admin_settings_authentication_url(): string { return sp_route_url('admin.settings.controls'); }
 }
 if (! function_exists('sp_admin_settings_system_path')) {
     function sp_admin_settings_system_path(): string { return sp_route_path('admin.settings.system'); }
@@ -531,10 +531,10 @@ if (! function_exists('sp_admin_settings_system_url')) {
     function sp_admin_settings_system_url(): string { return sp_route_url('admin.settings.system'); }
 }
 if (! function_exists('sp_admin_settings_security_path')) {
-    function sp_admin_settings_security_path(): string { return sp_route_path('admin.settings.security'); }
+    function sp_admin_settings_security_path(): string { return sp_route_path('admin.settings.controls'); }
 }
 if (! function_exists('sp_admin_settings_security_url')) {
-    function sp_admin_settings_security_url(): string { return sp_route_url('admin.settings.security'); }
+    function sp_admin_settings_security_url(): string { return sp_route_url('admin.settings.controls'); }
 }
 if (! function_exists('sp_settings_geofences_path')) {
     function sp_settings_geofences_path(): string { return sp_route_path('settings.geofences'); }
