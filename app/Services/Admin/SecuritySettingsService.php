@@ -164,14 +164,21 @@ class SecuritySettingsService
 
         $logs = array_map(static function ($row): array {
             $level = (string) ($row->level ?? 'info');
+            $action = (string) ($row->action ?? '');
+            // O 'level' sozinho não basta: eventos como LOGIN_FAILED são gravados
+            // com level='warning' (não está na lista de níveis de erro), o que
+            // fazia a UI mostrar 'success' para uma tentativa de login que falhou.
+            // Complementamos olhando o sufixo da própria ação.
+            $isFailureAction = (bool) preg_match('/_(FAILED|DENIED|REJECTED|BLOCKED|ERROR)$/', $action);
+            $isFailureLevel = in_array($level, ['error', 'critical', 'alert', 'emergency'], true);
 
             return [
                 'id' => (int) ($row->id ?? 0),
                 'user' => (string) ($row->user_name ?? 'Sistema'),
-                'action' => (string) ($row->action ?? ''),
+                'action' => $action,
                 'ip' => (string) ($row->ip_address ?? 'n/a'),
                 'timestamp' => (string) ($row->created_at ?? ''),
-                'status' => in_array($level, ['error', 'critical', 'alert', 'emergency'], true) ? 'failed' : 'success',
+                'status' => ($isFailureLevel || $isFailureAction) ? 'failed' : 'success',
                 'level' => $level,
                 'description' => (string) ($row->description ?? ''),
             ];
