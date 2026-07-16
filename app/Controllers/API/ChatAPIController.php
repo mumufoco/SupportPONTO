@@ -8,7 +8,6 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class ChatAPIController extends BaseApiController
 {
-    protected string $format = 'json';
 
     protected ChatApiWorkflowService $chatApiWorkflowService;
     protected ChatApiControllerActionService $chatApiControllerActionService;

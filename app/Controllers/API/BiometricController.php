@@ -11,7 +11,6 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class BiometricController extends BaseApiController
 {
-    protected string $format = 'json';
 
     protected ApiFaceBiometricService $apiFaceBiometricService;
     protected FaceImageService $faceImageService;
