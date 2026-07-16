@@ -3,6 +3,7 @@
 namespace App\Controllers\Settings;
 
 use App\Services\Auth\SessionSecurityService;
+use Config\Services;
 use App\Services\Settings\SettingsSafetyService;
 use App\Services\Queue\AsyncJobService;
 use App\Services\Settings\SettingsTransferService;
@@ -18,7 +19,7 @@ class SystemMaintenanceController extends BaseSettingsController
     {
         parent::__construct();
         $this->asyncJobService = new AsyncJobService();
-        $this->sessionSecurityService = service('sessionSecurityService');
+        $this->sessionSecurityService = Services::sessionSecurityService();
         $this->settingsTransferService = new SettingsTransferService($this->settingModel);
     }
 
@@ -55,14 +56,10 @@ class SystemMaintenanceController extends BaseSettingsController
 
     public function testSmtp()
     {
-        @file_put_contents('/tmp/smtp_debug.log', date('c') . " step=start\n", FILE_APPEND);
         $this->requireAdminAccess();
-        @file_put_contents('/tmp/smtp_debug.log', date('c') . " step=after_admin_check\n", FILE_APPEND);
         helper('observability');
-        @file_put_contents('/tmp/smtp_debug.log', date('c') . " step=after_helper\n", FILE_APPEND);
 
         try {
-            @file_put_contents('/tmp/smtp_debug.log', date('c') . " step=inside_try\n", FILE_APPEND);
             // Aceita valores ainda não salvos vindos do formulário (POST ou JSON) para
             // testar antes de gravar — cai para a configuração já salva quando o campo
             // não é enviado, mantendo compatibilidade com quem só manda 'test_email'.
@@ -118,10 +115,7 @@ class SystemMaintenanceController extends BaseSettingsController
                 . '<hr><small>Enviado em: ' . date('d/m/Y H:i:s') . ' | Host: ' . htmlspecialchars($smtpHost) . '</small>'
             );
 
-            @file_put_contents('/tmp/smtp_debug.log', date('c') . " step=before_send host={$smtpHost} port={$smtpPort} crypto={$smtpCrypto}\n", FILE_APPEND);
-            $sendResult = $email->send();
-            @file_put_contents('/tmp/smtp_debug.log', date('c') . " step=after_send result=" . ($sendResult ? '1' : '0') . "\n", FILE_APPEND);
-            if ($sendResult) {
+            if ($email->send()) {
                 log_message('info', "SMTP test succeeded to {$toEmail} via {$smtpHost}");
                 return $this->response->setJSON([
                     'success' => true,
