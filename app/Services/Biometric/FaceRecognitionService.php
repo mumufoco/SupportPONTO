@@ -158,7 +158,7 @@ class FaceRecognitionService
         }
 
         $response = $this->callDeepFaceAPI('/recognize', [
-            'image' => $this->faceImageService->cleanBase64($photoBase64),
+            'photo' => $this->faceImageService->cleanBase64($photoBase64),
         ]);
 
         if (!$response['success']) {
