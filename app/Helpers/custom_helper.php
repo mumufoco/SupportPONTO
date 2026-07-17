@@ -487,3 +487,28 @@ if (!function_exists('support_login_background_url')) {
         return '';
     }
 }
+
+if (!function_exists('sp_render_consent_body')) {
+    /**
+     * Renderiza o corpo de um termo de consentimento (LGPD) com seguranca.
+     *
+     * Termos redigidos no editor rico (Admin\BiometricConsentController::
+     * saveTerm()) ja chegam aqui como HTML sanitizado por
+     * ConsentTermSanitizerService no momento do save -- seguro pra ecoar
+     * direto. Termos legados em texto puro (sem nenhuma marcacao) continuam
+     * escapados + nl2br(), como sempre foram.
+     */
+    function sp_render_consent_body(?string $body): string
+    {
+        $body = (string) ($body ?? '');
+        if ($body === '') {
+            return '';
+        }
+
+        if (trim(strip_tags($body)) !== trim($body)) {
+            return $body;
+        }
+
+        return nl2br(esc($body));
+    }
+}

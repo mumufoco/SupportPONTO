@@ -327,18 +327,26 @@ class BiometricConsentController extends BaseController
         $this->requireAuth();
         $this->requireAnyRole(['admin', 'dpo', 'auditor', 'rh']);
 
-        $title      = $this->request->getPost('title');
-        $body       = $this->request->getPost('body');
+        $type    = $this->request->getPost('term_type') ?? 'biometric_face';
+        $allowed = ['biometric_face','biometric_fingerprint','geolocation','data_processing','marketing','data_sharing'];
+        if (!in_array($type, $allowed, true)) { $type = 'biometric_face'; }
+
+        $title      = trim((string) $this->request->getPost('title'));
+        $bodyRaw    = (string) $this->request->getPost('body');
         $legalBasis = $this->request->getPost('legal_basis');
 
-        if (!$title || !$body) {
+        // $bodyRaw pode vir do editor rico como HTML 'vazio' (ex.: '<p><br></p>'),
+        // que nao e string vazia mas tambem nao tem nenhum texto real -- por isso
+        // o check usa strip_tags(), nao so a string bruta.
+        if ($title === '' || trim(strip_tags($bodyRaw)) === '') {
             $this->setError('Titulo e texto do termo sao obrigatorios.');
             return redirect()->to(site_url('settings/consent-terms?type=' . $type));
         }
 
-        $type        = $this->request->getPost('term_type') ?? 'biometric_face';
-        $allowed     = ['biometric_face','biometric_fingerprint','geolocation','data_processing','marketing','data_sharing'];
-        if (!in_array($type, $allowed, true)) { $type = 'biometric_face'; }
+        // Sanitiza o HTML do editor rico antes de gravar -- nunca confia em HTML
+        // vindo direto do navegador, mesmo de um admin autenticado.
+        $body = (new \App\Services\Security\ConsentTermSanitizerService())->sanitize($bodyRaw);
+
         $nextVersion = $this->termModel->nextVersion($type);
 
         $this->termModel->deactivateAll($type);

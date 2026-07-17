@@ -28,7 +28,7 @@
             <!-- Texto do termo -->
             <div id="termText" class="border rounded p-4 bg-light mb-4" style="max-height:420px;overflow-y:auto;font-size:.9rem;line-height:1.7;">
                 <h6 class="fw-bold text-center mb-3"><?= esc($term->title) ?></h6>
-                <?= nl2br(esc($term->body)) ?>
+                <?= sp_render_consent_body($term->body) ?>
             </div>
 
             <!-- Base legal badge -->

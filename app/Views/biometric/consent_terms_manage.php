@@ -1,5 +1,10 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('title') ?>Templates de Termos de Consentimento<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.css">
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 <?php
 $consentTypes = $consentTypes ?? [];
@@ -161,18 +166,23 @@ if (!function_exists('sp_lgpd_parse_sections')) {
                     </header>
 
                     <div class="lgpd-paper__body">
-                        <?php foreach (sp_lgpd_parse_sections($activeTerm->body) as $section): ?>
-                            <?php if ($section['heading']): ?>
-                                <section class="lgpd-clause">
-                                    <h4 class="lgpd-clause__title"><?= esc($section['heading']) ?></h4>
-                                    <?php foreach (array_filter($section['body'], fn($l) => trim($l) !== '') as $para): ?>
-                                        <p><?= esc(trim($para)) ?></p>
-                                    <?php endforeach; ?>
-                                </section>
-                            <?php else: ?>
-                                <p class="lgpd-clause__intro"><?php foreach ($section['body'] as $l): ?><?= esc(trim($l)) ?><br><?php endforeach; ?></p>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
+                        <?php if (trim(strip_tags($activeTerm->body)) !== trim($activeTerm->body)): ?>
+                            <?php // Termo redigido no editor rico -- ja sanitizado (ConsentTermSanitizerService) no momento do save, seguro pra ecoar direto. ?>
+                            <div class="lgpd-rich-body"><?= $activeTerm->body ?></div>
+                        <?php else: ?>
+                            <?php foreach (sp_lgpd_parse_sections($activeTerm->body) as $section): ?>
+                                <?php if ($section['heading']): ?>
+                                    <section class="lgpd-clause">
+                                        <h4 class="lgpd-clause__title"><?= esc($section['heading']) ?></h4>
+                                        <?php foreach (array_filter($section['body'], fn($l) => trim($l) !== '') as $para): ?>
+                                            <p><?= esc(trim($para)) ?></p>
+                                        <?php endforeach; ?>
+                                    </section>
+                                <?php else: ?>
+                                    <p class="lgpd-clause__intro"><?php foreach ($section['body'] as $l): ?><?= esc(trim($l)) ?><br><?php endforeach; ?></p>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
 
                     <?php if (!empty($allVersions)): ?>
@@ -226,8 +236,11 @@ if (!function_exists('sp_lgpd_parse_sections')) {
                         </div>
                         <div class="mb-3">
                             <label class="lgpd-label">Texto Íntegro do Termo</label>
-                            <textarea name="body" class="lgpd-textarea" rows="14" required><?= esc($activeTerm->body ?? '') ?></textarea>
-                            <div class="lgpd-hint">Este texto será exibido ao colaborador no momento do aceite e gravado no registro.</div>
+                            <textarea name="body" id="lgpdBodyEditor" class="lgpd-textarea" rows="14" required><?= esc($activeTerm->body ?? '') ?></textarea>
+                            <div class="lgpd-hint">
+                                Use o botão <i class="bi bi-code-slash"></i> na barra do editor pra ver/editar o código-fonte (HTML) diretamente.
+                                Este texto será exibido ao colaborador no momento do aceite e gravado no registro.
+                            </div>
                         </div>
                         <button type="submit" class="lgpd-submit"
                                 onclick="return confirm('Confirma a publicação de nova versão? O termo atual será desativado.')">
@@ -433,6 +446,53 @@ if (!function_exists('sp_lgpd_parse_sections')) {
 .lgpd-node__mode.is-gate { background: var(--sp-danger-light); color: var(--sp-danger); }
 .lgpd-node__mode.is-self { background: var(--sp-info-light); color: var(--sp-info); }
 .lgpd-node__url { font-size: .68rem; color: var(--sp-text-muted); word-break: break-all; }
+
+/* Termo redigido no editor rico -- tipografia consistente com .lgpd-clause */
+.lgpd-rich-body { font-size: .85rem; color: var(--sp-text-primary); line-height: 1.65; }
+.lgpd-rich-body h3, .lgpd-rich-body h4, .lgpd-rich-body h5, .lgpd-rich-body h6 {
+    color: var(--accent); font-size: .85rem; font-weight: 700; margin: 1.1rem 0 .45rem;
+}
+.lgpd-rich-body h3:first-child, .lgpd-rich-body h4:first-child { margin-top: 0; }
+.lgpd-rich-body p { margin-bottom: .65rem; }
+.lgpd-rich-body ul, .lgpd-rich-body ol { margin-bottom: .65rem; padding-left: 1.4rem; }
+.lgpd-rich-body a { color: var(--sp-info); }
+.lgpd-rich-body table { width: 100%; border-collapse: collapse; margin-bottom: .65rem; font-size: .8rem; }
+.lgpd-rich-body th, .lgpd-rich-body td { border: 1px solid var(--sp-border); padding: .4rem .6rem; }
+.lgpd-rich-body blockquote { border-left: 3px solid var(--accent); padding-left: .9rem; color: var(--sp-text-secondary); margin: .65rem 0; }
+
+/* Summernote adaptado ao tema escuro/claro do app via tokens --sp-* */
+.note-editor.note-frame { background: var(--sp-bg-page); border: 1px solid var(--sp-border) !important; border-radius: var(--sp-radius-md, 6px); }
+.note-editor .note-toolbar { background: var(--sp-bg-surface); border-bottom: 1px solid var(--sp-border) !important; }
+.note-editor .note-editing-area .note-editable { background: var(--sp-bg-page); color: var(--sp-text-primary); }
+.note-editor .note-statusbar { background: var(--sp-bg-surface); border-top: 1px solid var(--sp-border); }
+.note-btn { background: var(--sp-bg-surface) !important; border-color: var(--sp-border) !important; color: var(--sp-text-primary) !important; }
+.note-btn:hover { background: var(--sp-bg-page) !important; }
+.note-codable { background: #1c1f26 !important; color: #cccccc !important; font-family: 'SFMono-Regular', Consolas, monospace !important; }
 </style>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<?php // Summernote 0.8.x depende de jQuery; a app nao carrega jQuery globalmente, entao carregamos aqui mesmo. ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"></script>
+<script <?= csp_script_nonce_attr() ?>>
+(function () {
+    var el = document.getElementById('lgpdBodyEditor');
+    if (!el || typeof jQuery === 'undefined' || !jQuery.fn.summernote) { return; }
+
+    jQuery(el).summernote({
+        height: 320,
+        lang: 'pt-BR',
+        placeholder: 'Digite o texto integral do termo...',
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['insert', ['link', 'table']],
+            ['view', ['codeview']],
+        ],
+    });
+})();
+</script>
 <?= $this->endSection() ?>
