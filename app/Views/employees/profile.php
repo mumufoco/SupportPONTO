@@ -43,7 +43,7 @@
                     <strong>Histórico disciplinar</strong>
                     <span>Acompanhe ocorrências e advertências do colaborador.</span>
                 </a>
-                <a class="sp-shortcut-card" href="<?= site_url('biometric/manage-employee/' . ($emp->id ?? 0)) ?>">
+                <a class="sp-shortcut-card" href="<?= site_url('minha-biometria') ?>">
                     <div class="icon"><i class="bi bi-fingerprint"></i></div>
                     <strong>Biometria</strong>
                     <span>Gerencie status facial e digital do colaborador.</span>
