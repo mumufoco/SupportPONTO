@@ -6,17 +6,53 @@
 <link rel="stylesheet" href="<?= sp_safe_url(asset_url('css/pages/dashboard.css')) ?>">
 <style>
 .sp-section-label{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sp-text-muted,#888);margin-bottom:.5rem;padding-left:.1rem}
-.sp-kpi-card{border:1px solid var(--sp-border,rgba(0,0,0,.08))!important;transition:box-shadow .15s}
-.sp-kpi-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)!important}
-.sp-kpi-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
-.sp-kpi-value{font-size:1.7rem;font-weight:600;line-height:1.1;color:var(--sp-text-primary,#1a1a1a)}
-.sp-kpi-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--sp-text-muted,#888);margin-top:.15rem;font-weight:500}
+.sp-kpi-card{border:1px solid var(--sp-border,rgba(0,0,0,.08))!important;transition:transform .15s,box-shadow .15s}
+.sp-kpi-card:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)!important;transform:translateY(-1px)}
+.sp-kpi-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
+.sp-kpi-value{font-size:1.7rem;font-weight:700;line-height:1.1;color:var(--sp-text-primary,#1a1a1a)}
+.sp-kpi-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--sp-text-muted,#888);margin-top:.15rem;font-weight:600}
 .sp-kpi-desc{font-size:.7rem;color:var(--sp-text-muted,#999);margin-top:.2rem}
 .sp-kpi-sec-card{border:1px solid var(--sp-border,rgba(0,0,0,.08))!important}
-.sp-kpi-sec-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem}
-.sp-kpi-sec-value{font-size:1.3rem;font-weight:600;line-height:1.1;color:var(--sp-text-primary,#1a1a1a)}
+.sp-kpi-sec-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem}
+.sp-kpi-sec-value{font-size:1.3rem;font-weight:700;line-height:1.1;color:var(--sp-text-primary,#1a1a1a)}
 #health-band .card{border-left-width:3px!important}
 #health-band .card-body{padding:.75rem 1.1rem!important}
+
+/* ══ Comando / hero ══════════════════════════════════════════════════ */
+.sp-cmd-hero{
+    position:relative;overflow:hidden;border-radius:16px;margin-bottom:1.1rem;
+    background:linear-gradient(135deg,var(--sp-bg-surface,#161a22) 0%,var(--sp-bg-page,#0e1116) 100%);
+    border:1px solid var(--sp-border,rgba(255,255,255,.08));
+    padding:1.4rem 1.6rem;
+}
+.sp-cmd-hero::before{
+    content:'';position:absolute;top:-60%;right:-8%;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle,var(--accent,#4f46e5) 0%,transparent 70%);opacity:.16;pointer-events:none;
+}
+.sp-cmd-hero__row{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:1rem;justify-content:space-between}
+.sp-cmd-hero__eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent,#4f46e5);margin-bottom:.3rem;display:block}
+.sp-cmd-hero__title{font-size:1.5rem;font-weight:800;color:var(--sp-text-primary);margin:0;line-height:1.2}
+.sp-cmd-hero__subtitle{font-size:.82rem;color:var(--sp-text-secondary,var(--sp-text-muted));margin-top:.25rem}
+.sp-cmd-hero__status{
+    display:flex;align-items:center;gap:.55rem;padding:.55rem .9rem;border-radius:999px;flex-shrink:0;
+    background:var(--sp-bg-page,rgba(0,0,0,.15));border:1px solid var(--sp-border,rgba(255,255,255,.08));
+}
+.sp-cmd-hero__status-dot{width:.55rem;height:.55rem;border-radius:50%;flex-shrink:0}
+.sp-cmd-hero__status-text{font-size:.78rem;font-weight:600;color:var(--sp-text-primary)}
+
+/* ══ Tira de atenção rápida ══════════════════════════════════════════ */
+.sp-attn-strip{display:flex;flex-wrap:wrap;gap:.65rem;margin-bottom:1.3rem}
+.sp-attn-chip{
+    display:flex;align-items:center;gap:.65rem;padding:.65rem 1rem;border-radius:12px;flex:1 1 200px;min-width:200px;
+    background:var(--sp-bg-surface,#161a22);border:1px solid var(--sp-border,rgba(255,255,255,.08));
+    text-decoration:none;transition:transform .15s,box-shadow .15s;cursor:pointer;
+}
+.sp-attn-chip:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);text-decoration:none}
+.sp-attn-chip__icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.sp-attn-chip__value{font-size:1.25rem;font-weight:800;line-height:1;color:var(--sp-text-primary)}
+.sp-attn-chip__label{font-size:.72rem;color:var(--sp-text-muted);font-weight:600;margin-top:.1rem}
+.sp-attn-chip.is-idle{opacity:.65}
+.sp-attn-chip.is-idle:hover{transform:none;box-shadow:none}
 </style>
 <?= $this->endSection() ?>
 
@@ -52,11 +88,29 @@ $defaultPendingStatusLabel    = lang('DashboardAdmin.common.pending');
 // parametrizado) e chegam prontos como $_methodLabels, $_statsJson, $_justSummary,
 // $_situationLabels, $_punchTypeLabels, $_pendingPunches, $_pendingPunchCount — antes
 // viviam como SQL bruto interpolado direto nesta view.
+
+// Saudação + status geral (calculados aqui pra dar identidade à página sem
+// precisar de nenhum dado novo do backend).
+$_firstName = 'Admin';
+if (is_object($currentUser) && !empty($currentUser->name)) {
+    $_firstName = trim(explode(' ', (string) $currentUser->name)[0]);
+} elseif (is_array($currentUser) && !empty($currentUser['name'])) {
+    $_firstName = trim(explode(' ', (string) $currentUser['name'])[0]);
+}
+$_diasSemana = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+$_meses      = ['','janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+$_now        = new DateTime('now', new DateTimeZone(date_default_timezone_get()));
+$_dataExtenso = $_diasSemana[(int) $_now->format('w')] . ', ' . (int) $_now->format('j') . ' de ' . $_meses[(int) $_now->format('n')] . ' de ' . $_now->format('Y');
+$_hour       = (int) $_now->format('G');
+$_saudacao   = $_hour < 12 ? 'Bom dia' : ($_hour < 18 ? 'Boa tarde' : 'Boa noite');
+
+// Cadastros pendentes de aprovação -- já vinham em $pendingApprovals['employees']
+// (DashboardAdminService::pendingApprovals()) mas ficavam sem uso nesta view.
+$_pendingRegistrations      = is_array($pendingApprovals['employees'] ?? null) ? $pendingApprovals['employees'] : [];
+$_pendingRegistrationsCount = (int) ($statistics['pending_registrations'] ?? count($_pendingRegistrations));
 ?>
 
-<?= view('components/page_header', $pageHeader) ?>
-
-<!-- ══ Barra de saúde operacional ══════════════════════════════════════════ -->
+<!-- ══ Comando / boas-vindas ═══════════════════════════════════════════════ -->
 <?php
 try {
     $_health = (new \App\Services\Health\SystemHealthCheckService())->detailedHealth();
@@ -72,9 +126,9 @@ $_hWarn    = (int)($_hSummary['warning_count']  ?? 0);
 $_hErr     = (int)($_hSummary['error_count']    ?? 0);
 
 $_statusMeta = [
-    'ok'      => ['color' => '#198754', 'bg' => 'rgba(25,135,84,.1)',  'icon' => 'bi-check-circle-fill',        'label' => 'OK'],
-    'warning' => ['color' => '#f59e0b', 'bg' => 'rgba(245,158,11,.1)', 'icon' => 'bi-exclamation-triangle-fill', 'label' => 'Atenção'],
-    'error'   => ['color' => '#dc3545', 'bg' => 'rgba(220,53,69,.1)',  'icon' => 'bi-x-circle-fill',            'label' => 'Erro'],
+    'ok'      => ['color' => '#198754', 'bg' => 'rgba(25,135,84,.1)',  'icon' => 'bi-check-circle-fill',        'label' => 'Operando normalmente'],
+    'warning' => ['color' => '#f59e0b', 'bg' => 'rgba(245,158,11,.1)', 'icon' => 'bi-exclamation-triangle-fill', 'label' => 'Atenção em algum módulo'],
+    'error'   => ['color' => '#dc3545', 'bg' => 'rgba(220,53,69,.1)',  'icon' => 'bi-x-circle-fill',            'label' => 'Erro detectado'],
 ];
 $_overallMeta = $_statusMeta[$_hStatus] ?? $_statusMeta['error'];
 
@@ -90,6 +144,61 @@ $_moduleLabels = [
     'env'           => ['icon' => 'bi-gear-fill',           'label' => 'Ambiente'],
 ];
 ?>
+<div class="sp-cmd-hero">
+    <div class="sp-cmd-hero__row">
+        <div>
+            <span class="sp-cmd-hero__eyebrow"><i class="bi bi-shield-lock-fill me-1"></i>Painel Administrativo &middot; SupportPONTO</span>
+            <h1 class="sp-cmd-hero__title"><?= esc($_saudacao) ?>, <?= esc($_firstName) ?>.</h1>
+            <p class="sp-cmd-hero__subtitle"><?= esc(ucfirst($_dataExtenso)) ?> &middot; <?= (int) ($statistics['employees_present'] ?? 0) ?> colaborador(es) já bateram ponto hoje</p>
+        </div>
+        <div class="sp-cmd-hero__status">
+            <span class="sp-cmd-hero__status-dot" style="background:<?= $_overallMeta['color'] ?>"></span>
+            <span class="sp-cmd-hero__status-text"><?= esc($_overallMeta['label']) ?></span>
+            <a href="<?= site_url('admin/health') ?>" class="btn btn-sm btn-outline-secondary ms-2">Detalhes</a>
+        </div>
+    </div>
+</div>
+
+<!-- ══ O que precisa de você agora ═══════════════════════════════════════ -->
+<div class="sp-section-label">O que precisa de você agora</div>
+<div class="sp-attn-strip">
+    <a href="#pending-justifications-section" data-dashboard-scroll-link="true"
+       class="sp-attn-chip <?= $_justSummary['pendente'] > 0 ? '' : 'is-idle' ?>">
+        <span class="sp-attn-chip__icon" style="background:rgba(245,158,11,.14);color:#b45309"><i class="bi bi-clipboard-check"></i></span>
+        <span>
+            <span class="sp-attn-chip__value"><?= (int) $_justSummary['pendente'] ?></span>
+            <span class="sp-attn-chip__label d-block">Justificativas pendentes</span>
+        </span>
+    </a>
+    <a href="#pending-punches-section" data-dashboard-scroll-link="true"
+       class="sp-attn-chip <?= $_pendingPunchCount > 0 ? '' : 'is-idle' ?>">
+        <span class="sp-attn-chip__icon" style="background:rgba(220,53,69,.14);color:#a32d2d"><i class="bi bi-clock-history"></i></span>
+        <span>
+            <span class="sp-attn-chip__value"><?= (int) $_pendingPunchCount ?></span>
+            <span class="sp-attn-chip__label d-block">Pontos p/ revisão</span>
+        </span>
+    </a>
+    <a href="<?= sp_safe_url(sp_route_url('employees.pending')) ?>"
+       class="sp-attn-chip <?= $_pendingRegistrationsCount > 0 ? '' : 'is-idle' ?>">
+        <span class="sp-attn-chip__icon" style="background:rgba(79,70,229,.14);color:#4338ca"><i class="bi bi-person-plus-fill"></i></span>
+        <span>
+            <span class="sp-attn-chip__value"><?= (int) $_pendingRegistrationsCount ?></span>
+            <span class="sp-attn-chip__label d-block">Cadastros aguardando aprovação</span>
+        </span>
+    </a>
+    <a href="#system-alerts-section" data-dashboard-scroll-link="true"
+       class="sp-attn-chip <?= $systemAlertCount > 0 ? '' : 'is-idle' ?>">
+        <span class="sp-attn-chip__icon" style="background:<?= $systemAlertCount > 0 ? 'rgba(220,53,69,.14);color:#a32d2d' : 'rgba(25,135,84,.14);color:#198754' ?>">
+            <i class="bi <?= $systemAlertCount > 0 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check' ?>"></i>
+        </span>
+        <span>
+            <span class="sp-attn-chip__value"><?= (int) $systemAlertCount ?></span>
+            <span class="sp-attn-chip__label d-block">Alertas do sistema</span>
+        </span>
+    </a>
+</div>
+
+<!-- ══ Barra de saúde operacional ══════════════════════════════════════════ -->
 <div class="sp-section-label">Saúde do sistema</div>
 <div class="mb-3" id="health-band">
     <div class="card border-0 shadow-sm overflow-hidden" style="border-left:4px solid <?= $_overallMeta['color'] ?> !important">
@@ -446,22 +555,21 @@ foreach ($primaryStats as $_st):
                 </div>
 
                 <!-- Pending list preview -->
-                <?php if ($_justSummary['pendente'] > 0): ?>
+                <?php if ($_justSummary['pendente'] > 0 && $pendingJustificationRows !== []): ?>
                     <?php
-                    $_pendJust = $_db->query("
-                        SELECT j.id, e.name AS emp_name, j.justification_date, j.justification_type, j.category
-                        FROM justifications j JOIN employees e ON e.id = j.employee_id
-                        WHERE j.status = 'pendente' AND j.deleted_at IS NULL
-                        ORDER BY j.justification_date DESC LIMIT 4
-                    ")->getResultArray();
-                    $_justTypeLabels = ['falta'=>'Falta','atraso'=>'Atraso','saida_antecipada'=>'Saída Antec.','outro'=>'Outro'];
+                    // BAIXO-05 (auditoria) / correção: este preview usava uma query bruta
+                    // interpolada direto na view (referenciando $_db, que não existe neste
+                    // escopo -- disparava um erro fatal sempre que houvesse justificativa
+                    // pendente). Reaproveita $pendingJustificationRows, já calculado por
+                    // DashboardAdminService/AdminDashboardViewPresenter com a mesma
+                    // finalidade (nome do funcionário, tipo, data), sem SQL na view.
                     ?>
                     <ul class="list-unstyled mb-3" style="font-size:.82rem">
-                        <?php foreach ($_pendJust as $_j): ?>
+                        <?php foreach (array_slice($pendingJustificationRows, 0, 4) as $_j): ?>
                             <li class="d-flex align-items-center gap-2 py-1 border-bottom" style="border-color:var(--sp-border)!important">
-                                <span class="badge text-bg-warning" style="font-size:.65rem"><?= esc($_justTypeLabels[$_j['justification_type']] ?? ucfirst($_j['justification_type'])) ?></span>
-                                <span class="flex-grow-1 text-truncate"><?= esc($_j['emp_name']) ?></span>
-                                <span class="text-muted" style="font-size:.72rem;white-space:nowrap"><?= date('d/m', strtotime($_j['justification_date'])) ?></span>
+                                <span class="badge text-bg-warning" style="font-size:.65rem"><?= esc($_j['typeLabel'] ?? $missingText) ?></span>
+                                <span class="flex-grow-1 text-truncate"><?= esc($_j['employeeName'] ?? $missingText) ?></span>
+                                <span class="text-muted" style="font-size:.72rem;white-space:nowrap"><?= esc($_j['createdAtLabel'] ?? '') ?></span>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -576,8 +684,6 @@ foreach ($primaryStats as $_st):
 </div><!-- /col methods -->
 
 </div><!-- /row -->
-
-
 
 
 
