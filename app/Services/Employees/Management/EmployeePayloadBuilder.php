@@ -78,9 +78,14 @@ class EmployeePayloadBuilder
             'work_end_time' => $this->normalizeTime($postData['work_end_time'] ?? $postData['horario_saida'] ?? null),
             'lunch_start_time' => $this->normalizeTime($postData['lunch_start_time'] ?? null),
             'lunch_end_time' => $this->normalizeTime($postData['lunch_end_time'] ?? null),
-            'allow_remote_punch' => $this->truthy($postData['allow_remote_punch'] ?? false),
-            'require_geolocation' => $this->truthy($postData['require_geolocation'] ?? false),
-            'active' => $isCreate ? $this->truthy($postData['active'] ?? true) : $this->truthy($postData['active'] ?? false),
+            // EmployeeModel::$validationRules valida estes 3 campos com
+            // in_list[true,false,0,1], que so aceita STRING -- um bool nativo
+            // true (ex.: 'active' => true) falha nessa regra silenciosamente
+            // (o insert() retorna false sem excecao), travando o cadastro de
+            // qualquer funcionario ativo. boolString() converte pra '1'/'0'.
+            'allow_remote_punch' => $this->boolString($this->truthy($postData['allow_remote_punch'] ?? false)),
+            'require_geolocation' => $this->boolString($this->truthy($postData['require_geolocation'] ?? false)),
+            'active' => $this->boolString($isCreate ? $this->truthy($postData['active'] ?? true) : $this->truthy($postData['active'] ?? false)),
         ];
 
         if ($isCreate) {
@@ -190,5 +195,10 @@ class EmployeePayloadBuilder
     private function truthy(mixed $value): bool
     {
         return in_array($value, [true, 1, '1', 'true', 'on', 'yes', 'sim'], true);
+    }
+
+    private function boolString(bool $value): string
+    {
+        return $value ? '1' : '0';
     }
 }
