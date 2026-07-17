@@ -93,6 +93,136 @@
             </div>
         </div>
 
+        <!-- Plataformas Support -->
+        <div class="sp-card mb-3">
+            <div class="sp-card-header d-flex justify-content-between align-items-center">
+                <span class="sp-card-title"><i class="bi bi-diagram-3-fill"></i> Plataformas Support</span>
+                <span class="text-muted small">URL base + token de API de cada sistema do grupo</span>
+            </div>
+            <div class="sp-card-body">
+
+                <div class="row g-3 align-items-end mb-4 pb-4 border-bottom">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-file-earmark-check-fill text-success"></i>
+                            <strong>SupportCHECK</strong>
+                            <span class="badge bg-success-subtle text-success-emphasis">em uso</span>
+                            <a href="<?= sp_safe_url(sp_route_url('settings.supportcheck')) ?>" class="small ms-auto">
+                                Painel de sincronização &raquo;
+                            </a>
+                        </div>
+                        <div class="form-text mb-2">Gestão documental, biometria e assinatura eletrônica. Já integrado (relatórios de ponto, termos de consentimento, cadastro de funcionários).</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">URL base</label>
+                        <input type="url" class="form-control" name="supportcheck_base_url"
+                               value="<?= esc($settings['supportcheck_base_url'] ?? '') ?>"
+                               placeholder="https://check.supportsondagens.com.br">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Token de API</label>
+                        <input type="password" class="form-control" name="supportcheck_api_token"
+                               placeholder="<?= !empty($settings['supportcheck_api_token']) ? '••••• configurado' : 'Token do SupportCHECK' ?>"
+                               autocomplete="new-password">
+                        <div class="form-text">Deixe em branco para manter o token atual. Prioridade: env SUPPORTCHECK_API_TOKEN, depois este campo.</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 align-items-end mb-4 pb-4 border-bottom">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-signpost-split-fill text-muted"></i>
+                            <strong>SupportSPT</strong>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">reservado</span>
+                        </div>
+                        <div class="form-text mb-2">Sondagens (SPT). Sem uso funcional no PONTO hoje — campos guardados para uma futura integração.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">URL base</label>
+                        <input type="url" class="form-control" name="supportspt_base_url"
+                               value="<?= esc($settings['supportspt_base_url'] ?? '') ?>"
+                               placeholder="https://spt.supportsondagens.com.br">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Token de API</label>
+                        <input type="password" class="form-control" name="supportspt_api_token"
+                               placeholder="<?= !empty($settings['supportspt_api_token']) ? '••••• configurado' : 'Token do SupportSPT' ?>"
+                               autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="row g-3 align-items-end mb-4 pb-4 border-bottom">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-lightning-charge-fill text-muted"></i>
+                            <strong>SupportSEV</strong>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">reservado</span>
+                        </div>
+                        <div class="form-text mb-2">Resistividade (SEV). Sem uso funcional no PONTO hoje — campos guardados para uma futura integração.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">URL base</label>
+                        <input type="url" class="form-control" name="supportsev_base_url"
+                               value="<?= esc($settings['supportsev_base_url'] ?? '') ?>"
+                               placeholder="https://sev.supportsondagens.com.br">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Token de API</label>
+                        <input type="password" class="form-control" name="supportsev_api_token"
+                               placeholder="<?= !empty($settings['supportsev_api_token']) ? '••••• configurado' : 'Token do SupportSEV' ?>"
+                               autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="row g-3 align-items-end mb-4 pb-4 border-bottom">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-eye-fill text-muted"></i>
+                            <strong>SupportVISUAL</strong>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">reservado</span>
+                        </div>
+                        <div class="form-text mb-2">Inspeção visual. Sem uso funcional no PONTO hoje — campos guardados para uma futura integração.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">URL base</label>
+                        <input type="url" class="form-control" name="supportvisual_base_url"
+                               value="<?= esc($settings['supportvisual_base_url'] ?? '') ?>"
+                               placeholder="https://visual.supportsondagens.com.br">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Token de API</label>
+                        <input type="password" class="form-control" name="supportvisual_api_token"
+                               placeholder="<?= !empty($settings['supportvisual_api_token']) ? '••••• configurado' : 'Token do SupportVISUAL' ?>"
+                               autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-building-fill text-muted"></i>
+                            <strong>SupportERP</strong>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">reservado</span>
+                        </div>
+                        <div class="form-text mb-2">ERP / gestão financeira. Sem uso funcional no PONTO hoje — campos guardados para uma futura integração.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">URL base</label>
+                        <input type="url" class="form-control" name="supporterp_base_url"
+                               value="<?= esc($settings['supporterp_base_url'] ?? '') ?>"
+                               placeholder="https://erp.supportsondagens.com.br">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Token de API</label>
+                        <input type="password" class="form-control" name="supporterp_api_token"
+                               placeholder="<?= !empty($settings['supporterp_api_token']) ? '••••• configurado' : 'Token do SupportERP' ?>"
+                               autocomplete="new-password">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
         <!-- Botões -->
         <div class="sp-card">
             <div class="sp-card-body d-flex gap-2 justify-content-end">

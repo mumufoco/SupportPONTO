@@ -19,6 +19,21 @@ class SupportCheckApiClient
     public function __construct(?SupportCheckConfig $config = null)
     {
         $this->config = $config ?? config('SupportCheck');
+
+        // Fallback para configuracoes salvas em /admin/settings/integrations quando
+        // o .env nao define SUPPORTCHECK_BASE_URL/SUPPORTCHECK_API_TOKEN -- mesmo
+        // padrao ja usado por DeepFaceApiClient/PushNotificationService (env tem
+        // prioridade; settings table so preenche o que ficou vazio).
+        if ($this->config->baseUrl === '' || $this->config->apiToken === '') {
+            $settingModel = new \App\Models\SettingModel();
+            if ($this->config->baseUrl === '') {
+                $this->config->baseUrl = (string) $settingModel->get('supportcheck_base_url', '');
+            }
+            if ($this->config->apiToken === '') {
+                $this->config->apiToken = (string) $settingModel->get('supportcheck_api_token', '');
+            }
+        }
+
         $this->client = \Config\Services::curlrequest([
             'baseURI' => rtrim($this->config->baseUrl, '/') . '/',
             'timeout' => $this->config->timeout,

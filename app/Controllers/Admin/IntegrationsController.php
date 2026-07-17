@@ -53,6 +53,27 @@ class IntegrationsController extends BaseController
 
     private const FCM_SENSITIVE = ['fcm_server_key'];
 
+    /**
+     * Catalogo de plataformas do ecossistema Support (mesmo conceito de
+     * "sistemas conectados" do SupportCHECK, do lado do PONTO). SupportCHECK
+     * ja e usado de fato (SupportCheckApiClient passa a aceitar estes campos
+     * como fallback do .env). SupportSPT/SEV/VISUAL/ERP sao sistemas de
+     * engenharia do mesmo grupo sem uso funcional no PONTO hoje -- os campos
+     * ficam guardados para quando/se essa integracao for construida.
+     */
+    private const SUPPORT_PLATFORM_FIELDS = [
+        'supportcheck_base_url', 'supportcheck_api_token',
+        'supportspt_base_url', 'supportspt_api_token',
+        'supportsev_base_url', 'supportsev_api_token',
+        'supportvisual_base_url', 'supportvisual_api_token',
+        'supporterp_base_url', 'supporterp_api_token',
+    ];
+
+    private const SUPPORT_PLATFORM_SENSITIVE = [
+        'supportcheck_api_token', 'supportspt_api_token', 'supportsev_api_token',
+        'supportvisual_api_token', 'supporterp_api_token',
+    ];
+
     protected SettingModel $settingModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -66,7 +87,7 @@ class IntegrationsController extends BaseController
         $this->requireRole('admin');
 
         $settings = [];
-        foreach (array_merge(self::DEEPFACE_FIELDS, self::FCM_FIELDS) as $field) {
+        foreach (array_merge(self::DEEPFACE_FIELDS, self::FCM_FIELDS, self::SUPPORT_PLATFORM_FIELDS) as $field) {
             $settings[$field] = $this->settingModel->get($field);
         }
 
@@ -93,6 +114,7 @@ class IntegrationsController extends BaseController
         try {
             $this->saveGroup($data, self::DEEPFACE_FIELDS, self::DEEPFACE_SENSITIVE, 'biometria');
             $this->saveGroup($data, self::FCM_FIELDS, self::FCM_SENSITIVE, 'integrations');
+            $this->saveGroup($data, self::SUPPORT_PLATFORM_FIELDS, self::SUPPORT_PLATFORM_SENSITIVE, 'integrations');
 
             $this->settingModel->clearCache();
 
