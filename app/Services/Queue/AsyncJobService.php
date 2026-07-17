@@ -28,6 +28,7 @@ class AsyncJobService
     public const TYPE_PUSH_NOTIFICATION = 'notification.push';
     public const TYPE_FACE_ENROLL = 'biometric.face_enroll';
     public const TYPE_DATABASE_BACKUP = 'admin.database_backup';
+    public const TYPE_SUPPORTCHECK_EMPLOYEE_SYNC = 'supportcheck.employee_sync';
 
     protected AsyncJobModel $jobModel;
     protected ReportExecutionService $reportExecutionService;
@@ -199,6 +200,7 @@ class AsyncJobService
                 self::TYPE_PUSH_NOTIFICATION => $this->handlePushNotification($payload),
                 self::TYPE_FACE_ENROLL => $this->handleFaceEnrollment($payload),
                 self::TYPE_DATABASE_BACKUP => $this->handleDatabaseBackup(),
+                self::TYPE_SUPPORTCHECK_EMPLOYEE_SYNC => $this->handleSupportCheckEmployeeSync($payload),
                 default => throw new RuntimeException('Tipo de job não suportado: ' . $job->job_type),
             };
 
@@ -236,6 +238,7 @@ class AsyncJobService
                 self::TYPE_PUSH_NOTIFICATION => $this->handlePushNotification($payload),
                 self::TYPE_FACE_ENROLL => $this->handleFaceEnrollment($payload),
                 self::TYPE_DATABASE_BACKUP => $this->handleDatabaseBackup(),
+                self::TYPE_SUPPORTCHECK_EMPLOYEE_SYNC => $this->handleSupportCheckEmployeeSync($payload),
                 default => throw new RuntimeException('Tipo de job não suportado: ' . $job->job_type),
             };
 
@@ -394,6 +397,37 @@ class AsyncJobService
         ];
     }
 
+    /**
+     * Sincroniza um unico funcionario com o SupportCHECK apos criacao, edicao,
+     * ativacao/desligamento ou aprovacao de cadastro. Reaproveita
+     * SupportCheckSyncService::syncEmployee(), que sempre manda o estado atual
+     * completo (cargo, departamento, unidade, status ativo/inativo) -- por isso
+     * cobre mudanca de cargo/departamento/unidade e desligamento sem precisar
+     * de um tipo de evento por campo.
+     */
+    protected function handleSupportCheckEmployeeSync(array $payload): array
+    {
+        $employeeId = (int) ($payload['employee_id'] ?? 0);
+        if ($employeeId <= 0) {
+            throw new RuntimeException('employee_id invalido para sincronizacao com o SupportCHECK.');
+        }
+
+        $client = new \App\Libraries\SupportCheck\SupportCheckApiClient();
+        if (! $client->isEnabled()) {
+            return ['result_payload' => ['skipped' => true, 'reason' => 'Integracao SupportCHECK desabilitada neste servidor.']];
+        }
+
+        $employeeModel = new \App\Models\EmployeeModel();
+        $employee = $employeeModel->withDeleted()->find($employeeId);
+        if ($employee === null) {
+            return ['result_payload' => ['skipped' => true, 'reason' => 'Funcionario nao encontrado (id removido em definitivo).']];
+        }
+
+        $result = (new \App\Services\SupportCheck\SupportCheckSyncService($client))->syncEmployee($employee);
+
+        return ['result_payload' => $result];
+    }
+
     protected function resolveQueue(string $jobType): string
     {
         return $this->jobTypeCatalog->queueFor($jobType);
@@ -423,6 +457,23 @@ class AsyncJobService
             'queue' => 'notifications',
             'priority' => $options['priority'] ?? 90,
             'max_attempts' => $options['max_attempts'] ?? 3,
+        ]);
+    }
+
+    /**
+     * Enfileira sincronizacao de um funcionario com o SupportCHECK sem travar
+     * a requisicao web que originou a mudanca (criacao/edicao/ativacao/
+     * desligamento/aprovacao de cadastro).
+     */
+    public function dispatchSupportCheckEmployeeSync(int $employeeId): array
+    {
+        return $this->enqueue(self::TYPE_SUPPORTCHECK_EMPLOYEE_SYNC, [
+            'employee_id' => $employeeId,
+        ], [
+            'employee_id' => $employeeId > 0 ? $employeeId : null,
+            'queue' => 'default',
+            'priority' => 40,
+            'max_attempts' => 5,
         ]);
     }
 

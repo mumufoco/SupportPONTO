@@ -262,5 +262,6 @@ $routes->group('api', ['filter' => ['cors', 'api-version']], static function ($r
 $routes->group('api/v1/supportcheck', ['filter' => ['cors', 'ratelimit', 'api-json', 'supportcheck-callback']], static function ($routes): void {
     $routes->post('request-report', 'API\SupportCheckCallbackController::requestReport', ['as' => 'api.supportcheck.request-report']);
     $routes->post('request-terms', 'API\SupportCheckCallbackController::requestTerms', ['as' => 'api.supportcheck.request-terms']);
+    $routes->post('terms/signature-status', 'API\SupportCheckCallbackController::signatureStatus', ['as' => 'api.supportcheck.terms.signature-status']);
 });
 

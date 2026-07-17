@@ -47,6 +47,7 @@ class EmployeeRegistrationService
         }
 
         $this->formSupport->clearCache();
+        $this->dispatchSupportCheckSync((int) $employeeId);
 
         return [
             'success' => true,
@@ -87,6 +88,8 @@ class EmployeeRegistrationService
             return ['success' => false, 'error' => 'Erro ao atualizar empregado.'];
         }
 
+        $this->dispatchSupportCheckSync($id);
+
         $oldRole = is_array($employee) ? ($employee['role'] ?? null) : ($employee->role ?? null);
         $oldActive = is_array($employee) ? ($employee['active'] ?? null) : ($employee->active ?? null);
         $newActive = array_key_exists('active', $payload) ? $payload['active'] : $oldActive;
@@ -111,6 +114,21 @@ class EmployeeRegistrationService
                 'active' => $oldActive,
             ],
         ];
+    }
+
+    /**
+     * Mantem o cadastro do SupportCHECK em dia sem travar a requisicao web:
+     * enfileira um job assincrono (AsyncJobService::dispatchSupportCheckEmployeeSync)
+     * em vez de chamar a API do SupportCHECK sincronamente aqui. Se o CHECK estiver
+     * fora do ar ou desabilitado, isso nunca deve impedir criar/editar o funcionario.
+     */
+    private function dispatchSupportCheckSync(int $employeeId): void
+    {
+        try {
+            (new \App\Services\Queue\AsyncJobService())->dispatchSupportCheckEmployeeSync($employeeId);
+        } catch (\Throwable $e) {
+            log_message('error', 'Falha ao enfileirar sincronizacao SupportCHECK para funcionario #{id}: {msg}', ['id' => $employeeId, 'msg' => $e->getMessage()]);
+        }
     }
 
     private function normalizeRegistrationPayload(array $postData): array

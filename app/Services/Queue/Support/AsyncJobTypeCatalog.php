@@ -19,6 +19,11 @@ final class AsyncJobTypeCatalog
         'notification.push' => ['queue' => 'notifications', 'priority' => 90],
         'biometric.face_enroll' => ['queue' => 'biometric', 'priority' => 80],
         'admin.database_backup' => ['queue' => 'maintenance', 'priority' => 60],
+        // Fila 'default': o worker systemd (supportponto-worker.service) roda com
+        // --queues fixo (reports,biometric,exports,notifications,maintenance,default) --
+        // uma fila nova so seria processada apos editar o unit file e reiniciar o
+        // servico, entao reaproveitamos 'default' em vez disso.
+        'supportcheck.employee_sync' => ['queue' => 'default', 'priority' => 40],
     ];
 
     public function queueFor(string $jobType): string

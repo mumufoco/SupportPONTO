@@ -50,6 +50,7 @@ class EmployeeStatusService
         }
 
         $this->employeeModel->update($id, ['active' => $active]);
+        $this->dispatchSupportCheckSync($id);
 
         // ALTO-02 (auditoria): desativar um funcionário (ex.: desligamento) não
         // revogava a sessão já aberta — quem estivesse logado continuava acessando o
@@ -63,6 +64,19 @@ class EmployeeStatusService
         }
 
         return ['success' => true, 'employee' => $employee, 'active' => $active];
+    }
+
+    /**
+     * Ver EmployeeRegistrationService::dispatchSupportCheckSync() -- mesmo
+     * padrao (job assincrono, nunca bloqueia a acao administrativa em si).
+     */
+    private function dispatchSupportCheckSync(int $employeeId): void
+    {
+        try {
+            (new \App\Services\Queue\AsyncJobService())->dispatchSupportCheckEmployeeSync($employeeId);
+        } catch (\Throwable $e) {
+            log_message('error', 'Falha ao enfileirar sincronizacao SupportCHECK para funcionario #{id}: {msg}', ['id' => $employeeId, 'msg' => $e->getMessage()]);
+        }
     }
 
     private function cancelOpenPendencies(int $employeeId, string $reason): void
@@ -99,6 +113,7 @@ class EmployeeStatusService
         }
 
         $this->employeeModel->update($id, ['active' => true]);
+        $this->dispatchSupportCheckSync($id);
 
         $employeeId = is_array($employee) ? (int) ($employee['id'] ?? 0) : (int) ($employee->id ?? 0);
 

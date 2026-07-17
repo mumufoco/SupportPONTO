@@ -30,6 +30,35 @@ class UserConsentModel extends Model
         'employee_name_snapshot',
         'employee_cpf_snapshot',
         'synced_to_supportcheck_at',
+        'supportcheck_document_id',
+        'supportcheck_internal_code',
+        'signature_status',
+        'signature_provider',
+        'provider_document_id',
+        'provider_signature_id',
+        'signed_at',
+        'signed_file_reference',
+        'signed_file_hash',
+        'audit_status',
+        'signature_sync_message',
+        'signature_updated_at',
+    ];
+
+    /**
+     * Status de assinatura aceitos no callback do SupportCHECK
+     * (POST /api/v1/supportcheck/terms/signature-status).
+     */
+    public const SIGNATURE_STATUSES = [
+        'pending_signature',
+        'sent_to_signature',
+        'viewed',
+        'signed',
+        'refused',
+        'expired',
+        'cancelled',
+        'failed',
+        'synced',
+        'sync_failed',
     ];
 
     // Dates
@@ -173,6 +202,29 @@ class UserConsentModel extends Model
         }
 
         return $pending;
+    }
+
+    /**
+     * Resolve o consentimento a partir do supportponto_term_id enviado ao
+     * SupportCHECK em SupportCheckTermService::sendOne() (formato 'consent-{id}').
+     */
+    public function findByExternalTermId(string $supportpontoTermId): ?object
+    {
+        if (! preg_match('/^consent-(\d+)$/', $supportpontoTermId, $matches)) {
+            return null;
+        }
+
+        return $this->find((int) $matches[1]);
+    }
+
+    /**
+     * Grava o retorno de status de assinatura vindo do SupportCHECK
+     * (fecha o loop: o PONTO manda o termo para assinar e passa a saber
+     * se/quando foi assinado).
+     */
+    public function updateSignatureStatus(int $consentId, array $data): bool
+    {
+        return (bool) $this->update($consentId, $data);
     }
 
     /**
