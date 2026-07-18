@@ -19,22 +19,22 @@
     <!-- Atalhos de relatórios pré-definidos -->
     <div class="sp-shortcuts-grid mb-4">
         <a class="sp-shortcut-card" href="<?= route_to('reports.timesheet') ?>?month=<?= esc($defaultMonth) ?><?= $selectedEmployeeId ? '&employee_id=' . urlencode((string) $selectedEmployeeId) : '' ?>">
-            <div class="icon"><i class="bi bi-calendar-range"></i></div>
+            <div class="icon" style="background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-calendar-range"></i></div>
             <strong>Espelho consolidado</strong>
             <span>Relatório mensal por colaborador com jornada prevista, saldo e registros diários.</span>
         </a>
         <a class="sp-shortcut-card" href="<?= route_to('reports.attendance') ?>?month=<?= esc($defaultMonth) ?>">
-            <div class="icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="icon" style="background:rgba(25,135,84,.12);color:#198754;"><i class="bi bi-graph-up-arrow"></i></div>
             <strong>Assiduidade</strong>
             <span>Compare horas trabalhadas, faltas operacionais e taxa de presença por período.</span>
         </a>
         <a class="sp-shortcut-card" href="<?= route_to('reports.justifications') ?>?month=<?= esc($defaultMonth) ?>">
-            <div class="icon"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="icon" style="background:rgba(13,202,240,.12);color:#0dcaf0;"><i class="bi bi-file-earmark-text"></i></div>
             <strong>Justificativas</strong>
             <span>Monitore aprovações, pendências e histórico de solicitações do período.</span>
         </a>
         <a class="sp-shortcut-card" href="<?= route_to('reports.late_arrivals') ?>?month=<?= esc($defaultMonth) ?>">
-            <div class="icon"><i class="bi bi-alarm"></i></div>
+            <div class="icon" style="background:rgba(253,126,20,.12);color:#fd7e14;"><i class="bi bi-alarm"></i></div>
             <strong>Atrasos</strong>
             <span>Veja colaboradores com atrasos recorrentes e datas impactadas no mês.</span>
         </a>
@@ -46,7 +46,10 @@
         <div class="col-12 col-xl-7">
             <div class="sp-data-card">
                 <div class="sp-data-card__header">
-                    <h2 class="sp-data-card__title"><i class="bi bi-sliders"></i>Relatório customizado</h2>
+                    <h2 class="sp-data-card__title">
+                        <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-sliders"></i></span>
+                        Relatório customizado
+                    </h2>
                 </div>
                 <div class="sp-data-card__body">
                     <form id="form-report" action="<?= route_to('reports.generate') ?>" method="post" class="row g-3">
@@ -132,7 +135,10 @@
         <div class="col-12 col-xl-5" id="afd-export">
             <div class="sp-data-card h-100">
                 <div class="sp-data-card__header">
-                    <h2 class="sp-data-card__title"><i class="bi bi-filetype-txt"></i>Exportação AFD</h2>
+                    <h2 class="sp-data-card__title">
+                        <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(25,135,84,.12);color:#198754;"><i class="bi bi-filetype-txt"></i></span>
+                        Exportação AFD
+                    </h2>
                 </div>
                 <div class="sp-data-card__body">
                     <p class="text-muted">Informe o período de apuração para gerar o arquivo AFD (Arquivo de Fonte de Dados).</p>
@@ -167,22 +173,6 @@
                         </div>
                         <p class="text-muted small mt-2" id="afd-async-status"></p>
                     </div>
-
-                    <hr class="my-3">
-                    <div class="sp-process-list">
-                        <div class="sp-process-item">
-                            <strong>O que é o AFD?</strong>
-                            <span>Arquivo de Fonte de Dados exigido pela Portaria 671/2021 para registro eletrônico de ponto.</span>
-                        </div>
-                        <div class="sp-process-item">
-                            <strong>Conteúdo</strong>
-                            <span>Registros de marcação de todos os colaboradores no período informado.</span>
-                        </div>
-                        <div class="sp-process-item">
-                            <strong>Download automático</strong>
-                            <span>O arquivo será baixado automaticamente quando pronto.</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -193,7 +183,10 @@
         <div class="col-12">
             <div class="sp-data-card">
                 <div class="sp-data-card__header">
-                    <h2 class="sp-data-card__title"><i class="bi bi-person-lines-fill"></i>Relatório por funcionário</h2>
+                    <h2 class="sp-data-card__title">
+                        <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(111,66,193,.12);color:#6f42c1;"><i class="bi bi-person-lines-fill"></i></span>
+                        Relatório por funcionário
+                    </h2>
                 </div>
                 <div class="sp-data-card__body">
                     <form id="form-employee-report" action="<?= route_to('reports.generate') ?>" method="post" class="row g-3">
