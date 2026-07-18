@@ -18,8 +18,9 @@ $exportQuery = http_build_query(array_filter([
         'subtitle' => 'Filtre registros, acompanhe o resumo do período e acesse rapidamente cada lançamento.',
         'icon'     => 'bi bi-clock-history',
         'actions'  => [
-            ['label' => 'Exportar PDF',   'icon' => 'bi bi-file-earmark-pdf-fill',   'url' => base_url('timesheet/history/export/pdf?' . $exportQuery)],
-            ['label' => 'Exportar Excel', 'icon' => 'bi bi-file-earmark-excel-fill', 'url' => base_url('timesheet/history/export/excel?' . $exportQuery)],
+            ['label' => 'Exportar PDF',   'icon' => 'bi bi-file-earmark-pdf-fill',   'url' => base_url('timesheet/history/export/pdf?' . $exportQuery),   'class' => 'sp-page-chip--primary'],
+            ['label' => 'Exportar Excel', 'icon' => 'bi bi-file-earmark-excel-fill', 'url' => base_url('timesheet/history/export/excel?' . $exportQuery), 'class' => 'sp-page-chip--primary'],
+            ['label' => 'Exportar CSV',   'icon' => 'bi bi-filetype-csv',            'url' => base_url('timesheet/history/export/csv?' . $exportQuery),   'class' => 'sp-page-chip--primary'],
         ],
     ]) ?>
 

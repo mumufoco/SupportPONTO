@@ -10,8 +10,9 @@
         'subtitle' => 'Acompanhe seu banco de horas e desempenho por período.',
         'icon'     => 'bi bi-bar-chart-line-fill',
         'actions'  => [
-            ['label' => 'Exportar PDF',   'icon' => 'bi bi-file-earmark-pdf-fill',   'url' => base_url('timesheet/export/pdf?employee_id='   . ($viewingEmployee->id ?? '') . '&period=' . ($period ?? 30))],
-            ['label' => 'Exportar Excel', 'icon' => 'bi bi-file-earmark-excel-fill', 'url' => base_url('timesheet/export/excel?employee_id=' . ($viewingEmployee->id ?? '') . '&period=' . ($period ?? 30))],
+            ['label' => 'Exportar PDF',   'icon' => 'bi bi-file-earmark-pdf-fill',   'url' => base_url('timesheet/export/pdf?employee_id='   . ($viewingEmployee->id ?? '') . '&period=' . ($period ?? 30)), 'class' => 'sp-page-chip--primary'],
+            ['label' => 'Exportar Excel', 'icon' => 'bi bi-file-earmark-excel-fill', 'url' => base_url('timesheet/export/excel?employee_id=' . ($viewingEmployee->id ?? '') . '&period=' . ($period ?? 30)), 'class' => 'sp-page-chip--primary'],
+            ['label' => 'Exportar CSV',   'icon' => 'bi bi-filetype-csv',            'url' => base_url('timesheet/export/csv?employee_id='   . ($viewingEmployee->id ?? '') . '&period=' . ($period ?? 30)), 'class' => 'sp-page-chip--primary'],
         ],
     ]) ?>
 

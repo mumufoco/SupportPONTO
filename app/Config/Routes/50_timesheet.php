@@ -24,6 +24,7 @@ $routes->group('timesheet', $timesheetAuth, static function ($routes) use ($time
     $routes->get('history', $timesheetController . '::history', ['as' => 'timesheet.history']);
     $routes->get('history/export/pdf', $timesheetController . '::historyExportPdf', ['as' => 'timesheet.history.export.pdf']);
     $routes->get('history/export/excel', $timesheetController . '::historyExportExcel', ['as' => 'timesheet.history.export.excel']);
+    $routes->get('history/export/csv', $timesheetController . '::historyExportCsv', ['as' => 'timesheet.history.export.csv']);
     $routes->get('day/(:segment)', $timesheetController . '::day/$1', ['as' => 'timesheet.day']);
     $routes->get('history/(:num)', $timesheetController . '::show/$1', ['as' => 'timesheet.history.show']);
     $routes->get('balance', $timesheetController . '::balance', ['as' => 'timesheet.balance']);
@@ -31,6 +32,7 @@ $routes->group('timesheet', $timesheetAuth, static function ($routes) use ($time
     $routes->get('employee/(:num)', $timesheetController . '::employee/$1', ['as' => 'timesheet.employee']);
     $routes->get('export/excel', $timesheetController . '::exportExcel', ['as' => 'timesheet.export.excel']);
     $routes->get('export/pdf', $timesheetController . '::exportPdf', ['as' => 'timesheet.export.pdf']);
+    $routes->get('export/csv', $timesheetController . '::exportCsv', ['as' => 'timesheet.export.csv']);
     $routes->get('punch-details/(:num)', $timesheetController . '::punchDetails/$1', ['as' => 'timesheet.punch-details']);
     $routes->post('approve/(:num)', $timesheetController . '::approvePunch/$1', ['as' => 'timesheet.approve']);
     $routes->post('reject/(:num)', $timesheetController . '::rejectPunch/$1', ['as' => 'timesheet.reject']);

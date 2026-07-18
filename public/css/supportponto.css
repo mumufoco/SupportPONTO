@@ -1250,6 +1250,8 @@ a:focus-visible { outline: none; box-shadow: var(--sp-ux-focus-ring); }
 .sp-page-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
 .sp-page-chip { display: inline-flex; align-items: center; gap: .45rem; min-height: 38px; padding: 0 .8rem; border-radius: 999px; border: 1px solid var(--sp-border-soft); background: var(--sp-bg-surface); color: var(--sp-text-main); text-decoration: none; font-weight: 600; font-size: .92rem; }
 .sp-page-chip:hover { background: var(--sp-brand-primary-soft); color: var(--sp-brand-tertiary); }
+.sp-page-chip--primary { background: var(--sp-primary); border-color: var(--sp-primary); color: #fff; }
+.sp-page-chip--primary:hover { background: color-mix(in srgb, var(--sp-primary) 85%, #000); border-color: color-mix(in srgb, var(--sp-primary) 85%, #000); color: #fff; }
 
 .sp-standard-table-wrapper { border: 1px solid var(--sp-border-soft); border-radius: 18px; background: var(--sp-bg-surface); box-shadow: var(--sp-shadow-card); overflow: hidden; }
 .sp-standard-table-wrapper .table { margin-bottom: 0; }

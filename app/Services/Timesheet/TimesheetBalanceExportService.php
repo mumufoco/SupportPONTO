@@ -518,4 +518,43 @@ class TimesheetBalanceExportService
             ]);
         }
     }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // CSV
+    // ══════════════════════════════════════════════════════════════════════════
+
+    public function buildCsv(object $employee, array $records): array
+    {
+        $lines = [$this->csvLine(['Data', 'Dia', 'Entrada', 'Saída', 'Intervalo (h)', 'Trabalhado (h)', 'Esperado (h)', 'Extras (h)', 'Devidas (h)', 'Status'])];
+
+        foreach ($records as $rec) {
+            $date  = (string) ($rec->date ?? '');
+            $extra = (float) ($rec->extra ?? 0);
+            $owed  = (float) ($rec->owed  ?? 0);
+
+            $lines[] = $this->csvLine([
+                $date ? date('d/m/Y', strtotime($date)) : '—',
+                $date ? $this->dayPt($date) : '—',
+                $rec->first_punch ?? '—',
+                $rec->last_punch  ?? '—',
+                number_format((float) ($rec->total_interval ?? 0), 2),
+                number_format((float) ($rec->total_worked   ?? 0), 2),
+                number_format((float) ($rec->expected       ?? 0), 2),
+                $extra > 0 ? number_format($extra, 2) : '',
+                $owed  > 0 ? number_format($owed,  2) : '',
+                $this->statusLabel($rec),
+            ]);
+        }
+
+        $filename = 'saldo_horas_' . date('Ymd') . '_' . preg_replace('/[^a-z0-9]/i', '_', $employee->name ?? 'colaborador') . '.csv';
+
+        return ['content' => "\xEF\xBB\xBF" . implode("\r\n", $lines) . "\r\n", 'filename' => $filename];
+    }
+
+    private function csvLine(array $fields): string
+    {
+        return implode(';', array_map(static function ($field): string {
+            return '"' . str_replace('"', '""', (string) $field) . '"';
+        }, $fields));
+    }
 }

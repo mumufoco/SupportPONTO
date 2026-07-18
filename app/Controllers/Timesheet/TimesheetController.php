@@ -130,6 +130,11 @@ class TimesheetController extends BaseController
         return $this->historyExport('excel');
     }
 
+    public function historyExportCsv()
+    {
+        return $this->historyExport('csv');
+    }
+
     /**
      * Exporta o espelho de ponto com os MESMOS filtros aplicados na tela
      * /timesheet/history (start_date, end_date, type, method, employee_id) —
@@ -160,13 +165,17 @@ class TimesheetController extends BaseController
         $historyData = $this->timesheetReadService->getHistoryData($targetEmployeeId, $filters);
 
         $exporter = new \App\Services\Timesheet\TimesheetHistoryExportService();
-        $result = $format === 'pdf'
-            ? $exporter->buildPdf($access['employee'], $historyData['punches'], $filters, $historyData['summary'])
-            : $exporter->buildExcel($access['employee'], $historyData['punches'], $filters, $historyData['summary']);
+        $result = match ($format) {
+            'pdf' => $exporter->buildPdf($access['employee'], $historyData['punches'], $filters, $historyData['summary']),
+            'csv' => $exporter->buildCsv($historyData['punches']),
+            default => $exporter->buildExcel($access['employee'], $historyData['punches'], $filters, $historyData['summary']),
+        };
 
-        $mimeType = $format === 'pdf'
-            ? 'application/pdf'
-            : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        $mimeType = match ($format) {
+            'pdf' => 'application/pdf',
+            'csv' => 'text/csv; charset=UTF-8',
+            default => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
 
         return $this->response
             ->setHeader('Content-Type', $mimeType)
@@ -374,6 +383,11 @@ class TimesheetController extends BaseController
         return $this->directExport('pdf');
     }
 
+    public function exportCsv()
+    {
+        return $this->directExport('csv');
+    }
+
     protected function directExport(string $format)
     {
         $actor = $this->requireAuthenticatedEmployee();
@@ -395,13 +409,17 @@ class TimesheetController extends BaseController
         );
 
         $exporter = new \App\Services\Timesheet\TimesheetBalanceExportService();
-        $result   = $format === 'pdf'
-            ? $exporter->buildPdf($access['employee'], $viewData['records'] ?? [], $viewData['balance'], $viewData['statistics'], $days)
-            : $exporter->buildExcel($access['employee'], $viewData['records'] ?? [], $viewData['balance'], $viewData['statistics'], $days);
+        $result   = match ($format) {
+            'pdf' => $exporter->buildPdf($access['employee'], $viewData['records'] ?? [], $viewData['balance'], $viewData['statistics'], $days),
+            'csv' => $exporter->buildCsv($access['employee'], $viewData['records'] ?? []),
+            default => $exporter->buildExcel($access['employee'], $viewData['records'] ?? [], $viewData['balance'], $viewData['statistics'], $days),
+        };
 
-        $mimeType = $format === 'pdf'
-            ? 'application/pdf'
-            : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        $mimeType = match ($format) {
+            'pdf' => 'application/pdf',
+            'csv' => 'text/csv; charset=UTF-8',
+            default => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
 
         return $this->response
             ->setHeader('Content-Type', $mimeType)

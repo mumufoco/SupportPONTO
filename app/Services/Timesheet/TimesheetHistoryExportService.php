@@ -321,4 +321,34 @@ class TimesheetHistoryExportService
         $writer->save('php://output');
         return ['content' => ob_get_clean(), 'filename' => $filename];
     }
+
+    public function buildCsv(array $punches): array
+    {
+        $lines = [$this->csvLine(['Data', 'Hora', 'Tipo', 'Método', 'Status', 'NSR'])];
+
+        foreach ($punches as $punch) {
+            $punchTime = (string) ($punch->punch_time ?? '');
+            $isValid = filter_var($punch->is_valid ?? true, FILTER_VALIDATE_BOOLEAN);
+
+            $lines[] = $this->csvLine([
+                $punchTime ? date('d/m/Y', strtotime($punchTime)) : '—',
+                $punchTime ? date('H:i', strtotime($punchTime)) : '—',
+                $this->typeLabel($punch->punch_type ?? null),
+                $this->methodLabel($punch->method ?? null),
+                $isValid ? 'Válido' : 'Revisar',
+                (string) ($punch->nsr ?? '—'),
+            ]);
+        }
+
+        $filename = 'espelho_ponto_' . date('Ymd') . '.csv';
+
+        return ['content' => "\xEF\xBB\xBF" . implode("\r\n", $lines) . "\r\n", 'filename' => $filename];
+    }
+
+    private function csvLine(array $fields): string
+    {
+        return implode(';', array_map(static function ($field): string {
+            return '"' . str_replace('"', '""', (string) $field) . '"';
+        }, $fields));
+    }
 }

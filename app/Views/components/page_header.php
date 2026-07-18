@@ -20,7 +20,7 @@ $actions = $actions ?? [];
     <?php if (!empty($actions)): ?>
         <div class="sp-page-header__actions">
             <?php foreach ($actions as $action): ?>
-                <a class="sp-page-chip" href="<?= sp_safe_url($action['url'] ?? '#') ?>" <?= !empty($action['attrs']) ? $action['attrs'] : '' ?>>
+                <a class="sp-page-chip<?= !empty($action['class']) ? ' ' . esc($action['class']) : '' ?>" href="<?= sp_safe_url($action['url'] ?? '#') ?>" <?= !empty($action['attrs']) ? $action['attrs'] : '' ?>>
                     <?php if (!empty($action['icon'])): ?><i class="<?= esc($action['icon']) ?>"></i><?php endif; ?>
                     <span><?= esc($action['label'] ?? lang('DashboardCommon.pageHeader.defaultAction')) ?></span>
                 </a>
