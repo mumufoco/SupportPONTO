@@ -42,11 +42,12 @@ class TimePunchController extends BaseController
         $todayHoliday   = $holidayModel->getHolidayInfo($today);
 
         $data = [
-            'enabledMethods'  => $enabledMethods,
-            'methodReadiness' => $this->punchMethodReadiness->summary($isKioskMode, false),
-            'isKioskMode'     => $isKioskMode,
-            'todayHoliday'    => $todayHoliday,
-            'canOverride'     => $this->isManager(),
+            'enabledMethods'    => $enabledMethods,
+            'methodReadiness'   => $this->punchMethodReadiness->summary($isKioskMode, false),
+            'isKioskMode'       => $isKioskMode,
+            'todayHoliday'      => $todayHoliday,
+            'canOverride'       => $this->isManager(),
+            'canAccessTerminal' => $this->hasAnyRole(['admin', 'gestor']),
         ];
 
         return $isKioskMode

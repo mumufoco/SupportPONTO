@@ -9,9 +9,9 @@
         'title'    => 'Registrar Ponto',
         'subtitle' => 'Escolha o tipo de marcação e o método de identificação.',
         'icon'     => 'bi bi-fingerprint',
-        'actions'  => [
-                                    ['label' => 'Terminal',   'icon' => 'bi bi-display-fill',         'url' => sp_timesheet_punch_kiosk_url()],
-        ],
+        'actions'  => !empty($canAccessTerminal)
+            ? [['label' => 'Terminal', 'icon' => 'bi bi-display-fill', 'url' => sp_timesheet_punch_kiosk_url()]]
+            : [],
     ]) ?>
 
 
