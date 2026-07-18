@@ -218,7 +218,7 @@ class WarningController extends BaseController
         }
 
         if (! $details['canAddWitness']) {
-            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após recusa do colaborador ou após 48 horas sem assinatura.');
+            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após 48 horas sem assinatura.');
         }
 
         return view('warnings/add_witness', ['employee' => $employee] + $details);
@@ -240,17 +240,17 @@ class WarningController extends BaseController
 
         if (! $this->controllerActionService->canAddWitnessByTime($warning)) {
             if ($this->requestExpectsJson()) {
-                return $this->jsonError('Testemunha só pode ser adicionada após recusa do colaborador ou após 48 horas sem assinatura.');
+                return $this->jsonError('Testemunha só pode ser adicionada após 48 horas sem assinatura.');
             }
 
-            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após recusa do colaborador ou após 48 horas sem assinatura.');
+            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após 48 horas sem assinatura.');
         }
 
         if (! $this->validate($this->controllerActionService->witnessValidationRules())) {
             if ($this->requestExpectsJson()) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'Dados da testemunha inválidos.',
+                    'message' => 'Dados das testemunhas inválidos.',
                     'errors' => $this->validator->getErrors(),
                 ]);
             }
@@ -261,7 +261,7 @@ class WarningController extends BaseController
         $result = $this->workflowService->refuseWithWitness(
             $employee,
             $warning,
-            $this->controllerActionService->witnessPayload($this->request)
+            $this->controllerActionService->witnessesFromPayload($this->controllerActionService->witnessPayload($this->request))
         );
 
         if ($this->requestExpectsJson()) {
@@ -269,7 +269,7 @@ class WarningController extends BaseController
         }
 
         $flashKey = ($result['success'] ?? false) ? 'success' : 'error';
-        $flashMessage = $result['message'] ?? 'Não foi possível adicionar a testemunha.';
+        $flashMessage = $result['message'] ?? 'Não foi possível adicionar as testemunhas.';
 
         return redirect()->to(sp_warning_show_url((int) $warning->id))->with($flashKey, $flashMessage);
     }
@@ -293,7 +293,7 @@ class WarningController extends BaseController
         if (! $this->validate($this->controllerActionService->witnessValidationRules())) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Dados da testemunha inválidos.',
+                'message' => 'Dados das testemunhas inválidos.',
                 'errors' => $this->validator->getErrors(),
             ]);
         }
@@ -301,7 +301,7 @@ class WarningController extends BaseController
         $result = $this->workflowService->refuseWithWitness(
             $employee,
             $warning,
-            $this->controllerActionService->witnessPayload($this->request)
+            $this->controllerActionService->witnessesFromPayload($this->controllerActionService->witnessPayload($this->request))
         );
 
         return $this->response->setJSON($result);

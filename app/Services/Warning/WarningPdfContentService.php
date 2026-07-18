@@ -178,12 +178,15 @@ class WarningPdfContentService
             $html .= '<div class="signature-box"><p><strong>' . htmlspecialchars($employee->name) . '</strong><br>
                 Data: ' . date('d/m/Y H:i', strtotime($warning->employee_signed_at)) . '<br>
                 <em style="font-size: 8pt;">' . htmlspecialchars($warning->employee_signature) . '</em></p></div>';
-        } elseif ($warning->status === 'recusado' && $warning->witness_name) {
-            $html .= '<div class="signature-box" style="background-color: #ffcccc;"><p><strong>RECUSADO PELO FUNCIONÁRIO</strong></p>
-                <p style="margin-top: 5mm;"><strong>Testemunha:</strong><br>
-                Nome: ' . htmlspecialchars($warning->witness_name) . '<br>
-                CPF: ' . htmlspecialchars($warning->witness_cpf) . '<br>
-                <em style="font-size: 8pt;">Testemunha presencial da recusa de assinatura</em></p></div>';
+        } elseif ($warning->status === 'recusado' && !empty($warning->witnesses ?? [])) {
+            $html .= '<div class="signature-box" style="background-color: #ffcccc;"><p><strong>RECUSADO PELO FUNCIONÁRIO</strong></p>';
+            foreach ($warning->witnesses as $i => $witness) {
+                $html .= '<p style="margin-top: 5mm;"><strong>Testemunha ' . ($i + 1) . ':</strong><br>
+                Nome: ' . htmlspecialchars($witness->witness_name) . '<br>
+                CPF: ' . htmlspecialchars($witness->witness_cpf) . '<br>
+                <em style="font-size: 8pt;">Testemunha presencial da recusa de assinatura</em></p>';
+            }
+            $html .= '</div>';
         }
 
         $html .= '<div class="footer">Documento gerado eletronicamente em ' . date('d/m/Y H:i:s') . '<br>

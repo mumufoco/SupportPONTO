@@ -4,6 +4,7 @@ namespace App\Services\Warning;
 
 use App\Models\EmployeeModel;
 use App\Models\WarningModel;
+use App\Models\WarningWitnessModel;
 use App\Services\Warning\WarningPdfStorageService;
 
 class WarningQueryService
@@ -12,7 +13,8 @@ class WarningQueryService
         private readonly WarningModel $warningModel,
         private readonly EmployeeModel $employeeModel,
         private readonly WarningAccessService $accessService,
-        private readonly WarningPdfStorageService $pdfStorageService
+        private readonly WarningPdfStorageService $pdfStorageService,
+        private readonly ?WarningWitnessModel $warningWitnessModel = null
     ) {
     }
 
@@ -120,15 +122,20 @@ class WarningQueryService
 
         $warningEmployee = $this->employeeModel->find($warning->employee_id);
 
-        // Testemunha entra em 2 cenarios: (1) recusa explicita - o proprio ato de recusar
-        // ja e o gatilho, sem precisar esperar; (2) silencio prolongado (48h+) ainda pendente.
+        // canAddWitness so libera enquanto ainda pendente ha 48h+ sem resposta - a propria
+        // acao de adicionar testemunha JA marca a advertencia como recusada (ver
+        // WarningWorkflowService::refuseWithWitness()), entao uma vez 'recusado' as
+        // testemunhas ja foram registradas e nao ha nada a adicionar de novo.
+        $witnessModel = $this->warningWitnessModel ?? new WarningWitnessModel();
+
         return [
             'warning'         => $warning,
             'warningEmployee' => $warningEmployee,
             'issuer'          => $this->employeeModel->find($warning->issued_by),
             'hoursElapsed'    => $hoursElapsed,
-            'canAddWitness'   => $warning->status === 'recusado' || ($warning->status === 'pendente-assinatura' && $hoursElapsed >= 48),
+            'canAddWitness'   => $warning->status === 'pendente-assinatura' && $hoursElapsed >= 48,
             'attachments'     => $attachments,
+            'witnesses'       => $warning->status === 'recusado' ? $witnessModel->forWarning($warningId) : [],
             'signerName'      => $warningEmployee ? ($warningEmployee->name ?? '') : '',
         ];
     }

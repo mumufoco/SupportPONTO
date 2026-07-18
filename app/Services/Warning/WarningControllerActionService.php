@@ -17,13 +17,19 @@ class WarningControllerActionService
         ];
     }
 
+    /**
+     * Orientação jurídica: recusa de assinatura exige 2 testemunhas presenciais.
+     */
     public function witnessValidationRules(): array
     {
-        return [
-            'witness_name' => 'required|min_length[3]|max_length[255]',
-            'witness_cpf' => 'required|exact_length[14]',
-            'witness_signature' => 'required',
-        ];
+        $rules = [];
+        foreach ([1, 2] as $n) {
+            $rules["witness_{$n}_name"] = "required|min_length[3]|max_length[255]";
+            $rules["witness_{$n}_cpf"] = "required|exact_length[14]";
+            $rules["witness_{$n}_signature"] = 'required';
+        }
+
+        return $rules;
     }
 
     public function createPayload(IncomingRequest $request): array
@@ -46,15 +52,25 @@ class WarningControllerActionService
         return $request->getPost();
     }
 
-    public function canAddWitnessByTime(object $warning): bool
+    /**
+     * @return list<array{name:string,cpf:string,signature:string}>
+     */
+    public function witnessesFromPayload(array $input): array
     {
-        // Recusa explicita ja e o gatilho por si so, sem precisar esperar 48h -
-        // precisa ficar em sincronia com WarningQueryService::warningDetails()
-        // (canAddWitness), usado para exibir/ocultar o botao na tela.
-        if (($warning->status ?? '') === 'recusado') {
-            return true;
+        $witnesses = [];
+        foreach ([1, 2] as $n) {
+            $witnesses[] = [
+                'name' => (string) ($input["witness_{$n}_name"] ?? ''),
+                'cpf' => (string) ($input["witness_{$n}_cpf"] ?? ''),
+                'signature' => (string) ($input["witness_{$n}_signature"] ?? ''),
+            ];
         }
 
+        return $witnesses;
+    }
+
+    public function canAddWitnessByTime(object $warning): bool
+    {
         $hoursElapsed = (time() - strtotime((string) $warning->created_at)) / 3600;
         return $hoursElapsed >= 48;
     }

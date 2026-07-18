@@ -88,14 +88,11 @@
             <?php if (!empty($canAddWitness) && in_array($employee['role'] ?? '', ['admin', 'gestor', 'rh'])): ?>
                 <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 flex-wrap mb-0">
                     <div>
-                        <div class="fw-semibold">
-                            <i class="bi bi-person-plus-fill me-1"></i>
-                            <?= $wStatus === 'recusado' ? 'Colaborador recusou assinar' : 'Mais de 48 horas sem assinatura' ?>
-                        </div>
-                        <div class="small">É possível formalizar a ocorrência com uma testemunha.</div>
+                        <div class="fw-semibold"><i class="bi bi-person-plus-fill me-1"></i>Mais de 48 horas sem assinatura</div>
+                        <div class="small">É possível formalizar a ocorrência com 2 testemunhas.</div>
                     </div>
                     <a href="<?= sp_warning_witness_form_url((int) $warning->id) ?>" class="btn btn-sm btn-primary flex-shrink-0">
-                        <i class="bi bi-person-plus me-1"></i>Adicionar testemunha
+                        <i class="bi bi-person-plus me-1"></i>Adicionar testemunhas
                     </a>
                 </div>
             <?php endif; ?>
@@ -169,15 +166,15 @@
                         </div>
                         <?php endif; ?>
 
-                        <?php if (!empty($warning->witness_signed_at ?? null)): ?>
+                        <?php foreach (($witnesses ?? []) as $witness): ?>
                         <div class="sp-warning-timeline__item">
                             <div class="sp-warning-timeline__dot" style="background:var(--sp-info);border-color:var(--sp-info);"></div>
                             <div>
-                                <strong class="d-block small">Testemunha: <?= esc($warning->witness_name ?? '—') ?></strong>
-                                <span class="text-muted small"><?= esc(format_datetime_br((string) $warning->witness_signed_at, false)) ?></span>
+                                <strong class="d-block small">Testemunha: <?= esc($witness->witness_name ?? '—') ?></strong>
+                                <span class="text-muted small"><?= esc(format_datetime_br((string) ($witness->created_at ?? ''), false)) ?></span>
                             </div>
                         </div>
-                        <?php endif; ?>
+                        <?php endforeach; ?>
 
                         <?php if ($wStatus === 'pendente-assinatura'): ?>
                         <div class="sp-warning-timeline__item sp-warning-timeline__item--last">

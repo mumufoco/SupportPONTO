@@ -5,6 +5,7 @@ namespace App\Services\Warning;
 use App\Models\AuditModel;
 use App\Models\EmployeeModel;
 use App\Models\WarningModel;
+use App\Models\WarningWitnessModel;
 use App\Services\NotificationService;
 use App\Services\SMSService;
 use App\Services\Warning\Workflow\WarningDocumentService;
@@ -20,6 +21,7 @@ class WarningWorkflowService
     private WarningSignatureService $warningSignatureService;
     private WarningDocumentService $warningDocumentService;
     private WarningNotificationService $warningNotificationService;
+    private WarningWitnessModel $warningWitnessModel;
 
     public function __construct(
         private readonly WarningModel $warningModel,
@@ -31,8 +33,10 @@ class WarningWorkflowService
         ?WarningEvidenceService $warningEvidenceService = null,
         ?WarningSignatureService $warningSignatureService = null,
         ?WarningDocumentService $warningDocumentService = null,
-        ?WarningNotificationService $warningNotificationService = null
+        ?WarningNotificationService $warningNotificationService = null,
+        ?WarningWitnessModel $warningWitnessModel = null
     ) {
+        $this->warningWitnessModel = $warningWitnessModel ?? new WarningWitnessModel();
         $this->warningEvidenceService = $warningEvidenceService ?? Services::warningEvidenceService(false);
         $this->warningSignatureService = $warningSignatureService ?? Services::warningSignatureService(false);
         $this->warningDocumentService = $warningDocumentService ?? Services::warningDocumentService(false);
@@ -150,14 +154,22 @@ class WarningWorkflowService
         return $this->smsService->sendVerificationCode($actor['id'], $targetEmployee->phone);
     }
 
-    public function refuseWithWitness(array $actor, object $warning, array $input): array
+    /**
+     * @param list<array{name:string,cpf:string,signature:string}> $witnesses Exatamente 2
+     *  testemunhas (orientação jurídica), ver WarningControllerActionService::witnessesFromPayload().
+     */
+    public function refuseWithWitness(array $actor, object $warning, array $witnesses): array
     {
-        $this->warningModel->refuseSignature(
-            (int) $warning->id,
-            $input['witness_name'],
-            $input['witness_cpf'],
-            $input['witness_signature']
-        );
+        $this->warningModel->markRefused((int) $warning->id);
+
+        foreach ($witnesses as $witness) {
+            $this->warningWitnessModel->insert([
+                'warning_id'        => (int) $warning->id,
+                'witness_name'      => $witness['name'],
+                'witness_cpf'       => $witness['cpf'],
+                'witness_signature' => $witness['signature'],
+            ]);
+        }
 
         $targetEmployee = $this->employeeModel->find($warning->employee_id);
         $issuer = $this->employeeModel->find($warning->issued_by);
@@ -170,7 +182,7 @@ class WarningWorkflowService
             $warning->id,
             ['status' => 'pendente-assinatura'],
             ['status' => 'recusado'],
-            "Advertência ID {$warning->id} marcada como recusada com testemunha",
+            "Advertência ID {$warning->id} marcada como recusada com 2 testemunhas",
             'warning'
         );
 
@@ -179,7 +191,7 @@ class WarningWorkflowService
             $this->warningNotificationService->notifyAdminsRefusal($admins, $targetEmployee, (int) $warning->id);
         }
 
-        return ['success' => true, 'message' => 'Testemunha adicionada. Advertência marcada como recusada.'];
+        return ['success' => true, 'message' => 'Testemunhas adicionadas. Advertência marcada como recusada.'];
     }
 
     public function deleteWarning(array $actor, object $warning): void

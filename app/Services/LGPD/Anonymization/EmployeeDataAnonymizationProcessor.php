@@ -10,6 +10,7 @@ use App\Models\JustificationModel;
 use App\Models\NotificationModel;
 use App\Models\UserConsentModel;
 use App\Models\WarningModel;
+use App\Models\WarningWitnessModel;
 use App\Services\Audit\AuditMutationService;
 use App\Services\Biometric\FaceRecognitionService;
 
@@ -20,6 +21,7 @@ class EmployeeDataAnonymizationProcessor
     private JustificationModel $justificationModel;
     private ChatMessageModel $chatMessageModel;
     private WarningModel $warningModel;
+    private WarningWitnessModel $warningWitnessModel;
     private UserConsentModel $consentModel;
     private AuditModel $auditModel;
     private NotificationModel $notificationModel;
@@ -37,6 +39,7 @@ class EmployeeDataAnonymizationProcessor
         ?NotificationModel $notificationModel = null,
         ?AuditMutationService $auditMutationService = null,
         ?FaceRecognitionService $faceRecognitionService = null,
+        ?WarningWitnessModel $warningWitnessModel = null,
     ) {
         $this->employeeModel = $employeeModel ?? new EmployeeModel();
         $this->biometricModel = $biometricModel ?? new BiometricTemplateModel();
@@ -48,6 +51,7 @@ class EmployeeDataAnonymizationProcessor
         $this->notificationModel = $notificationModel ?? new NotificationModel();
         $this->auditMutationService = $auditMutationService ?? AuditMutationService::createDefault();
         $this->faceRecognitionService = $faceRecognitionService ?? new FaceRecognitionService();
+        $this->warningWitnessModel = $warningWitnessModel ?? new WarningWitnessModel();
     }
 
     /**
@@ -218,8 +222,15 @@ class EmployeeDataAnonymizationProcessor
                 'reason' => '[Motivo anonimizado]',
                 'evidence_files' => null,
                 'employee_signature' => null,
-                'witness_signature' => null,
             ]);
+
+            foreach ($this->warningWitnessModel->forWarning((int) $warning->id) as $witness) {
+                $this->warningWitnessModel->update($witness->id, [
+                    'witness_name' => '[Testemunha anonimizada]',
+                    'witness_cpf' => '000.000.000-00',
+                    'witness_signature' => '[Depoimento anonimizado]',
+                ]);
+            }
 
             $count++;
         }

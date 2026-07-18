@@ -3,13 +3,15 @@
 namespace App\Services\Warning\Workflow;
 
 use App\Models\WarningModel;
+use App\Models\WarningWitnessModel;
 use App\Services\WarningPDFService;
 
 class WarningDocumentService
 {
     public function __construct(
         private readonly WarningModel $warningModel,
-        private readonly WarningPDFService $pdfService
+        private readonly WarningPDFService $pdfService,
+        private readonly ?WarningWitnessModel $warningWitnessModel = null
     ) {
     }
 
@@ -32,8 +34,14 @@ class WarningDocumentService
 
     public function regenerateFinalPdf(int $warningId, ?object $employee, ?object $issuer): void
     {
+        $warning = $this->warningModel->find($warningId);
+        if ($warning !== null && $warning->status === 'recusado') {
+            $witnessModel = $this->warningWitnessModel ?? new WarningWitnessModel();
+            $warning->witnesses = $witnessModel->forWarning($warningId);
+        }
+
         $this->pdfService->generateFinalPDF($warningId, [
-            'warning' => $this->warningModel->find($warningId),
+            'warning' => $warning,
             'employee' => $employee,
             'issuer' => $issuer,
         ]);

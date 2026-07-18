@@ -44,6 +44,7 @@ use App\Services\Security\RateLimitService;
 use App\Services\Security\TwoFactorAuthService;
 use App\Models\JustificationModel;
 use App\Models\WarningModel;
+use App\Models\WarningWitnessModel;
 use App\Libraries\ApiRequestAuthContext;
 use App\Models\TimesheetConsolidatedModel;
 use App\Models\WorkShiftModel;
@@ -421,7 +422,8 @@ class Services extends BaseService
             static::warningModel(),
             static::employeeModel(),
             static::warningAccessService(),
-            static::warningPdfStorageService()
+            static::warningPdfStorageService(),
+            new WarningWitnessModel()
         );
     }
 
@@ -449,7 +451,7 @@ class Services extends BaseService
             return static::getSharedInstance('warningDocumentService');
         }
 
-        return new WarningDocumentService(static::warningModel(), static::warningPdfService());
+        return new WarningDocumentService(static::warningModel(), static::warningPdfService(), new WarningWitnessModel());
     }
 
     public static function warningNotificationWorkflowService(bool $getShared = true): WarningNotificationService
@@ -491,7 +493,8 @@ class Services extends BaseService
             static::warningEvidenceService(),
             static::warningSignatureService(),
             static::warningDocumentService(),
-            static::warningNotificationWorkflowService()
+            static::warningNotificationWorkflowService(),
+            new WarningWitnessModel()
         );
     }
 

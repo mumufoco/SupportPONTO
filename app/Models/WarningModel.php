@@ -22,9 +22,6 @@ class WarningModel extends Model
         'pdf_path',
         'employee_signature',
         'employee_signed_at',
-        'witness_name',
-        'witness_cpf',
-        'witness_signature',
         'status',
     ];
 
@@ -207,19 +204,13 @@ class WarningModel extends Model
     }
 
     /**
-     * Refuse signature with witness
+     * Marca a advertência como recusada. As testemunhas (2, ver WarningWitnessModel)
+     * são gravadas separadamente por WarningWorkflowService::refuseWithWitness().
      */
-    public function refuseSignature(
-        int $warningId,
-        string $witnessName,
-        string $witnessCpf,
-        string $witnessSignature
-    ): bool {
+    public function markRefused(int $warningId): bool
+    {
         return $this->update($warningId, [
-            'witness_name'      => $witnessName,
-            'witness_cpf'       => $witnessCpf,
-            'witness_signature' => $witnessSignature,
-            'status'            => 'recusado',
+            'status' => 'recusado',
         ]);
     }
 
