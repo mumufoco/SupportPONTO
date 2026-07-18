@@ -236,6 +236,76 @@ class ReportController extends BaseController
         ]);
     }
 
+    public function lateArrivalsExportPdf(): ResponseInterface
+    {
+        return $this->lateArrivalsExport('pdf');
+    }
+
+    public function lateArrivalsExportExcel(): ResponseInterface
+    {
+        return $this->lateArrivalsExport('excel');
+    }
+
+    public function lateArrivalsExportCsv(): ResponseInterface
+    {
+        return $this->lateArrivalsExport('csv');
+    }
+
+    /**
+     * Exporta a tela de atrasos (reports/late_arrivals.php) com os mesmos
+     * filtros da tela (month/department/employee_id), reaproveitando a
+     * mesma fonte de dados (lateArrivalsViewData) para que o arquivo bata
+     * com o que está na tela.
+     */
+    protected function lateArrivalsExport(string $format): ResponseInterface
+    {
+        $employee = $this->requireOperationalReportsViewAccessOrRedirect();
+        if ($employee === null) {
+            return redirect()->to(route_to('dashboard'))->with('error', 'Acesso negado.');
+        }
+
+        $month = $this->reportControllerActionService->monthOrCurrent($this->request->getGet('month'));
+        $selectedDepartment = $this->request->getGet('department');
+        $selectedEmployee = $this->request->getGet('employee_id');
+        $range = $this->reportControllerActionService->monthRange($month);
+
+        $viewData = $this->reportCoordinatorService->lateArrivalsViewData(
+            $employee,
+            $range['start_date'],
+            $range['end_date'],
+            $selectedDepartment,
+            $selectedEmployee
+        );
+        $lateArrivalsData = $viewData['lateArrivalsData'] ?? [];
+
+        $exporter = new \App\Services\Reports\LateArrivalsExportService();
+        $result = match ($format) {
+            'pdf' => $exporter->buildPdf($lateArrivalsData, $month, $selectedDepartment),
+            'excel' => $exporter->buildExcel($lateArrivalsData, $month, $selectedDepartment),
+            default => $exporter->buildCsv($lateArrivalsData),
+        };
+
+        $mimeType = match ($format) {
+            'pdf' => 'application/pdf',
+            'csv' => 'text/csv; charset=UTF-8',
+            default => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
+
+        supportponto_log_event('info', 'reports', 'late_arrivals_exported', [
+            'user_id' => $this->session?->get('user_id'),
+            'month' => $month,
+            'department' => $selectedDepartment,
+            'format' => $format,
+        ]);
+
+        return $this->response
+            ->setHeader('Content-Type', $mimeType)
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"')
+            ->setHeader('Content-Length', (string) strlen($result['content']))
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody($result['content']);
+    }
+
     public function justifications()
     {
         $employee = $this->requireOperationalReportsViewAccessOrRedirect();

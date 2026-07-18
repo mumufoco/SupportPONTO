@@ -57,7 +57,30 @@
         </div>
     </div>
 
+    <?php
+        $exportQuery = [
+            'month' => $month,
+            'department' => $selectedDepartment,
+            'employee_id' => $selectedEmployee,
+        ];
+    ?>
     <div class="sp-data-card">
+        <div class="sp-data-card__header">
+            <h2 class="sp-data-card__title">
+                <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-alarm"></i></span>
+                Atrasos por colaborador
+            </h2>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download me-1"></i>Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="<?= route_to('reports.late_arrivals.export.pdf') . '?' . http_build_query($exportQuery) ?>"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF</a></li>
+                    <li><a class="dropdown-item" href="<?= route_to('reports.late_arrivals.export.excel') . '?' . http_build_query($exportQuery) ?>"><i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel</a></li>
+                    <li><a class="dropdown-item" href="<?= route_to('reports.late_arrivals.export.csv') . '?' . http_build_query($exportQuery) ?>"><i class="bi bi-file-earmark-text me-2 text-secondary"></i>CSV</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="sp-data-card__body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
