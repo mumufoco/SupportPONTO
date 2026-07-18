@@ -215,23 +215,35 @@ class ReportController extends BaseController
         $month = $this->reportControllerActionService->monthOrCurrent($this->request->getGet('month'));
         $selectedDepartment = $this->request->getGet('department');
         $selectedEmployee = $this->request->getGet('employee_id');
-        $range = $this->reportControllerActionService->monthRange($month);
+        // So consulta o banco (varredura por colaborador em getLateArrivalsViewData) depois
+        // de uma busca explicita - evita rodar a consulta pesada a cada carregamento direto
+        // da pagina e deixa a tela vazia ate o usuario definir os filtros desejados.
+        $hasSearched = $this->request->getGet('searched') !== null;
 
-        $viewData = $this->reportCoordinatorService->lateArrivalsViewData(
-            $employee,
-            $range['start_date'],
-            $range['end_date'],
-            $selectedDepartment,
-            $selectedEmployee
-        );
+        $lateArrivalsData = [];
+        $departments = $this->reportCoordinatorService->getDepartmentsForReports();
+
+        if ($hasSearched) {
+            $range = $this->reportControllerActionService->monthRange($month);
+            $viewData = $this->reportCoordinatorService->lateArrivalsViewData(
+                $employee,
+                $range['start_date'],
+                $range['end_date'],
+                $selectedDepartment,
+                $selectedEmployee
+            );
+            $lateArrivalsData = $viewData['lateArrivalsData'];
+            $departments = $viewData['departments'];
+        }
 
         return view('reports/late_arrivals', [
             'employee' => $employee,
-            'lateArrivalsData' => $viewData['lateArrivalsData'],
+            'lateArrivalsData' => $lateArrivalsData,
+            'hasSearched' => $hasSearched,
             'month' => $month,
             'selectedDepartment' => $selectedDepartment,
             'selectedEmployee' => $selectedEmployee,
-            'departments' => $viewData['departments'],
+            'departments' => $departments,
             'employees' => $this->reportCoordinatorService->getEmployeesForReports($employee),
         ]);
     }
