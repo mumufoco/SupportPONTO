@@ -85,6 +85,10 @@ class WarningController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Você só pode advertir funcionários do seu departamento.');
         }
 
+        if (strtotime($payload['occurrence_date']) > strtotime('today')) {
+            return redirect()->back()->withInput()->with('error', 'A data da ocorrência não pode ser no futuro.');
+        }
+
         $result = $this->workflowService->createWarning($employee, $payload, $this->request->getFiles());
         if (! ($result['success'] ?? false)) {
             $key = isset($result['warning']) ? 'warning' : 'error';

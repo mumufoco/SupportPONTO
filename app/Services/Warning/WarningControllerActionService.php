@@ -13,7 +13,7 @@ class WarningControllerActionService
             'warning_type' => 'required|in_list[verbal,escrita,suspensao]',
             'occurrence_date' => 'required|valid_date',
             'reason' => 'required|min_length[50]|max_length[5000]',
-            'evidence_files.*' => 'permit_empty|max_size[evidence_files.*,10240]|ext_in[evidence_files.*,pdf,jpg,jpeg,png,doc,docx]',
+            'evidence_files.*' => 'permit_empty|max_size[evidence_files.*,10240]|ext_in[evidence_files.*,pdf,jpg,jpeg,png,webp,doc,docx]',
         ];
     }
 

@@ -10,13 +10,11 @@ class WarningEvidenceService
     {
     }
 
-    private const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
-    private const ALLOWED_MIME_TYPES = [
-        'application/pdf',
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-    ];
+    // Precisa bater com o que a tela (warnings/create.php) e a regra de validacao
+    // (WarningControllerActionService::createValidationRules()) anunciam ao usuario -
+    // doc/docx passavam na validacao do formulario mas eram rejeitados aqui, quebrando
+    // silenciosamente o upload de evidencias nesse formato.
+    private const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx'];
     private const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     public function handleEvidenceUploads(array $files): array
@@ -30,6 +28,7 @@ class WarningEvidenceService
 
         helper('file_upload');
         $uploadSecurity = new \App\Services\Upload\SafeUploadService();
+        $allowedMimes = $uploadSecurity->allowedMimesForGroups(['image_private', 'document_private']);
         $fileCount = 0;
 
         foreach ($files['evidence_files'] as $file) {
@@ -46,7 +45,7 @@ class WarningEvidenceService
                 $file,
                 'warnings/evidence/' . date('Y') . '/' . date('m'),
                 self::ALLOWED_EXTENSIONS,
-                self::ALLOWED_MIME_TYPES,
+                $allowedMimes,
                 self::MAX_FILE_SIZE
             );
 
