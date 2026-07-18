@@ -83,7 +83,3 @@ $routes->group('manager/pending-punches', ['filter' => ['auth', 'manager']], sta
     $routes->post('(:num)/reject',  'Timesheet\PendingPunchController::reject/$1',  ['as' => 'manager.pending.reject']);
 });
 
-
-// Relatorio por cliente (unidade de trabalho)
-$routes->get('timesheet/por-cliente', 'Timesheet\TimesheetController::byClient', ['as' => 'timesheet.by-client', 'filter' => ['auth', 'manager']]);
-$routes->get('relatorio/por-cliente', 'Timesheet\TimesheetController::byClient', ['as' => 'relatorio.por-cliente', 'filter' => ['auth', 'manager']]);
