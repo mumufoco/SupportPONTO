@@ -184,7 +184,7 @@ class ScheduleModel extends Model
                     'shift_id' => $data['shift_id'],
                     'date' => $currentDate->format('Y-m-d'),
                     'week_day' => $weekDay,
-                    'is_recurring' => 1,
+                    'is_recurring' => true,
                     'recurrence_end_date' => $data['recurrence_end_date'],
                     'status' => 'scheduled',
                     'notes' => $data['notes'] ?? null,
@@ -264,7 +264,7 @@ class ScheduleModel extends Model
                     'shift_id' => $shiftId,
                     'date' => $date,
                     'week_day' => (int)date('w', strtotime($date)),
-                    'is_recurring' => 0,
+                    'is_recurring' => false,
                     'status' => 'scheduled',
                     'notes' => $notes
                 ];
