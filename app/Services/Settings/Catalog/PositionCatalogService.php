@@ -157,4 +157,34 @@ class PositionCatalogService
 
         return $active;
     }
+
+    public function delete(int $id): array
+    {
+        $position = $this->find($id);
+        if (!$position) {
+            return ['success' => false, 'message' => 'Cargo não encontrado.'];
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $count = $db->table('employees')
+                ->where('position_id', $id)
+                ->where('active', true)
+                ->countAllResults();
+
+            if ($count > 0) {
+                return [
+                    'success' => false,
+                    'message' => "Não é possível excluir: {$count} colaborador(es) ativo(s) usa(m) este cargo. Reatribua-os primeiro.",
+                ];
+            }
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Erro ao verificar uso do cargo: ' . $e->getMessage()];
+        }
+
+        $this->model->delete($id);
+        $this->bustCache();
+
+        return ['success' => true, 'message' => 'Cargo excluído com sucesso.'];
+    }
 }

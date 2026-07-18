@@ -287,6 +287,19 @@ class CatalogSettingsController extends BaseSettingsController
         return $this->toggleCatalog($this->positionsService()->toggle((int) $id), 'Cargo não encontrado');
     }
 
+    public function deletePosition($id)
+    {
+        $this->requireAdminAccess();
+
+        if (!$this->request->is('post')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Método inválido.']);
+        }
+
+        $result = $this->positionsService()->delete((int) $id);
+
+        return $this->response->setJSON($result);
+    }
+
     public function roles()
     {
         $this->requireAdminAccess();

@@ -99,6 +99,12 @@
                                                     onclick="catalogToggle(this, '<?= sp_route_url('settings.positions.toggle', $posId) ?>')">
                                                 <i class="bi <?= $isActive ? 'bi-toggle-on' : 'bi-toggle-off' ?>"></i>
                                             </button>
+                                            <button type="button"
+                                                    class="icon-action icon-action-danger"
+                                                    title="Excluir"
+                                                    onclick="confirmDeletePosition(<?= $posId ?>, '<?= esc(addslashes($pos['name'] ?? ''), 'js') ?>')">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -137,6 +143,37 @@
         </div>
     </div>
 </div>
+
+<!-- Modal confirmação de exclusão -->
+<div class="modal fade" id="deletePositionModal" tabindex="-1" aria-labelledby="deletePositionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-danger" id="deletePositionModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o cargo <strong id="deletePositionName"></strong>?</p>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Esta ação não pode ser desfeita. Colaboradores vinculados a este cargo precisarão ser reatribuídos antes da exclusão.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deletePositionForm" method="post" class="d-inline">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-danger" id="deletePositionBtn">
+                        <i class="bi bi-trash-fill me-2"></i>Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -169,6 +206,39 @@ async function catalogToggle(btn, url) {
     } finally {
         btn.disabled = false;
     }
+}
+
+function confirmDeletePosition(id, name) {
+    document.getElementById('deletePositionName').textContent = name;
+    document.getElementById('deletePositionForm').action = '<?= site_url('settings/positions/') ?>' + id + '/delete';
+
+    const btn = document.getElementById('deletePositionBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-trash-fill me-2"></i>Excluir';
+
+    document.getElementById('deletePositionForm').onsubmit = async function(e) {
+        e.preventDefault();
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Excluindo...';
+        try {
+            const fd = new FormData(this);
+            const resp = await fetch(this.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const json = await resp.json();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deletePositionModal'));
+            modal.hide();
+            if (json.success) {
+                location.reload();
+            } else {
+                setTimeout(() => alert(json.message || 'Erro ao excluir.'), 400);
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-trash-fill me-2"></i>Excluir';
+            alert('Erro de comunicação com o servidor.');
+        }
+    };
+
+    new bootstrap.Modal(document.getElementById('deletePositionModal')).show();
 }
 </script>
 <?= $this->endSection() ?>
