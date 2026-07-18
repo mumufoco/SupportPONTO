@@ -149,16 +149,16 @@
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <div class="sp-table-actions justify-content-end">
-                                            <a href="<?= sp_shifts_show_url($shift->id) ?>" class="btn btn-sm btn-outline-primary" title="Ver">
-                                                <i class="bi bi-eye"></i>
+                                        <div class="table-icon-actions">
+                                            <a href="<?= sp_shifts_show_url($shift->id) ?>" class="icon-action" title="Ver">
+                                                <i class="bi bi-eye-fill"></i>
                                             </a>
-                                            <a href="<?= sp_shifts_edit_url($shift->id) ?>" class="btn btn-sm btn-outline-secondary" title="Editar">
-                                                <i class="bi bi-pencil"></i>
+                                            <a href="<?= sp_shifts_edit_url($shift->id) ?>" class="icon-action icon-action-edit" title="Editar">
+                                                <i class="bi bi-pencil-fill"></i>
                                             </a>
                                             <form method="POST" action="<?= sp_shifts_clone_url($shift->id) ?>" class="d-inline">
                                                 <?= csrf_field() ?>
-                                                <button type="submit" class="btn btn-sm btn-outline-info" title="Clonar">
+                                                <button type="submit" class="icon-action" title="Clonar">
                                                     <i class="bi bi-copy"></i>
                                                 </button>
                                             </form>
@@ -166,8 +166,8 @@
                                                 onsubmit="return confirm('Excluir este turno?')">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="_method" value="DELETE">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
-                                                    <i class="bi bi-trash"></i>
+                                                <button type="submit" class="icon-action icon-action-danger" title="Excluir">
+                                                    <i class="bi bi-trash-fill"></i>
                                                 </button>
                                             </form>
                                         </div>
