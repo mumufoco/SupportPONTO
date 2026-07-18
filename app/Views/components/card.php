@@ -74,8 +74,8 @@ $iconColor = $iconColor ?? 'primary'; // primary, accent, warning, danger
                 </div>
             <?php endif; ?>
             
-            <?php if ($value): ?>
-                <div class="kpi-value"><?= esc($value) ?></div>
+            <?php if ($value !== '' && $value !== null): ?>
+                <div class="kpi-value"><?= esc((string) $value) ?></div>
             <?php endif; ?>
             
             <?php if ($label): ?>
