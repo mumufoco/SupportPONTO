@@ -21,7 +21,7 @@ class SecurityHeadersFilter implements FilterInterface
         'X-Frame-Options' => 'DENY',
         'X-Content-Type-Options' => 'nosniff',
         'Referrer-Policy' => 'strict-origin-when-cross-origin',
-        'Permissions-Policy' => 'geolocation=(), camera=(self), microphone=(), payment=(), usb=(), fullscreen=(self)',
+        'Permissions-Policy' => 'geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), fullscreen=(self)',
         'Cross-Origin-Opener-Policy' => 'same-origin',
         'Cross-Origin-Resource-Policy' => 'same-origin',
         'Cross-Origin-Embedder-Policy' => 'unsafe-none',

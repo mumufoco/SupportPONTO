@@ -27,7 +27,7 @@ class ContentSecurityPolicy extends BaseConfig
     public $styleSrc = ['self', 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'https://fonts.googleapis.com', 'https://unpkg.com'];
 
     /** @var list<string>|string */
-    public $imageSrc = ['self', 'data:', 'blob:', 'https://api.qrserver.com', 'https://*.tile.openstreetmap.org', 'https://tile.openstreetmap.org'];
+    public $imageSrc = ['self', 'data:', 'blob:', 'https://api.qrserver.com', 'https://*.tile.openstreetmap.org', 'https://tile.openstreetmap.org', 'https://unpkg.com'];
 
     /** @var list<string>|string|null */
     public $baseURI = 'self';
@@ -75,7 +75,7 @@ class ContentSecurityPolicy extends BaseConfig
     public array $permissionsPolicy = [
         'camera' => 'self',
         'microphone' => 'none',
-        'geolocation' => 'none',
+        'geolocation' => 'self',
         'usb' => 'none',
         'payment' => 'none',
         'fullscreen' => 'self',
