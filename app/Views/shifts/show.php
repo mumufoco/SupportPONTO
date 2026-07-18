@@ -27,7 +27,6 @@ $shiftEnd = substr((string) $shift->end_time, 0, 5);
         'icon'     => 'bi bi-calendar2-week-fill',
         'actions'  => [
             ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => sp_shifts_index_url()],
-            ['label' => 'Editar', 'icon' => 'bi bi-pencil-fill', 'url' => sp_shifts_edit_url($shift->id)],
         ],
     ]) ?>
 
