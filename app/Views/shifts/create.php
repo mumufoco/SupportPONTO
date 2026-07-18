@@ -251,5 +251,11 @@ function calculateDuration() {
         '<strong>' + display + '</strong> ' +
         (endMinutes >= 24 * 60 ? '<span class="badge bg-warning ms-2">Turno noturno</span>' : '');
 }
+
+// Recalcular com valores repopulados (old()) após um erro de validação
+window.addEventListener('DOMContentLoaded', function () {
+    calcLunchBreak();
+    calculateDuration();
+});
 </script>
 <?= $this->endSection() ?>
