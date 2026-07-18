@@ -128,19 +128,21 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
     <!-- Senha -->
     <div class="col-12 col-md-6">
         <label for="password" class="form-label"><?= $isEditing ? 'Nova senha' : 'Senha inicial *' ?></label>
-        <div class="input-group">
+        <div class="d-flex align-items-center gap-2">
             <input type="password" id="password" name="password" class="form-control"
                    <?= !$isEditing ? 'required' : '' ?> minlength="8" autocomplete="new-password"
                    <?= $isEditing ? 'placeholder="Preencha apenas se desejar alterar"' : '' ?>>
-            <button type="button" class="btn btn-outline-secondary" id="btnTogglePwd" title="Mostrar/ocultar">
-                <i class="bi bi-eye" id="pwdEyeIcon"></i>
-            </button>
-            <button type="button" class="btn btn-outline-primary" id="btnGenPwd" title="Gerar senha forte">
-                <i class="bi bi-magic"></i>
-            </button>
-            <button type="button" class="btn btn-outline-secondary" id="btnCopyPwd" title="Copiar senha">
-                <i class="bi bi-clipboard" id="pwdClipIcon"></i>
-            </button>
+            <div class="table-icon-actions">
+                <button type="button" class="icon-action" id="btnTogglePwd" title="Mostrar/ocultar">
+                    <i class="bi bi-eye" id="pwdEyeIcon"></i>
+                </button>
+                <button type="button" class="icon-action icon-action-edit" id="btnGenPwd" title="Gerar senha forte">
+                    <i class="bi bi-magic"></i>
+                </button>
+                <button type="button" class="icon-action icon-action-success" id="btnCopyPwd" title="Copiar senha">
+                    <i class="bi bi-clipboard" id="pwdClipIcon"></i>
+                </button>
+            </div>
         </div>
         <div class="mt-1" style="height:5px;background:var(--sp-gray-200);border-radius:3px;overflow:hidden">
             <div id="pwdStrengthBar" style="width:0%"></div>
