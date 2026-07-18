@@ -41,6 +41,7 @@ $routes->group('settings', ['filter' => ['auth', 'admin']], static function ($ro
     $routes->get('departments/(:num)/edit', 'Settings\CatalogSettingsController::editDepartment/$1', ['as' => 'settings.departments.edit']);
     $routes->post('departments/(:num)/update', 'Settings\CatalogSettingsController::updateDepartment/$1', ['as' => 'settings.departments.update']);
     $routes->post('departments/(:num)/toggle', 'Settings\CatalogSettingsController::toggleDepartment/$1', ['as' => 'settings.departments.toggle']);
+    $routes->post('departments/(:num)/delete', 'Settings\CatalogSettingsController::deleteDepartment/$1', ['as' => 'settings.departments.delete']);
 
     $routes->get('positions', 'Settings\CatalogSettingsController::positions', ['as' => 'settings.positions']);
     $routes->get('positions/create', 'Settings\CatalogSettingsController::createPosition', ['as' => 'settings.positions.create']);

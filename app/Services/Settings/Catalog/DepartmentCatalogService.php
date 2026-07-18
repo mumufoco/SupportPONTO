@@ -158,4 +158,46 @@ class DepartmentCatalogService
 
         return $newActive;
     }
+
+    public function delete(int $id): array
+    {
+        $department = $this->find($id);
+        if (!$department) {
+            return ['success' => false, 'message' => 'Departamento não encontrado.'];
+        }
+
+        try {
+            $db = \Config\Database::connect();
+
+            $employeeCount = $db->table('employees')
+                ->where('department_id', $id)
+                ->where('active', true)
+                ->countAllResults();
+
+            if ($employeeCount > 0) {
+                return [
+                    'success' => false,
+                    'message' => "Não é possível excluir: {$employeeCount} colaborador(es) ativo(s) usa(m) este departamento. Reatribua-os primeiro.",
+                ];
+            }
+
+            $positionCount = $db->table('positions')
+                ->where('department_id', $id)
+                ->countAllResults();
+
+            if ($positionCount > 0) {
+                return [
+                    'success' => false,
+                    'message' => "Não é possível excluir: {$positionCount} cargo(s) vinculado(s) a este departamento. Remova ou reatribua os cargos primeiro.",
+                ];
+            }
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Erro ao verificar uso do departamento: ' . $e->getMessage()];
+        }
+
+        $this->model->delete($id);
+        $this->bustCache();
+
+        return ['success' => true, 'message' => 'Departamento excluído com sucesso.'];
+    }
 }

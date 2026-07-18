@@ -180,6 +180,19 @@ class CatalogSettingsController extends BaseSettingsController
         return $this->toggleCatalog($this->departmentsService()->toggle((int) $id), 'Departamento não encontrado');
     }
 
+    public function deleteDepartment($id)
+    {
+        $this->requireAdminAccess();
+
+        if (!$this->request->is('post')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Método inválido.']);
+        }
+
+        $result = $this->departmentsService()->delete((int) $id);
+
+        return $this->response->setJSON($result);
+    }
+
     public function positions()
     {
         $this->requireAdminAccess();
