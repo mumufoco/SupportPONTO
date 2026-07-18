@@ -46,7 +46,7 @@
                     <div class="form-text" style="min-height:1.25rem">Filtra as opções do campo Colaborador</div>
                 </div>
                 <div class="col-md-2 d-flex flex-column">
-                    <label class="form-label invisible d-none d-md-block">&nbsp;</label>
+                    <label class="form-label" style="visibility:hidden;">&nbsp;</label>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Buscar</button>
                         <a href="<?= route_to('reports.timesheet') ?>" class="btn btn-outline-secondary">Limpar</a>
