@@ -219,7 +219,7 @@ class ReportController extends BaseController
 
         $month = $this->reportControllerActionService->monthOrCurrent($this->request->getGet('month'));
         $selectedDepartment = $this->request->getGet('department');
-        $selectedStatus = $this->request->getGet('status') ?: 'all';
+        $selectedEmployee = $this->request->getGet('employee_id');
         $range = $this->reportControllerActionService->monthRange($month);
 
         $viewData = $this->reportCoordinatorService->justificationsViewData(
@@ -227,7 +227,7 @@ class ReportController extends BaseController
             $range['start_date'],
             $range['end_date'],
             $selectedDepartment,
-            $selectedStatus
+            $selectedEmployee
         );
 
         return view('reports/justifications', [
@@ -236,9 +236,80 @@ class ReportController extends BaseController
             'summary' => $viewData['summary'],
             'month' => $month,
             'selectedDepartment' => $selectedDepartment,
-            'selectedStatus' => $selectedStatus,
+            'selectedEmployee' => $selectedEmployee,
             'departments' => $viewData['departments'],
+            'employees' => $this->reportCoordinatorService->getEmployeesForReports($employee),
         ]);
+    }
+
+    public function justificationsExportPdf(): ResponseInterface
+    {
+        return $this->justificationsExport('pdf');
+    }
+
+    public function justificationsExportExcel(): ResponseInterface
+    {
+        return $this->justificationsExport('excel');
+    }
+
+    public function justificationsExportCsv(): ResponseInterface
+    {
+        return $this->justificationsExport('csv');
+    }
+
+    /**
+     * Exporta a tela de justificativas (reports/justifications.php) com os
+     * mesmos filtros da tela (month/department/employee_id), reaproveitando a
+     * mesma fonte de dados (justificationsViewData) para que o arquivo bata
+     * com o que está na tela.
+     */
+    protected function justificationsExport(string $format): ResponseInterface
+    {
+        $employee = $this->requireOperationalReportsViewAccessOrRedirect();
+        if ($employee === null) {
+            return redirect()->to(route_to('dashboard'))->with('error', 'Acesso negado.');
+        }
+
+        $month = $this->reportControllerActionService->monthOrCurrent($this->request->getGet('month'));
+        $selectedDepartment = $this->request->getGet('department');
+        $selectedEmployee = $this->request->getGet('employee_id');
+        $range = $this->reportControllerActionService->monthRange($month);
+
+        $viewData = $this->reportCoordinatorService->justificationsViewData(
+            $employee,
+            $range['start_date'],
+            $range['end_date'],
+            $selectedDepartment,
+            $selectedEmployee
+        );
+        $justifications = $viewData['justifications'] ?? [];
+
+        $exporter = new \App\Services\Reports\JustificationsExportService();
+        $result = match ($format) {
+            'pdf' => $exporter->buildPdf($justifications, $month, $selectedDepartment),
+            'excel' => $exporter->buildExcel($justifications, $month, $selectedDepartment),
+            default => $exporter->buildCsv($justifications),
+        };
+
+        $mimeType = match ($format) {
+            'pdf' => 'application/pdf',
+            'csv' => 'text/csv; charset=UTF-8',
+            default => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
+
+        supportponto_log_event('info', 'reports', 'justifications_exported', [
+            'user_id' => $this->session?->get('user_id'),
+            'month' => $month,
+            'department' => $selectedDepartment,
+            'format' => $format,
+        ]);
+
+        return $this->response
+            ->setHeader('Content-Type', $mimeType)
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"')
+            ->setHeader('Content-Length', (string) strlen($result['content']))
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody($result['content']);
     }
 
     public function generate(): ResponseInterface

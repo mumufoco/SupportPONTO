@@ -71,9 +71,9 @@ class ReportCoordinatorService
         return $this->viewService->getLateArrivalsViewData($employee, $startDate, $endDate, $department);
     }
 
-    public function justificationsViewData(array $employee, string $startDate, string $endDate, ?string $department, string $status): array
+    public function justificationsViewData(array $employee, string $startDate, string $endDate, ?string $department, ?string $employeeId = null): array
     {
-        return $this->viewService->getJustificationsViewData($employee, $startDate, $endDate, $department, $status);
+        return $this->viewService->getJustificationsViewData($employee, $startDate, $endDate, $department, $employeeId);
     }
 
     public function isValidType(string $type): bool

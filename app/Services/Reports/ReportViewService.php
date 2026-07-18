@@ -107,18 +107,11 @@ class ReportViewService
         ];
     }
 
-    public function getJustificationsViewData(array $actor, string $startDate, string $endDate, ?string $department, string $status): array
+    public function getJustificationsViewData(array $actor, string $startDate, string $endDate, ?string $department, ?string $employeeId = null): array
     {
         $query = $this->justificationModel
             ->where('justification_date >=', $startDate)
             ->where('justification_date <=', $endDate);
-
-        // Filtro da UI usa valores em inglês (pending/approved/rejected), mas o
-        // banco armazena em português (pendente/aprovado/rejeitado).
-        $statusMap = ['pending' => 'pendente', 'approved' => 'aprovado', 'rejected' => 'rejeitado'];
-        if ($status !== 'all') {
-            $query->where('status', $statusMap[$status] ?? $status);
-        }
 
         if (($actor['role'] ?? '') === 'gestor') {
             $employeeIds = $this->employeeModel->where('department', $actor['department'])->findColumn('id');
@@ -126,6 +119,10 @@ class ReportViewService
         } elseif ($department) {
             $employeeIds = $this->employeeModel->where('department', $department)->findColumn('id');
             $query->whereIn('employee_id', $employeeIds ?: [0]);
+        }
+
+        if (! empty($employeeId)) {
+            $query->where('employee_id', (int) $employeeId);
         }
 
         $justifications = $query->orderBy('created_at', 'DESC')->findAll();
