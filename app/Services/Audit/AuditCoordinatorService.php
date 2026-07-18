@@ -84,6 +84,26 @@ class AuditCoordinatorService
         return $result;
     }
 
+    public function exportPdf(string $dateFrom, string $dateTo, ?int $actorId = null): array
+    {
+        $result = $this->exportService->pdfExport($dateFrom, $dateTo);
+        if ($actorId !== null) {
+            $this->exportService->logPdfExport($actorId, $dateFrom, $dateTo, (int) ($result['count'] ?? 0));
+        }
+
+        return $result;
+    }
+
+    public function exportExcel(string $dateFrom, string $dateTo, ?int $actorId = null): array
+    {
+        $result = $this->exportService->excelExport($dateFrom, $dateTo);
+        if ($actorId !== null) {
+            $this->exportService->logExcelExport($actorId, $dateFrom, $dateTo, (int) ($result['count'] ?? 0));
+        }
+
+        return $result;
+    }
+
     public function complianceData(): array
     {
         return $this->complianceService->complianceSummary();

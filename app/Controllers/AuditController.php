@@ -166,6 +166,40 @@ class AuditController extends BaseController
             ->setBody((string) $export['content']);
     }
 
+    public function exportPdf(): ResponseInterface
+    {
+        if (!$this->can('audit.export') && !$this->hasRole('admin')) {
+            return redirect()->to(route_to('audit'))->with('error', 'Acesso negado.');
+        }
+
+        $dateFrom = (string) ($this->request->getGet('date_from') ?: date('Y-m-01'));
+        $dateTo = (string) ($this->request->getGet('date_to') ?: date('Y-m-d'));
+        $employee = $this->auditCoordinatorService->authenticatedEmployee();
+        $export = $this->auditCoordinatorService->exportPdf($dateFrom, $dateTo, $employee !== null ? (int) $employee['id'] : null);
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $export['filename'] . '"')
+            ->setBody((string) $export['content']);
+    }
+
+    public function exportExcel(): ResponseInterface
+    {
+        if (!$this->can('audit.export') && !$this->hasRole('admin')) {
+            return redirect()->to(route_to('audit'))->with('error', 'Acesso negado.');
+        }
+
+        $dateFrom = (string) ($this->request->getGet('date_from') ?: date('Y-m-01'));
+        $dateTo = (string) ($this->request->getGet('date_to') ?: date('Y-m-d'));
+        $employee = $this->auditCoordinatorService->authenticatedEmployee();
+        $export = $this->auditCoordinatorService->exportExcel($dateFrom, $dateTo, $employee !== null ? (int) $employee['id'] : null);
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $export['filename'] . '"')
+            ->setBody((string) $export['content']);
+    }
+
     public function clear(): ResponseInterface
     {
         $employee = $this->auditCoordinatorService->authenticatedEmployee();

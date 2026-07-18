@@ -40,9 +40,6 @@ class AuditQueryService
         $length = (int) ($requestData['length'] ?? 25);
         $searchValue = trim((string) (($requestData['search']['value'] ?? '') ?: ''));
 
-        $orderColumnIndex = (int) (($requestData['order'][0]['column'] ?? 0));
-        $orderDir = strtolower((string) ($requestData['order'][0]['dir'] ?? 'desc')) === 'asc' ? 'ASC' : 'DESC';
-
         $filters = [
             'user_id' => $requestData['filter_user_id'] ?? null,
             'action' => $requestData['filter_action'] ?? null,
@@ -52,22 +49,20 @@ class AuditQueryService
             'end_date' => $requestData['filter_end_date'] ?? null,
         ];
 
-        $columns = ['id', 'user_id', 'action', 'entity_type', 'description', 'level', 'created_at'];
-        $orderColumn = $columns[$orderColumnIndex] ?? 'created_at';
-        if ($orderColumn === 'entity_type') {
-            $orderColumn = 'COALESCE(audit_logs.entity_type, audit_logs.table_name)';
-        } else {
-            $orderColumn = 'audit_logs.' . $orderColumn;
-        }
+        // Builder fresco por consulta - CI4 QueryBuilder nao clona de forma confiavel
+        // (mesmo problema ja documentado em WarningQueryService::countWarnings()), entao
+        // "clone $builder" aqui deixava recordsFiltered/paginacao com contagem errada.
+        $scoped = function () use ($actor, $filters, $searchValue): BaseBuilder {
+            $builder = $this->baseScopeBuilder($actor);
+            $this->applyDatatableFilters($builder, $filters, $searchValue);
+            return $builder;
+        };
 
-        $builder = $this->baseScopeBuilder($actor);
-        $this->applyDatatableFilters($builder, $filters, $searchValue);
-
-        $recordsFiltered = $this->countDistinctAuditIds(clone $builder);
-        $logs = $builder
+        $recordsFiltered = $this->countDistinctAuditIds($scoped());
+        $logs = $scoped()
             ->select('audit_logs.id, audit_logs.user_id, audit_logs.action, audit_logs.description, audit_logs.level, audit_logs.ip_address, audit_logs.created_at, COALESCE(audit_logs.entity_type, audit_logs.table_name) AS entity_type, COALESCE(audit_logs.entity_id, audit_logs.record_id) AS entity_id')
             ->distinct()
-            ->orderBy($orderColumn, $orderDir)
+            ->orderBy('audit_logs.created_at', 'DESC')
             ->limit($length > 0 ? $length : 25, $start)
             ->get()
             ->getResult();
@@ -207,24 +202,44 @@ class AuditQueryService
         ];
     }
 
+    /**
+     * value = codigo cru (usado no filtro/where), label = mesma formatacao aplicada
+     * as linhas da tabela (formatAction()) - evita o dropdown mostrar "REPORT_GENERATED"
+     * enquanto a tabela mostra "report generated" para o mesmo evento.
+     *
+     * @return list<array{value:string,label:string}>
+     */
     private function distinctActions(?array $actor = null): array
     {
-        return $this->baseScopeBuilder($actor)
+        $rows = $this->baseScopeBuilder($actor)
             ->select('audit_logs.action')
             ->distinct()
             ->orderBy('audit_logs.action')
             ->get()
             ->getResultArray();
+
+        return array_map(
+            fn(array $row): array => ['value' => (string) $row['action'], 'label' => $this->formatAction((string) $row['action'])],
+            $rows
+        );
     }
 
+    /**
+     * @return list<array{value:string,label:string}>
+     */
     private function distinctEntities(?array $actor = null): array
     {
-        return $this->baseScopeBuilder($actor)
+        $rows = $this->baseScopeBuilder($actor)
             ->select('COALESCE(audit_logs.entity_type, audit_logs.table_name) AS entity_type')
             ->distinct()
             ->orderBy('entity_type')
             ->get()
             ->getResultArray();
+
+        return array_values(array_filter(array_map(
+            static fn(array $row): array => ['value' => (string) $row['entity_type'], 'label' => (string) $row['entity_type']],
+            $rows
+        ), static fn(array $row): bool => $row['value'] !== ''));
     }
 
     private function scopedUsers(?array $actor = null): array

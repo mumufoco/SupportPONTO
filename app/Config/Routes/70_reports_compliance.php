@@ -90,6 +90,8 @@ $routes->group('audit', ['filter' => ['auth', 'role:admin,dpo,auditor,gestor']],
     $routes->get('(:num)', 'AuditController::show/$1', ['as' => 'audit.show']);
     $routes->get('details/(:num)', 'AuditController::details/$1', ['as' => 'audit.details']);
     $routes->get('export', 'AuditController::export', ['as' => 'audit.export', 'filter' => ['auth', 'role:admin,dpo,auditor']]);
+    $routes->get('export/pdf', 'AuditController::exportPdf', ['as' => 'audit.export.pdf', 'filter' => ['auth', 'role:admin,dpo,auditor']]);
+    $routes->get('export/excel', 'AuditController::exportExcel', ['as' => 'audit.export.excel', 'filter' => ['auth', 'role:admin,dpo,auditor']]);
     $routes->post('clear', 'AuditController::clear', ['as' => 'audit.clear', 'filter' => ['auth', 'admin', 'stepup:back']]);
     $routes->get('afd', 'AuditController::generateAFD', ['as' => 'audit.afd']);
     $routes->get('compliance', 'AuditController::compliance', ['as' => 'audit.compliance']);
