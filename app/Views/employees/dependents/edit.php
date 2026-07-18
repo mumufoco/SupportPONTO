@@ -52,16 +52,6 @@
         ],
     ]) ?>
 
-    <?php if (session()->getFlashdata('errors')): ?>
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                    <li><?= esc($error) ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
-
     <form action="<?= site_url('employees/dependents/' . (int) $dependent->id) ?>" method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="_method" value="PUT">
