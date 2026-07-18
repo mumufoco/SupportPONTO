@@ -14,6 +14,15 @@
         ],
     ]) ?>
 
+    <!-- Aviso de toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+        <div id="sp-toast" class="toast align-items-center text-white border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold" id="sp-toast-msg"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -178,6 +187,15 @@
 
 <?= $this->section('scripts') ?>
 <script <?= csp_script_nonce_attr() ?>>
+function toast(msg, type) {
+    type = type || 'success';
+    const el     = document.getElementById('sp-toast');
+    const msgEl  = document.getElementById('sp-toast-msg');
+    el.className = 'toast align-items-center text-white border-0 bg-' + type;
+    msgEl.textContent = msg;
+    bootstrap.Toast.getOrCreateInstance(el, { delay: 4000 }).show();
+}
+
 async function catalogToggle(btn, url) {
     const nameEl  = document.querySelector('meta[name="csrf-token-name"]');
     const hashEl  = document.querySelector('meta[name="csrf-hash"]');
@@ -199,10 +217,10 @@ async function catalogToggle(btn, url) {
             btn.querySelector('i').className = 'bi ' + (active ? 'bi-toggle-on' : 'bi-toggle-off');
             if (hashEl && data.csrf_hash) { hashEl.content = data.csrf_hash; }
         } else {
-            alert(data.message ?? 'Erro ao alterar status.');
+            toast(data.message ?? 'Erro ao alterar status.', 'danger');
         }
     } catch (e) {
-        alert('Erro de comunicação. Tente novamente.');
+        toast('Erro de comunicação. Tente novamente.', 'danger');
     } finally {
         btn.disabled = false;
     }
@@ -229,12 +247,12 @@ function confirmDeletePosition(id, name) {
             if (json.success) {
                 location.reload();
             } else {
-                setTimeout(() => alert(json.message || 'Erro ao excluir.'), 400);
+                toast(json.message || 'Erro ao excluir.', 'danger');
             }
         } catch (err) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-trash-fill me-2"></i>Excluir';
-            alert('Erro de comunicação com o servidor.');
+            toast('Erro de comunicação com o servidor.', 'danger');
         }
     };
 
