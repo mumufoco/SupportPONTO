@@ -18,31 +18,31 @@
     <!-- Estatísticas -->
     <div class="sp-grid-4 mb-3">
         <div class="stat-card">
-            <div class="stat-icon bg-primary"><i class="bi bi-calendar2-week-fill"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Total de Turnos</div>
-                <div class="stat-value"><?= (int) ($statistics['total_shifts'] ?? 0) ?></div>
+            <div class="stat-card-icon primary"><i class="bi bi-calendar2-week-fill"></i></div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Total de Turnos</div>
+                <div class="stat-card-value"><?= (int) ($statistics['total_shifts'] ?? 0) ?></div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-success"><i class="bi bi-check-circle-fill"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Turnos Ativos</div>
-                <div class="stat-value"><?= (int) ($statistics['active_shifts'] ?? 0) ?></div>
+            <div class="stat-card-icon success"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Turnos Ativos</div>
+                <div class="stat-card-value"><?= (int) ($statistics['active_shifts'] ?? 0) ?></div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-info"><i class="bi bi-people-fill"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Funcionários Escalados</div>
-                <div class="stat-value"><?= (int) ($statistics['employees_scheduled'] ?? 0) ?></div>
+            <div class="stat-card-icon info"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Funcionários Escalados</div>
+                <div class="stat-card-value"><?= (int) ($statistics['employees_scheduled'] ?? 0) ?></div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon bg-warning"><i class="bi bi-calendar-check-fill"></i></div>
-            <div class="stat-content">
-                <div class="stat-label">Escalas (30 dias)</div>
-                <div class="stat-value"><?= (int) ($statistics['upcoming_schedules'] ?? 0) ?></div>
+            <div class="stat-card-icon warning"><i class="bi bi-calendar-check-fill"></i></div>
+            <div class="stat-card-content">
+                <div class="stat-card-label">Escalas (30 dias)</div>
+                <div class="stat-card-value"><?= (int) ($statistics['upcoming_schedules'] ?? 0) ?></div>
             </div>
         </div>
     </div>
@@ -83,9 +83,6 @@
     <div class="sp-card">
         <div class="sp-card-header">
             <span class="sp-card-title"><i class="bi bi-list-ul"></i> Turnos cadastrados</span>
-            <a href="<?= sp_shifts_create_url() ?>" class="btn btn-sm btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>Novo
-            </a>
         </div>
         <div class="sp-card-body p-0">
             <?php if (empty($shifts)): ?>
