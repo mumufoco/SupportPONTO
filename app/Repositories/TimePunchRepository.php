@@ -149,7 +149,7 @@ class TimePunchRepository
      */
     public function findByNsr(int $nsr): ?object
     {
-        return $this->model->where('nsr', $nsr)->first();
+        return $this->model->where('nsr', (string) $nsr)->first();
     }
 
     // ── Helpers privados ────────────────────────────────────────────────────

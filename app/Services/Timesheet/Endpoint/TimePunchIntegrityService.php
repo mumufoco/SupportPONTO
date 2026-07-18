@@ -44,7 +44,7 @@ class TimePunchIntegrityService
 
     public function validatePunchByNsr(int $nsr, ?int $actorEmployeeId = null, bool $canManage = false): array
     {
-        $punch = $this->timePunchModel->where('nsr', $nsr)->first();
+        $punch = $this->timePunchModel->where('nsr', (string) $nsr)->first();
         if (!$punch) {
             return $this->resultFactory->error('Registro não encontrado.', 404);
         }
@@ -72,7 +72,7 @@ class TimePunchIntegrityService
 
     public function validatePunchByNsrPublic(int $nsr): array
     {
-        $punch = $this->timePunchModel->where('nsr', $nsr)->first();
+        $punch = $this->timePunchModel->where('nsr', (string) $nsr)->first();
         if (!$punch) {
             return $this->resultFactory->error('Registro não encontrado.', 404);
         }

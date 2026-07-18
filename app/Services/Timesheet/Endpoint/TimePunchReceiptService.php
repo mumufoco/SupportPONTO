@@ -158,7 +158,7 @@ class TimePunchReceiptService
             ->select('time_punches.*, employees.name, employees.cpf, employees.unique_code')
             ->join('employees', 'employees.id = time_punches.employee_id')
             ->where('time_punches.employee_id', $employeeId)
-            ->where('time_punches.nsr', $nsr)
+            ->where('time_punches.nsr', (string) $nsr)
             ->first());
     }
 
