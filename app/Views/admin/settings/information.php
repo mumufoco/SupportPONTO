@@ -71,7 +71,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">E-mail corporativo</label>
-                        <input type="email" class="form-control" name="company_email"
+                        <input type="email" class="form-control" id="company_email" name="company_email"
                                value="<?= esc($settings['company_email'] ?? '') ?>"
                                placeholder="contato@empresa.com.br">
                     </div>
@@ -94,24 +94,24 @@
                 <div class="row g-3">
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">CEP</label>
-                        <input type="text" class="form-control" name="company_cep"
+                        <input type="text" class="form-control" id="company_cep" name="company_cep"
                                value="<?= esc($settings['company_cep'] ?? '') ?>"
                                placeholder="00000-000" maxlength="9">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Logradouro, número e complemento</label>
-                        <input type="text" class="form-control" name="company_address"
+                        <input type="text" class="form-control" id="company_address" name="company_address"
                                value="<?= esc($settings['company_address'] ?? '') ?>"
                                placeholder="Rua, número, complemento, bairro">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Cidade</label>
-                        <input type="text" class="form-control" name="company_city"
+                        <input type="text" class="form-control" id="company_city" name="company_city"
                                value="<?= esc($settings['company_city'] ?? '') ?>">
                     </div>
                     <div class="col-md-1">
                         <label class="form-label fw-semibold">UF</label>
-                        <input type="text" class="form-control" name="company_state"
+                        <input type="text" class="form-control" id="company_state" name="company_state"
                                value="<?= esc($settings['company_state'] ?? '') ?>"
                                maxlength="2" placeholder="SP">
                     </div>
@@ -198,4 +198,17 @@
         </div>
     </form>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+SupportPontoValidation.bindEmailFormatField(document.getElementById('company_email'));
+SupportPontoValidation.bindCepField(document.getElementById('company_cep'), {
+    fields: {
+        logradouroCombined: 'company_address',
+        municipio: 'company_city',
+        uf: 'company_state'
+    }
+});
+</script>
 <?= $this->endSection() ?>

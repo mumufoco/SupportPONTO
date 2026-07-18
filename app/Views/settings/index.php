@@ -225,7 +225,7 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold">E-mail remetente</label>
-                                        <input type="email" class="form-control" name="smtp_from_email"
+                                        <input type="email" class="form-control" id="smtp_from_email" name="smtp_from_email"
                                                value="<?= esc($settings['notifications']['smtp_from_email'] ?? '') ?>">
                                     </div>
                                     <div class="col-md-6">
@@ -389,6 +389,8 @@
 <script <?= csp_script_nonce_attr() ?>>
 (function () {
     'use strict';
+
+    SupportPontoValidation.bindEmailFormatField(document.getElementById('smtp_from_email'));
 
     const EP = {
         saveWorkday:       '<?= esc(route_to('settings.save-workday')) ?>',

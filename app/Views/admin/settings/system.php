@@ -151,3 +151,9 @@
     </form>
 </div>
 <?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+SupportPontoValidation.bindEmailFormatField(document.getElementById('company_email'));
+</script>
+<?= $this->endSection() ?>

@@ -126,6 +126,9 @@
 (function () {
     'use strict';
 
+    SupportPontoValidation.bindEmailFormatField(document.getElementById('smtp-from-address'));
+    SupportPontoValidation.bindEmailFormatField(document.getElementById('smtp-test-to'));
+
     // Mostrar/ocultar senha
     var pwdInput  = document.getElementById('smtp-password');
     var pwdToggle = document.getElementById('smtp-password-toggle');

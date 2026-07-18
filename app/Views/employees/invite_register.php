@@ -240,33 +240,19 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
         this.closest('[id$=Wrap]')?.classList?.toggle('sp-field-err',!ok&&!!this.value);
     });
 
-    // CPF mask + validation
-    function cpfMask(v){v=v.replace(/\D/g,'').slice(0,11);if(!v.length)return '';return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
-    function validCpf(r){r=r.replace(/\D/g,'');if(r.length!==11||/^(.)\1{10}$/.test(r))return false;var s=0,x;for(var i=0;i<9;i++)s+=+r[i]*(10-i);x=11-s%11;if(x>=10)x=0;if(x!==+r[9])return false;s=0;for(var i=0;i<10;i++)s+=+r[i]*(11-i);x=11-s%11;if(x>=10)x=0;return x===+r[10];}
-    var cpfEl=document.getElementById('ir_cpf');
-    cpfEl?.addEventListener('input',function(){this.value=cpfMask(this.value);var ok=validCpf(this.value);var m=document.getElementById('ir_cpfMsg');if(m)m.textContent=this.value.replace(/\D/g,'').length===11?(ok?'✓ CPF válido':'✗ CPF inválido'):'';});
+    // CPF mask + validação real (compartilhado)
+    SupportPontoValidation.bindCpfField(document.getElementById('ir_cpf'), { wrapId: 'ir_cpfWrap', msgId: 'ir_cpfMsg' });
 
     // Phone mask
     function phoneMask(v){v=v.replace(/\D/g,'').slice(0,11);if(!v.length)return '';if(v.length<=2)return '('+v;if(v.length<=3)return '('+v.slice(0,2)+') '+v.slice(2);if(v.length<=7)return '('+v.slice(0,2)+') '+v.slice(2,3)+' '+v.slice(3);return '('+v.slice(0,2)+') '+v.slice(2,3)+' '+v.slice(3,7)+'-'+v.slice(7);}
     var phoneEl=document.getElementById('ir_phone'),phoneHid=document.getElementById('ir_phoneHid');
     phoneEl?.addEventListener('input',function(){this.value=phoneMask(this.value);var r=this.value.replace(/\D/g,'');if(phoneHid)phoneHid.value=r;var m=document.getElementById('ir_phoneMsg');if(m)m.textContent=r.length===11?'✓ Formato válido':r.length>0?'✗ Use (DDD) 9 XXXX-XXXX':''});
 
-    // CEP auto-fill
-    var cepEl=document.getElementById('ir_cep'),cepSpin=document.getElementById('ir_cepSpin');
-    function cepMask(v){v=v.replace(/\D/g,'').slice(0,8);return v.length>5?v.slice(0,5)+'-'+v.slice(5):v;}
-    cepEl?.addEventListener('input',function(){this.value=cepMask(this.value);});
-    cepEl?.addEventListener('blur',async function(){
-        var r=this.value.replace(/\D/g,'');if(r.length!==8)return;
-        if(cepSpin)cepSpin.classList.remove('d-none');
-        var m=document.getElementById('ir_cepMsg');if(m)m.textContent='Buscando...';
-        try{var res=await fetch('https://viacep.com.br/ws/'+r+'/json/',{cache:'force-cache'});var d=await res.json();
-        if(d.erro){if(m)m.textContent='✗ CEP não encontrado';}
-        else{var s=function(id,v){var e=document.getElementById(id);if(e&&v)e.value=v;};
-        s('ir_logr',d.logradouro);s('ir_bairro',d.bairro);s('ir_mun',d.localidade);
-        var uf=document.getElementById('ir_uf');if(uf&&d.uf)for(var i=0;i<uf.options.length;i++)if(uf.options[i].value===d.uf){uf.selectedIndex=i;break;}
-        if(m)m.textContent='✓ Endereço preenchido';document.getElementById('ir_num')?.focus();}}
-        catch(_){if(m)m.textContent='✗ Erro ao buscar CEP';}
-        finally{if(cepSpin)cepSpin.classList.add('d-none');}
+    // CEP auto-fill (compartilhado)
+    SupportPontoValidation.bindCepField(document.getElementById('ir_cep'), {
+        msgId: 'ir_cepMsg',
+        spinnerId: 'ir_cepSpin',
+        fields: { logradouro: 'ir_logr', bairro: 'ir_bairro', municipio: 'ir_mun', uf: 'ir_uf', numero: 'ir_num' }
     });
 
     // Catalog sync

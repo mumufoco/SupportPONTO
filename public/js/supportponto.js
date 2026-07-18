@@ -537,3 +537,161 @@ if (document.readyState === 'loading') {
     });
   });
 })();
+
+/* ─────────────────────────────────────────────────────────
+   7. VALIDAÇÃO — CPF, CEP (ViaCEP), formato de e-mail
+   Portado de app/Views/employees/partials/_personal_data.php,
+   que já validava isso em produção. Extraído aqui para reuso
+   em todos os campos do sistema, sem duplicar a lógica.
+   ───────────────────────────────────────────────────────── */
+(function (window, document) {
+  'use strict';
+
+  function setStatus(el, opts, ok, text) {
+    if (opts && opts.wrapId) {
+      var w = document.getElementById(opts.wrapId);
+      if (w) { w.classList.toggle('sp-field-ok', ok === true); w.classList.toggle('sp-field-err', ok === false); }
+      if (opts.msgId) {
+        var m = document.getElementById(opts.msgId);
+        if (m) m.textContent = text || '';
+      }
+      return;
+    }
+    // Fallback: sem wrap/msg dedicados, usa as classes nativas do Bootstrap no próprio input.
+    el.classList.toggle('is-valid', ok === true);
+    el.classList.toggle('is-invalid', ok === false);
+  }
+
+  function maskCpf(v) {
+    v = v.replace(/\D/g, '').slice(0, 11);
+    return v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  }
+
+  function validateCpf(raw) {
+    var s = raw.replace(/\D/g, '');
+    if (s.length !== 11 || /^(.)\1{10}$/.test(s)) return false;
+    var sum = 0, r, i;
+    for (i = 0; i < 9; i++) sum += +s[i] * (10 - i);
+    r = 11 - (sum % 11); if (r >= 10) r = 0;
+    if (r !== +s[9]) return false;
+    sum = 0;
+    for (i = 0; i < 10; i++) sum += +s[i] * (11 - i);
+    r = 11 - (sum % 11); if (r >= 10) r = 0;
+    return r === +s[10];
+  }
+
+  function bindCpfField(el, opts) {
+    if (!el) return;
+    opts = opts || {};
+    el.addEventListener('input', function () {
+      this.value = maskCpf(this.value);
+      var raw = this.value.replace(/\D/g, '');
+      if (raw.length < 11) { setStatus(this, opts, null, ''); return; }
+      var ok = validateCpf(raw);
+      setStatus(this, opts, ok, ok ? '✓ CPF válido' : '✗ CPF inválido');
+    });
+    el.dispatchEvent(new Event('input'));
+  }
+
+  function maskCep(v) {
+    v = v.replace(/\D/g, '').slice(0, 8);
+    return v.length > 5 ? v.slice(0, 5) + '-' + v.slice(5) : v;
+  }
+
+  function bindCepField(el, opts) {
+    if (!el) return;
+    opts = opts || {};
+    var fields = opts.fields || {};
+
+    function setField(id, value) {
+      if (!id || !value) return;
+      var target = document.getElementById(id);
+      if (target) target.value = value;
+    }
+
+    el.addEventListener('input', function () {
+      this.value = maskCep(this.value);
+    });
+
+    function toggleSpinner(spinner, show) {
+      if (!spinner) return;
+      // Cobre as duas convenções usadas hoje: estilo inline direto e a classe
+      // utilitária .d-none do Bootstrap (que usa !important e vence o inline).
+      spinner.style.display = show ? 'inline-block' : 'none';
+      spinner.classList.toggle('d-none', !show);
+    }
+
+    el.addEventListener('blur', async function () {
+      var raw = this.value.replace(/\D/g, '');
+      if (raw.length !== 8) return;
+
+      var spinner = opts.spinnerId ? document.getElementById(opts.spinnerId) : null;
+      toggleSpinner(spinner, true);
+      setStatus(this, opts, null, 'Buscando endereço...');
+      try {
+        var r = await fetch('https://viacep.com.br/ws/' + raw + '/json/', { cache: 'force-cache' });
+        var d = await r.json();
+        if (d.erro) {
+          setStatus(this, opts, false, '✗ CEP não encontrado');
+          return;
+        }
+
+        if (fields.logradouroCombined) {
+          var combined = d.logradouro || '';
+          if (d.bairro) combined += (combined ? ', ' : '') + d.bairro;
+          setField(fields.logradouroCombined, combined);
+        } else {
+          setField(fields.logradouro, d.logradouro);
+          setField(fields.bairro, d.bairro);
+        }
+        setField(fields.municipio, d.localidade);
+
+        if (fields.uf) {
+          var ufEl = document.getElementById(fields.uf);
+          if (ufEl && d.uf) {
+            if (ufEl.tagName === 'SELECT') {
+              for (var i = 0; i < ufEl.options.length; i++) {
+                if (ufEl.options[i].value === d.uf) { ufEl.selectedIndex = i; break; }
+              }
+            } else {
+              ufEl.value = d.uf;
+            }
+          }
+        }
+
+        setStatus(this, opts, true, '✓ Endereço preenchido');
+        if (fields.numero) document.getElementById(fields.numero)?.focus();
+      } catch (_) {
+        setStatus(this, opts, false, '✗ Não foi possível buscar o CEP');
+      } finally {
+        toggleSpinner(spinner, false);
+      }
+    });
+  }
+
+  function validateEmailFormat(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+  }
+
+  function bindEmailFormatField(el, opts) {
+    if (!el) return;
+    opts = opts || {};
+    el.addEventListener('input', function () {
+      var v = this.value.trim();
+      if (!v) { setStatus(this, opts, null, ''); return; }
+      var ok = validateEmailFormat(v);
+      setStatus(this, opts, ok, ok ? '✓ E-mail válido' : '✗ Formato inválido');
+    });
+    el.dispatchEvent(new Event('input'));
+  }
+
+  window.SupportPontoValidation = {
+    maskCpf: maskCpf,
+    validateCpf: validateCpf,
+    bindCpfField: bindCpfField,
+    maskCep: maskCep,
+    bindCepField: bindCepField,
+    validateEmailFormat: validateEmailFormat,
+    bindEmailFormatField: bindEmailFormatField
+  };
+})(window, document);

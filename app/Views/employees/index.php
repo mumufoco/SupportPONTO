@@ -395,6 +395,8 @@
 const EMP_ACTIVATE_URL   = '<?= esc(site_url('employees/')) ?>';
 const INVITE_URL         = '<?= esc(site_url("employees/invite")) ?>';
 
+SupportPontoValidation.bindEmailFormatField(document.getElementById('inv_email'));
+
 // ─── Toast simples ────────────────────────────────────────────────────────────
 function empToast(msg, ok) {
     const colors = ok ? '#166534,#dcfce7' : '#991b1b,#fee2e2';

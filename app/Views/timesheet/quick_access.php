@@ -246,7 +246,7 @@ $labels = [
                     <?= csrf_field() ?>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">E-mail</label>
-                        <input type="email" class="form-control form-control-sm" name="email" required autocomplete="username">
+                        <input type="email" id="login_email" class="form-control form-control-sm" name="email" required autocomplete="username">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Senha</label>
@@ -419,12 +419,8 @@ $labels = [
     });
 
     const cpfEl = document.getElementById('cpf');
-    if (cpfEl) {
-        cpfEl.addEventListener('input', function () {
-            const d = this.value.replace(/\D+/g, '').slice(0, 11);
-            this.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        });
-    }
+    SupportPontoValidation.bindCpfField(cpfEl);
+    SupportPontoValidation.bindEmailFormatField(document.getElementById('login_email'));
     document.getElementById('form-cpf').addEventListener('submit', async e => {
         e.preventDefault();
         await submit(endpoints.cpf, { cpf: (cpfEl?.value || '').trim(), punch_type: punchTypeInput.value });

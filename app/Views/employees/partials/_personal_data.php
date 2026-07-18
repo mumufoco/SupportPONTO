@@ -175,20 +175,19 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
         if (m) m.textContent = text || '';
     }
     /* CPF */
-    function cpfMask(v) { v=v.replace(/\D/g,'').slice(0,11); return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); }
-    function validateCpf(raw) { var s=raw.replace(/\D/g,''); if(s.length!==11||/^(.)\1{10}$/.test(s))return false; var sum=0,r; for(var i=0;i<9;i++)sum+=+s[i]*(10-i); r=11-(sum%11);if(r>=10)r=0;if(r!==+s[9])return false; sum=0;for(var i=0;i<10;i++)sum+=+s[i]*(11-i);r=11-(sum%11);if(r>=10)r=0;return r===+s[10]; }
-    var cpfEl=document.getElementById('cpf');
-    if(cpfEl){cpfEl.addEventListener('input',function(){this.value=cpfMask(this.value);var raw=this.value.replace(/\D/g,'');if(raw.length<11){setStatus('wrap-cpf','msg-cpf',null,'');return;}setStatus('wrap-cpf','msg-cpf',validateCpf(raw),validateCpf(raw)?'✓ CPF válido':'✗ CPF inválido');});cpfEl.dispatchEvent(new Event('input'));}
+    SupportPontoValidation.bindCpfField(document.getElementById('cpf'), { wrapId: 'wrap-cpf', msgId: 'msg-cpf' });
     /* Telefone */
     function phoneMask(v){v=v.replace(/\D/g,'').slice(0,11);if(!v.length)return'';if(v.length<=2)return'('+v;if(v.length<=3)return'('+v.slice(0,2)+') '+v.slice(2);if(v.length<=7)return'('+v.slice(0,2)+') '+v.slice(2,3)+' '+v.slice(3);return'('+v.slice(0,2)+') '+v.slice(2,3)+' '+v.slice(3,7)+'-'+v.slice(7);}
     var phoneEl=document.getElementById('telefone'),phoneHid=document.getElementById('phone');
     if(phoneEl){phoneEl.addEventListener('input',function(){this.value=phoneMask(this.value);var raw=this.value.replace(/\D/g,'');if(phoneHid)phoneHid.value=raw;if(raw.length===11)setStatus('wrap-telefone','msg-telefone',true,'✓ Formato válido');else if(raw.length>0)setStatus('wrap-telefone','msg-telefone',false,'✗ Use (DDD) 9 XXXX-XXXX');else setStatus('wrap-telefone','msg-telefone',null,'');});phoneEl.dispatchEvent(new Event('input'));}
     /* E-mail */
-    var emailEl=document.getElementById('email');
-    if(emailEl){emailEl.addEventListener('input',function(){var v=this.value.trim();if(!v){setStatus('wrap-email','msg-email',null,'');return;}var ok=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);setStatus('wrap-email','msg-email',ok,ok?'✓ E-mail válido':'✗ Formato inválido');});emailEl.dispatchEvent(new Event('input'));}
+    SupportPontoValidation.bindEmailFormatField(document.getElementById('email'), { wrapId: 'wrap-email', msgId: 'msg-email' });
     /* CEP */
-    var cepEl=document.getElementById('cep'),cepSpinner=document.getElementById('cepSpinner');
-    function cepMask(v){v=v.replace(/\D/g,'').slice(0,8);return v.length>5?v.slice(0,5)+'-'+v.slice(5):v;}
-    if(cepEl){cepEl.addEventListener('input',function(){this.value=cepMask(this.value);});cepEl.addEventListener('blur',async function(){var raw=this.value.replace(/\D/g,'');if(raw.length!==8)return;if(cepSpinner)cepSpinner.style.display='inline-block';setStatus('wrap-cep','msg-cep',null,'Buscando endereço...');try{var r=await fetch('https://viacep.com.br/ws/'+raw+'/json/',{cache:'force-cache'});var d=await r.json();if(d.erro){setStatus('wrap-cep','msg-cep',false,'✗ CEP não encontrado');}else{var set=function(id,v){var e=document.getElementById(id);if(e&&v)e.value=v;};set('logradouro',d.logradouro);set('bairro',d.bairro);set('municipio',d.localidade);var ufEl=document.getElementById('uf');if(ufEl&&d.uf)for(var i=0;i<ufEl.options.length;i++)if(ufEl.options[i].value===d.uf){ufEl.selectedIndex=i;break;}setStatus('wrap-cep','msg-cep',true,'✓ Endereço preenchido');document.getElementById('numero')?.focus();}}catch(_){setStatus('wrap-cep','msg-cep',false,'✗ Não foi possível buscar o CEP');}finally{if(cepSpinner)cepSpinner.style.display='none';}});}
+    SupportPontoValidation.bindCepField(document.getElementById('cep'), {
+        wrapId: 'wrap-cep',
+        msgId: 'msg-cep',
+        spinnerId: 'cepSpinner',
+        fields: { logradouro: 'logradouro', bairro: 'bairro', municipio: 'municipio', uf: 'uf', numero: 'numero' }
+    });
 })();
 </script>

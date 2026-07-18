@@ -319,13 +319,7 @@ window.SupportPontoPunchUI = (() => {
         }
 
         if (cpfInput) {
-            cpfInput.addEventListener('input', function () {
-                const digits = this.value.replace(/\D+/g, '').slice(0, 11);
-                this.value = digits
-                    .replace(/(\d{3})(\d)/, '$1.$2')
-                    .replace(/(\d{3})(\d)/, '$1.$2')
-                    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-            });
+            SupportPontoValidation.bindCpfField(cpfInput);
         }
 
         if (cpfForm) {

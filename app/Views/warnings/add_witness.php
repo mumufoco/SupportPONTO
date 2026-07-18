@@ -69,3 +69,9 @@
     </div>
 </div>
 <?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+SupportPontoValidation.bindCpfField(document.getElementById('witness_cpf'));
+</script>
+<?= $this->endSection() ?>

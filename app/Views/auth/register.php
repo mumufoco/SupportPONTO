@@ -342,12 +342,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    applyMask(cpfInput, value => {
-        value = value.replace(/\D/g, '').slice(0, 11);
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        return value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    });
+    SupportPontoValidation.bindCpfField(cpfInput);
+    SupportPontoValidation.bindEmailFormatField(document.getElementById('email'));
 
     applyMask(phoneInput, value => {
         value = value.replace(/\D/g, '').slice(0, 11);
@@ -369,9 +365,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    applyMask(cepInput, value => {
-        value = value.replace(/\D/g, '').slice(0, 8);
-        return value.replace(/(\d{5})(\d{0,3})/, '$1-$2').replace(/-$/, '');
+    SupportPontoValidation.bindCepField(cepInput, {
+        fields: { logradouro: 'logradouro', bairro: 'bairro', municipio: 'municipio', uf: 'uf', numero: 'numero' }
     });
 
     applyMask(pisInput, value => {

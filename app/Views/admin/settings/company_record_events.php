@@ -178,3 +178,9 @@
     </div>
 </div>
 <?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+SupportPontoValidation.bindCpfField(document.getElementById('responsible_cpf'));
+</script>
+<?= $this->endSection() ?>
