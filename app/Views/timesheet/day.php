@@ -13,7 +13,6 @@
         'icon' => 'bi bi-calendar-day-fill',
         'actions' => [
             ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left', 'url' => $backUrl, 'variant' => 'outline-secondary'],
-            ['label' => 'Espelho de ponto', 'icon' => 'bi bi-calendar3', 'url' => sp_timesheet_index_url()],
         ],
     ]) ?>
 
