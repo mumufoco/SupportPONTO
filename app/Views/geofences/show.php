@@ -10,11 +10,7 @@
         'subtitle' => 'Configuração completa da área geográfica e parâmetros operacionais.',
         'icon'     => 'bi bi-geo-alt-fill',
         'actions'  => [
-            !empty($geofence->id)
-                ? ['label' => 'Editar',  'icon' => 'bi bi-pencil-square',  'url' => sp_geofences_edit_url((int) $geofence->id)]
-                : null,
-            ['label' => 'Mapa',          'icon' => 'bi bi-map-fill',        'url' => sp_geofences_map_url()],
-            ['label' => 'Limites Virtuais',     'icon' => 'bi bi-arrow-left-circle','url' => sp_geofences_index_url()],
+            ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => sp_geofences_index_url()],
         ],
     ]) ?>
 
@@ -75,21 +71,29 @@
                 <div class="sp-profile-card__header">
                     <h2 class="sp-profile-card__title"><i class="bi bi-lightning-charge-fill"></i> Ações Rápidas</h2>
                 </div>
-                <div class="sp-profile-card__body d-grid gap-2">
-                    <a href="<?= sp_geofences_map_url() ?>" class="btn btn-outline-primary">
-                        <i class="bi bi-map me-2"></i>Ver mapa operacional
-                    </a>
-                    <?php if (!empty($geofence->center_lat) && !empty($geofence->center_lng)): ?>
-                        <a href="https://www.google.com/maps?q=<?= urlencode((string) $geofence->center_lat . ',' . (string) $geofence->center_lng) ?>"
-                           target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary">
-                            <i class="bi bi-box-arrow-up-right me-2"></i>Abrir no Google Maps
+                <div class="sp-profile-card__body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="<?= sp_geofences_map_url() ?>" class="list-group-item list-group-item-action">
+                            <i class="bi bi-map text-primary me-2"></i>
+                            <strong>Ver mapa operacional</strong>
+                            <small class="d-block text-muted">Visualizar esta geofence no mapa geral</small>
                         </a>
-                    <?php endif; ?>
-                    <?php if (!empty($geofence->id)): ?>
-                        <a href="<?= sp_geofences_edit_url((int) $geofence->id) ?>" class="btn btn-outline-warning">
-                            <i class="bi bi-pencil-square me-2"></i>Editar Geofence
-                        </a>
-                    <?php endif; ?>
+                        <?php if (!empty($geofence->center_lat) && !empty($geofence->center_lng)): ?>
+                            <a href="https://www.google.com/maps?q=<?= urlencode((string) $geofence->center_lat . ',' . (string) $geofence->center_lng) ?>"
+                               target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action">
+                                <i class="bi bi-box-arrow-up-right text-info me-2"></i>
+                                <strong>Abrir no Google Maps</strong>
+                                <small class="d-block text-muted">Ver as coordenadas em uma nova aba</small>
+                            </a>
+                        <?php endif; ?>
+                        <?php if (!empty($geofence->id)): ?>
+                            <a href="<?= sp_geofences_edit_url((int) $geofence->id) ?>" class="list-group-item list-group-item-action">
+                                <i class="bi bi-pencil-square text-warning me-2"></i>
+                                <strong>Editar Geofence</strong>
+                                <small class="d-block text-muted">Alterar nome, coordenadas, raio ou status</small>
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
