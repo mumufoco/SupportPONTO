@@ -47,7 +47,7 @@
         'subtitle' => 'Atualize os dados deste turno.',
         'icon'     => 'bi bi-pencil-fill',
         'actions'  => [
-            ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => sp_shifts_show_url($shift->id)],
+            ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => sp_shifts_index_url()],
         ],
     ]) ?>
 
