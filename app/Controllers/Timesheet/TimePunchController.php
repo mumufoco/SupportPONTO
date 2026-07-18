@@ -34,7 +34,14 @@ class TimePunchController extends BaseController
 
     public function index()
     {
-        $isKioskMode    = $this->endpointService->isKioskMode(uri_string());
+        $uri = uri_string();
+
+        if ($this->endpointService->isManagerOnlyKioskRoute($uri) && !$this->hasAnyRole(['admin', 'gestor'])) {
+            $this->session->setFlashdata('error', 'Você não tem permissão para acessar o Terminal.');
+            return redirect()->to(site_url('timesheet/punch'));
+        }
+
+        $isKioskMode    = $this->endpointService->isKioskMode($uri);
         $enabledMethods = $this->endpointService->getEnabledPunchMethods();
 
         $today          = date('Y-m-d');

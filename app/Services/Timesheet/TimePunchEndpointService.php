@@ -82,6 +82,21 @@ class TimePunchEndpointService
         ], true);
     }
 
+    /**
+     * Rotas de kiosk que exigem sessão autenticada (acessadas via o botão "Terminal"
+     * dentro do app). Diferente de operacao/terminal-publico e timesheet/punch-terminal,
+     * que são terminais físicos públicos e precisam continuar acessíveis sem login.
+     */
+    public function isManagerOnlyKioskRoute(string $uri): bool
+    {
+        $normalized = trim($uri, '/');
+
+        return in_array($normalized, [
+            'operacao/terminal',
+            'timesheet/punch-kiosk',
+        ], true);
+    }
+
     public function dispatchPunch(RequestInterface $request, string $uri): array
     {
         return $this->punchProcessor->dispatchPunch($request, $uri);
