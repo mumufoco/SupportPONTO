@@ -19,6 +19,15 @@ $routes->group('employees', ['filter' => ['auth', 'manager']], static function (
     $routes->get('get-positions-by-department', 'Employees\EmployeeController::getPositionsByDepartment', ['as' => 'employees.get-positions-by-department']);
 });
 
+$routes->group('employees/dependents', ['filter' => ['auth', 'manager']], static function ($routes) {
+    $routes->get('/', 'Employees\EmployeeDependentController::index', ['as' => 'employees.dependents']);
+    $routes->get('create', 'Employees\EmployeeDependentController::create', ['as' => 'employees.dependents.create']);
+    $routes->post('/', 'Employees\EmployeeDependentController::store', ['as' => 'employees.dependents.store']);
+    $routes->get('(:num)/edit', 'Employees\EmployeeDependentController::edit/$1', ['as' => 'employees.dependents.edit']);
+    $routes->put('(:num)', 'Employees\EmployeeDependentController::update/$1', ['as' => 'employees.dependents.update']);
+    $routes->post('(:num)/delete', 'Employees\EmployeeDependentController::delete/$1', ['as' => 'employees.dependents.delete']);
+});
+
 $routes->group('employees', ['filter' => ['auth', 'admin']], static function ($routes) {
     $routes->get('pending', 'Employees\EmployeeController::pendingRegistrations', ['as' => 'employees.pending']);
     $routes->post('pending/(:num)/approve', 'Employees\EmployeeController::approveRegistration/$1', ['as' => 'employees.pending.approve', 'filter' => ['auth', 'admin', 'stepup:back']]);

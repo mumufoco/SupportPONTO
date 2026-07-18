@@ -153,7 +153,13 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
 
     <div class="col-12 col-md-6 d-flex align-items-center">
         <div class="sp-callout-info py-2 px-3 w-100">
-            Dependentes podem ser detalhados posteriormente. Este pacote mantém o cadastro principal completo e seguro.
+            <?php if ($isEditing): ?>
+                <a href="<?= site_url('employees/dependents?employee_id=' . (int) $employee->id) ?>">
+                    <i class="bi bi-person-hearts me-1"></i>Gerencie os dependentes deste colaborador
+                </a>
+            <?php else: ?>
+                Dependentes podem ser cadastrados após salvar este colaborador.
+            <?php endif; ?>
         </div>
     </div>
 

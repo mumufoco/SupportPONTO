@@ -12,6 +12,7 @@
         'actions'  => [
             ['label' => 'Novo colaborador',     'icon' => 'bi bi-person-plus-fill', 'url' => site_url('employees/create')],
             ['label' => 'Convidar funcionário', 'icon' => 'bi bi-envelope-plus-fill', 'url' => '#', 'variant' => 'outline-primary', 'attrs' => 'data-bs-toggle="modal" data-bs-target="#inviteModal"'],
+            ['label' => 'Dependentes',          'icon' => 'bi bi-person-hearts', 'url' => site_url('employees/dependents')],
 
         ],
     ]) ?>
