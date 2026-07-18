@@ -15,22 +15,8 @@
 
     <div class="sp-data-card mb-4">
         <div class="sp-data-card__body">
-            <form method="get" action="<?= route_to('reports.timesheet') ?>" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="month" class="form-label">Mês <span class="text-danger">*</span></label>
-                    <input type="month" id="month" name="month" class="form-control" value="<?= esc($month ?? date('Y-m')) ?>" required>
-                </div>
-                <div class="col-md-3">
-                    <label for="department" class="form-label">Departamento</label>
-                    <select id="department" name="department" class="form-select">
-                        <option value="">Todos</option>
-                        <?php foreach (($departments ?? []) as $departmentOption): ?>
-                            <option value="<?= esc((string) $departmentOption) ?>" <?= ($selectedDepartment ?? '') === $departmentOption ? 'selected' : '' ?>><?= esc((string) $departmentOption) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <small class="text-muted">Filtra a lista de colaboradores ao lado</small>
-                </div>
-                <div class="col-md-3">
+            <form method="get" action="<?= route_to('reports.timesheet') ?>" class="row g-3">
+                <div class="col-md-4">
                     <label for="employee_id" class="form-label">Colaborador <span class="text-danger">*</span></label>
                     <select id="employee_id" name="employee_id" class="form-select" required>
                         <option value="">Selecione...</option>
@@ -42,10 +28,30 @@
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <div class="form-text" style="min-height:1.25rem"></div>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Buscar</button>
-                    <a href="<?= route_to('reports.timesheet') ?>" class="btn btn-outline-secondary">Limpar</a>
+                <div class="col-md-3">
+                    <label for="month" class="form-label">Mês <span class="text-danger">*</span></label>
+                    <input type="month" id="month" name="month" class="form-control" value="<?= esc($month ?? date('Y-m')) ?>" required>
+                    <div class="form-text" style="min-height:1.25rem"></div>
+                </div>
+                <div class="col-md-3">
+                    <label for="department" class="form-label">Departamento</label>
+                    <select id="department" name="department" class="form-select">
+                        <option value="">Todos</option>
+                        <?php foreach (($departments ?? []) as $departmentOption): ?>
+                            <option value="<?= esc((string) $departmentOption) ?>" <?= ($selectedDepartment ?? '') === $departmentOption ? 'selected' : '' ?>><?= esc((string) $departmentOption) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="form-text" style="min-height:1.25rem">Filtra as opções do campo Colaborador</div>
+                </div>
+                <div class="col-md-2 d-flex flex-column">
+                    <label class="form-label invisible d-none d-md-block">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Buscar</button>
+                        <a href="<?= route_to('reports.timesheet') ?>" class="btn btn-outline-secondary">Limpar</a>
+                    </div>
+                    <div class="form-text" style="min-height:1.25rem"></div>
                 </div>
             </form>
         </div>
@@ -107,14 +113,20 @@
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>Data</th>
-                                <th>Dia</th>
-                                <th style="min-width:220px;">Marcações</th>
-                                <th>Horas</th>
-                                <th>Previsto</th>
-                                <th>Saldo</th>
-                                <th class="text-center">Justificativas</th>
-                                <th>Validação</th>
+                                <th rowspan="2">Data</th>
+                                <th rowspan="2">Dia</th>
+                                <th rowspan="2">Entrada</th>
+                                <th colspan="2" class="text-center">Intervalo</th>
+                                <th rowspan="2">Saída</th>
+                                <th rowspan="2">Horas</th>
+                                <th rowspan="2">Previsto</th>
+                                <th rowspan="2">Saldo</th>
+                                <th rowspan="2" class="text-center">Justificativas</th>
+                                <th rowspan="2">Validação</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center small">Início</th>
+                                <th class="text-center small">Fim</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,28 +136,32 @@
                                 $validation = $record['validation'] ?? [];
                                 $isValid = (bool) ($validation['valid'] ?? false);
                                 $validationMessage = $validation['message'] ?? ($isValid ? 'OK' : 'Inconsistente');
+
+                                $punchColumns = [
+                                    'entrada' => [],
+                                    'intervalo_inicio' => [],
+                                    'intervalo_fim' => [],
+                                    'saida' => [],
+                                ];
+                                foreach (($record['punches'] ?? []) as $p) {
+                                    $ptype = (string) ($p['type'] ?? '');
+                                    if (array_key_exists($ptype, $punchColumns)) {
+                                        $punchColumns[$ptype][] = format_time((string) ($p['time'] ?? ''), false);
+                                    }
+                                }
                             ?>
                             <tr>
                                 <td><?= esc(format_date_br((string) $record['date'])) ?></td>
                                 <td><?= esc(get_day_of_week_br((string) $record['date'], true)) ?></td>
-                                <td>
-                                    <?php if (empty($record['punches'])): ?>
-                                        <span class="text-muted small">Sem registros</span>
-                                    <?php else: ?>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            <?php foreach ($record['punches'] as $p): ?>
-                                                <?php
-                                                    $ptype = strtoupper((string) ($p['type'] ?? ''));
-                                                    $ptime = format_time((string) ($p['time'] ?? ''), false);
-                                                    $isEntry = str_contains(strtolower($ptype), 'entrada');
-                                                ?>
-                                                <span class="sp-badge <?= $isEntry ? 'sp-badge-success' : 'sp-badge-neutral' ?>" title="<?= esc($ptype) ?>">
-                                                    <?= esc($ptype) ?> <?= esc($ptime) ?>
-                                                </span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
+                                <?php foreach (['entrada', 'intervalo_inicio', 'intervalo_fim', 'saida'] as $col): ?>
+                                    <td class="text-center">
+                                        <?php if ($punchColumns[$col] === []): ?>
+                                            <span class="text-muted">—</span>
+                                        <?php else: ?>
+                                            <?= implode('<br>', array_map('esc', $punchColumns[$col])) ?>
+                                        <?php endif; ?>
+                                    </td>
+                                <?php endforeach; ?>
                                 <td><?= esc(format_hours((float) ($record['hours_worked'] ?? 0))) ?></td>
                                 <td><?= esc(format_hours((float) ($record['expected_hours'] ?? 0))) ?></td>
                                 <td><?= esc(format_hours((float) ($record['balance'] ?? 0), true)) ?></td>
