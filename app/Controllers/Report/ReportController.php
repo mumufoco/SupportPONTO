@@ -40,6 +40,7 @@ class ReportController extends BaseController
             'employee'           => $employee,
             'selectedEmployeeId' => $employeeId ?? $this->request->getGet('employee_id'),
             'employees'          => $this->reportCoordinatorService->getEmployeesForReports($employee),
+            'departments'        => $this->reportCoordinatorService->getDepartmentsForReports(),
         ]);
     }
 

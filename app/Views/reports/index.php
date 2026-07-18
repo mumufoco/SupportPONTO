@@ -88,8 +88,12 @@
                         </div>
                         <div class="col-md-4">
                             <label for="filters-department" class="form-label">Departamento</label>
-                            <input type="text" name="filters[department]" id="filters-department" class="form-control"
-                                   placeholder="Opcional">
+                            <select name="filters[department]" id="filters-department" class="form-select">
+                                <option value="">Todos</option>
+                                <?php foreach (($departments ?? []) as $dept): ?>
+                                    <option value="<?= esc($dept) ?>"><?= esc($dept) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-12">
                             <button type="submit" id="btn-generate" class="btn btn-primary">

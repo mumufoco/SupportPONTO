@@ -51,6 +51,11 @@ class ReportCoordinatorService
         return $this->viewService->getEmployeesForReports($actor);
     }
 
+    public function getDepartmentsForReports(): array
+    {
+        return $this->viewService->getDepartmentsForReports();
+    }
+
     public function timesheetViewData(array $employee, string $month, ?string $department, ?string $selectedEmployee): array
     {
         return $this->viewService->getTimesheetViewData($employee, $month, $department, $selectedEmployee);

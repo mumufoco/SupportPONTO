@@ -191,4 +191,9 @@ class ReportViewService
             ->where('active', true)
             ->findColumn('department') ?? [];
     }
+
+    public function getDepartmentsForReports(): array
+    {
+        return $this->getDepartments();
+    }
 }
