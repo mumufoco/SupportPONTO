@@ -218,7 +218,7 @@ class WarningController extends BaseController
         }
 
         if (! $details['canAddWitness']) {
-            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após 48 horas sem assinatura.');
+            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após recusa do colaborador ou após 48 horas sem assinatura.');
         }
 
         return view('warnings/add_witness', ['employee' => $employee] + $details);
@@ -240,10 +240,10 @@ class WarningController extends BaseController
 
         if (! $this->controllerActionService->canAddWitnessByTime($warning)) {
             if ($this->requestExpectsJson()) {
-                return $this->jsonError('Testemunha só pode ser adicionada após 48 horas.');
+                return $this->jsonError('Testemunha só pode ser adicionada após recusa do colaborador ou após 48 horas sem assinatura.');
             }
 
-            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após 48 horas.');
+            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após recusa do colaborador ou após 48 horas sem assinatura.');
         }
 
         if (! $this->validate($this->controllerActionService->witnessValidationRules())) {

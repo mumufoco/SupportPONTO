@@ -120,12 +120,14 @@ class WarningQueryService
 
         $warningEmployee = $this->employeeModel->find($warning->employee_id);
 
+        // Testemunha entra em 2 cenarios: (1) recusa explicita - o proprio ato de recusar
+        // ja e o gatilho, sem precisar esperar; (2) silencio prolongado (48h+) ainda pendente.
         return [
             'warning'         => $warning,
             'warningEmployee' => $warningEmployee,
             'issuer'          => $this->employeeModel->find($warning->issued_by),
             'hoursElapsed'    => $hoursElapsed,
-            'canAddWitness'   => $hoursElapsed >= 48 && $warning->status === 'pendente-assinatura',
+            'canAddWitness'   => $warning->status === 'recusado' || ($warning->status === 'pendente-assinatura' && $hoursElapsed >= 48),
             'attachments'     => $attachments,
             'signerName'      => $warningEmployee ? ($warningEmployee->name ?? '') : '',
         ];

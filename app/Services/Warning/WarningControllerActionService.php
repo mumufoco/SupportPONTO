@@ -48,6 +48,13 @@ class WarningControllerActionService
 
     public function canAddWitnessByTime(object $warning): bool
     {
+        // Recusa explicita ja e o gatilho por si so, sem precisar esperar 48h -
+        // precisa ficar em sincronia com WarningQueryService::warningDetails()
+        // (canAddWitness), usado para exibir/ocultar o botao na tela.
+        if (($warning->status ?? '') === 'recusado') {
+            return true;
+        }
+
         $hoursElapsed = (time() - strtotime((string) $warning->created_at)) / 3600;
         return $hoursElapsed >= 48;
     }

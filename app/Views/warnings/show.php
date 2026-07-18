@@ -78,22 +78,25 @@
                         </button>
                     </div>
                 </div>
-
-                <?php if (!empty($canAddWitness) && in_array($employee['role'] ?? '', ['admin', 'gestor', 'rh'])): ?>
-                    <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 flex-wrap mb-0">
-                        <div>
-                            <div class="fw-semibold"><i class="bi bi-person-plus-fill me-1"></i>Mais de 48 horas sem assinatura</div>
-                            <div class="small">É possível formalizar a ocorrência com uma testemunha.</div>
-                        </div>
-                        <a href="<?= sp_warning_witness_form_url((int) $warning->id) ?>" class="btn btn-sm btn-primary flex-shrink-0">
-                            <i class="bi bi-person-plus me-1"></i>Adicionar testemunha
-                        </a>
-                    </div>
-                <?php endif; ?>
             <?php elseif ($wStatus === 'recusado'): ?>
                 <div class="alert alert-danger mb-0">
                     <div class="fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Assinatura recusada pelo colaborador</div>
                     <div class="small">O colaborador recusou assinar a advertência. Documente o incidente e, se necessário, acione o RH para procedimento alternativo.</div>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($canAddWitness) && in_array($employee['role'] ?? '', ['admin', 'gestor', 'rh'])): ?>
+                <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 flex-wrap mb-0">
+                    <div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-person-plus-fill me-1"></i>
+                            <?= $wStatus === 'recusado' ? 'Colaborador recusou assinar' : 'Mais de 48 horas sem assinatura' ?>
+                        </div>
+                        <div class="small">É possível formalizar a ocorrência com uma testemunha.</div>
+                    </div>
+                    <a href="<?= sp_warning_witness_form_url((int) $warning->id) ?>" class="btn btn-sm btn-primary flex-shrink-0">
+                        <i class="bi bi-person-plus me-1"></i>Adicionar testemunha
+                    </a>
                 </div>
             <?php endif; ?>
 
