@@ -201,6 +201,7 @@ class SecurityHeadersFilter implements FilterInterface
             'https://api.qrserver.com',
             'https://*.tile.openstreetmap.org',
             'https://tile.openstreetmap.org',
+            'https://unpkg.com',
         ];
 
         $connectSrc = array_values(array_unique(array_filter(array_merge(
