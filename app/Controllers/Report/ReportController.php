@@ -143,6 +143,68 @@ class ReportController extends BaseController
         return $this->monthRangeView('attendance', 'attendanceData', fn (array $employee, string $start, string $end, ?string $department): array => $this->reportCoordinatorService->attendanceViewData($employee, $start, $end, $department));
     }
 
+    public function attendanceExportPdf(): ResponseInterface
+    {
+        return $this->attendanceExport('pdf');
+    }
+
+    public function attendanceExportExcel(): ResponseInterface
+    {
+        return $this->attendanceExport('excel');
+    }
+
+    public function attendanceExportCsv(): ResponseInterface
+    {
+        return $this->attendanceExport('csv');
+    }
+
+    /**
+     * Exporta a tela de assiduidade (reports/attendance.php) com os mesmos
+     * filtros da tela (month/department), reaproveitando a mesma fonte de
+     * dados (attendanceViewData) para que o arquivo bata com o que está na tela.
+     */
+    protected function attendanceExport(string $format): ResponseInterface
+    {
+        $employee = $this->requireOperationalReportsViewAccessOrRedirect();
+        if ($employee === null) {
+            return redirect()->to(route_to('dashboard'))->with('error', 'Acesso negado.');
+        }
+
+        $month = $this->reportControllerActionService->monthOrCurrent($this->request->getGet('month'));
+        $selectedDepartment = $this->request->getGet('department');
+        $range = $this->reportControllerActionService->monthRange($month);
+
+        $viewData = $this->reportCoordinatorService->attendanceViewData($employee, $range['start_date'], $range['end_date'], $selectedDepartment);
+        $attendanceData = $viewData['attendanceData'] ?? [];
+
+        $exporter = new \App\Services\Reports\AttendanceExportService();
+        $result = match ($format) {
+            'pdf' => $exporter->buildPdf($attendanceData, $month, $selectedDepartment),
+            'excel' => $exporter->buildExcel($attendanceData, $month, $selectedDepartment),
+            default => $exporter->buildCsv($attendanceData),
+        };
+
+        $mimeType = match ($format) {
+            'pdf' => 'application/pdf',
+            'csv' => 'text/csv; charset=UTF-8',
+            default => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
+
+        supportponto_log_event('info', 'reports', 'attendance_exported', [
+            'user_id' => $this->session?->get('user_id'),
+            'month' => $month,
+            'department' => $selectedDepartment,
+            'format' => $format,
+        ]);
+
+        return $this->response
+            ->setHeader('Content-Type', $mimeType)
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"')
+            ->setHeader('Content-Length', (string) strlen($result['content']))
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody($result['content']);
+    }
+
     public function lateArrivals()
     {
         return $this->monthRangeView('late_arrivals', 'lateArrivalsData', fn (array $employee, string $start, string $end, ?string $department): array => $this->reportCoordinatorService->lateArrivalsViewData($employee, $start, $end, $department));
