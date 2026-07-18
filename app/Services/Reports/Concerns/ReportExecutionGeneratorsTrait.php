@@ -254,11 +254,32 @@ trait ReportExecutionGeneratorsTrait
     }
     protected function generateWarningsReport(array $filters): array
     {
-        return ['success' => true, 'data' => []];
-    }
-    protected function generateCustomReport(array $filters): array
-    {
-        return ['success' => true, 'data' => []];
+        [$startDate, $endDate] = $this->resolveDateRange($filters);
+
+        $query = $this->warningModel
+            ->select('warnings.*, employees.name AS employee_name, employees.department')
+            ->join('employees', 'employees.id = warnings.employee_id')
+            ->where('warnings.occurrence_date >=', $startDate)
+            ->where('warnings.occurrence_date <=', $endDate)
+            ->orderBy('warnings.occurrence_date', 'DESC');
+
+        $this->applyEmployeeIdFilter($query, $filters, 'warnings.employee_id');
+        $this->applyDepartmentFilter($query, $filters);
+        $this->applyResultLimit($query, $filters);
+
+        $data = [];
+        foreach ($query->findAll() as $record) {
+            $data[] = [
+                'occurrence_date' => $record->occurrence_date,
+                'employee_name' => $record->employee_name ?: 'Desconhecido',
+                'department' => $record->department,
+                'warning_type' => $record->warning_type,
+                'reason' => $record->reason,
+                'status' => $record->status,
+            ];
+        }
+
+        return ['success' => true, 'data' => $data];
     }
 
 }

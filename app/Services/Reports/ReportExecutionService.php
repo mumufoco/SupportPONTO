@@ -11,6 +11,7 @@ use App\Models\EmployeeModel;
 use App\Models\JustificationModel;
 use App\Models\TimePunchModel;
 use App\Models\TimesheetConsolidatedModel;
+use App\Models\WarningModel;
 use App\Services\CSVService;
 use App\Services\ExcelService;
 use App\Services\PDFService;
@@ -26,6 +27,7 @@ class ReportExecutionService
     protected EmployeeModel $employeeModel;
     protected TimePunchModel $timePunchModel;
     protected JustificationModel $justificationModel;
+    protected WarningModel $warningModel;
     protected TimesheetConsolidatedModel $consolidatedModel;
     protected TimesheetService $timesheetService;
     protected PDFService $pdfService;
@@ -49,10 +51,12 @@ class ReportExecutionService
         ?CSVService $csvService = null,
         ?XMLService $xmlService = null,
         ?TXTService $txtService = null,
+        ?WarningModel $warningModel = null,
     ) {
         $this->employeeModel = $employeeModel ?? Services::employeeModel(false);
         $this->timePunchModel = $timePunchModel ?? Services::timePunchModel(false);
         $this->justificationModel = $justificationModel ?? Services::justificationModel(false);
+        $this->warningModel = $warningModel ?? Services::warningModel(false);
         $this->consolidatedModel = $consolidatedModel ?? Services::timesheetConsolidatedModel(false);
         $this->timesheetService = $timesheetService ?? Services::timesheetService(false);
         $this->pdfService = $pdfService ?? Services::pdfService(false);

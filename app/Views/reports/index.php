@@ -60,7 +60,6 @@
                                 <option value="banco-horas">Banco de horas</option>
                                 <option value="consolidado-mensal">Consolidado mensal</option>
                                 <option value="advertencias">Advertências</option>
-                                <option value="personalizado">Personalizado</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -218,6 +217,7 @@
                                 <option value="justificativas">Justificativas</option>
                                 <option value="banco-horas">Banco de horas</option>
                                 <option value="consolidado-mensal">Consolidado mensal</option>
+                                <option value="advertencias">Advertências</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -400,6 +400,14 @@
             { key: 'extra',         label: 'Extras',     fmt: fmtDecimalHours },
             { key: 'is_weekend',    label: 'Fim de semana', fmt: fmtBool },
         ],
+        'advertencias': [
+            { key: 'occurrence_date', label: 'Data',        fmt: fmtDate },
+            { key: 'employee_name',   label: 'Colaborador' },
+            { key: 'department',      label: 'Depto' },
+            { key: 'warning_type',    label: 'Tipo' },
+            { key: 'reason',          label: 'Motivo' },
+            { key: 'status',          label: 'Status' },
+        ],
     };
 
     function colsFor(type) {
@@ -446,7 +454,6 @@
             'consolidado-mensal': 'Consolidado mensal',
             'horas-extras': 'Horas extras',
             'advertencias': 'Advertências',
-            'personalizado': 'Personalizado',
         };
         title.textContent = (typeLabels[type] || type) + ' — ' + data.length + ' registro' + (data.length !== 1 ? 's' : '');
         count.textContent = data.length + ' registro' + (data.length !== 1 ? 's' : '') + ' encontrado' + (data.length !== 1 ? 's' : '');

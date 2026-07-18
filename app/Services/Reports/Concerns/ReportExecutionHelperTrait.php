@@ -14,7 +14,6 @@ trait ReportExecutionHelperTrait
             'consolidado-mensal' => 'generateMonthlyConsolidatedReport',
             'justificativas' => 'generateJustificationsReport',
             'advertencias' => 'generateWarningsReport',
-            'personalizado' => 'generateCustomReport',
         ];
     }
     protected function jsonPayload(array $data, array $filters, bool $includeMeta): array
