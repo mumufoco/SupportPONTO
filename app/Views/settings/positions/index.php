@@ -92,7 +92,8 @@
                                     <td><strong><?= esc($pos['name'] ?? '') ?></strong></td>
                                     <td class="text-muted"><?= esc($pos['department_name'] ?? '-') ?></td>
                                     <td class="text-center">
-                                        <span class="badge <?= $isActive ? 'bg-success' : 'bg-secondary' ?> sp-status-badge">
+                                        <span class="sp-badge sp-status-badge <?= $isActive ? 'sp-badge-success' : 'sp-badge-danger' ?>">
+                                            <i class="bi <?= $isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill' ?>"></i>
                                             <?= $isActive ? 'Ativo' : 'Inativo' ?>
                                         </span>
                                     </td>
@@ -210,8 +211,8 @@ async function catalogToggle(btn, url) {
             const row    = btn.closest('tr');
             const badge  = row.querySelector('.sp-status-badge');
             const active = data.active ?? (data.status === 'active');
-            badge.textContent = active ? 'Ativo' : 'Inativo';
-            badge.className   = 'badge sp-status-badge ' + (active ? 'bg-success' : 'bg-secondary');
+            badge.innerHTML   = '<i class="bi ' + (active ? 'bi-check-circle-fill' : 'bi-x-circle-fill') + '"></i> ' + (active ? 'Ativo' : 'Inativo');
+            badge.className   = 'sp-badge sp-status-badge ' + (active ? 'sp-badge-success' : 'sp-badge-danger');
             btn.className     = 'icon-action ' + (active ? 'icon-action-warning' : 'icon-action-success');
             btn.title         = active ? 'Desativar' : 'Ativar';
             btn.querySelector('i').className = 'bi ' + (active ? 'bi-toggle-on' : 'bi-toggle-off');
