@@ -76,6 +76,30 @@ class WorkShiftModel extends Model
     protected $afterInsert = ['clearCacheAfterChange'];
     protected $afterUpdate = ['clearCacheAfterChange'];
     protected $afterDelete = ['clearCacheAfterChange'];
+    protected $afterFind = ['castBooleans'];
+
+    /**
+     * Normaliza 'active' para bool de verdade — o Postgres retorna colunas
+     * boolean como string 't'/'f', e sem isso !empty()/checagens truthy
+     * tratam 'f' como valor verdadeiro (mesmo bug já corrigido em
+     * TimePunchModel/RoleModel/GeofenceModel).
+     */
+    protected function castBooleans(array $data): array
+    {
+        if (empty($data['data'])) {
+            return $data;
+        }
+
+        $rows = $data['singleton'] ? [$data['data']] : $data['data'];
+
+        foreach ($rows as $row) {
+            if (is_object($row) && property_exists($row, 'active')) {
+                $row->active = in_array($row->active, [true, 't', '1', 1, 'true'], true);
+            }
+        }
+
+        return $data;
+    }
 
     /**
      * Set created_by field
