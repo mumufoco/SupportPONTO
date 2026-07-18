@@ -142,4 +142,34 @@ class WorkUnitCatalogService
 
         return $newActive;
     }
+
+    public function delete(int $id): array
+    {
+        $workUnit = $this->find($id);
+        if (!$workUnit) {
+            return ['success' => false, 'message' => 'Unidade de trabalho não encontrada.'];
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $count = $db->table('employees')
+                ->where('work_unit_id', $id)
+                ->where('active', true)
+                ->countAllResults();
+
+            if ($count > 0) {
+                return [
+                    'success' => false,
+                    'message' => "Não é possível excluir: {$count} colaborador(es) ativo(s) usa(m) esta unidade. Reatribua-os primeiro.",
+                ];
+            }
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Erro ao verificar uso da unidade: ' . $e->getMessage()];
+        }
+
+        $this->model->delete($id);
+        $this->bustCache();
+
+        return ['success' => true, 'message' => 'Unidade de trabalho excluída com sucesso.'];
+    }
 }

@@ -33,6 +33,7 @@ $routes->group('settings', ['filter' => ['auth', 'admin']], static function ($ro
     $routes->get('work-units/(:num)/edit', 'Settings\CatalogSettingsController::editWorkUnit/$1', ['as' => 'settings.work-units.edit']);
     $routes->post('work-units/(:num)/update', 'Settings\CatalogSettingsController::updateWorkUnit/$1', ['as' => 'settings.work-units.update']);
     $routes->post('work-units/(:num)/toggle', 'Settings\CatalogSettingsController::toggleWorkUnit/$1', ['as' => 'settings.work-units.toggle']);
+    $routes->post('work-units/(:num)/delete', 'Settings\CatalogSettingsController::deleteWorkUnit/$1', ['as' => 'settings.work-units.delete']);
 
     $routes->get('departments', 'Settings\CatalogSettingsController::departments', ['as' => 'settings.departments']);
     $routes->get('departments/create', 'Settings\CatalogSettingsController::createDepartment', ['as' => 'settings.departments.create']);

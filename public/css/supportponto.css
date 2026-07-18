@@ -825,6 +825,16 @@ a:hover { color: var(--sp-primary); text-decoration: underline; }
 .table tbody tr:hover td { background: var(--sp-gray-50); }
 .table td, .table th { vertical-align: middle; }
 
+/* Table row actions — ícones sem moldura, maiores que os antigos btn-sm */
+.table-icon-actions { display: flex; align-items: center; justify-content: flex-end; gap: .15rem; }
+.table-icon-actions .icon-action { display: inline-flex; align-items: center; justify-content: center; width: 2.35rem; height: 2.35rem; border-radius: var(--sp-radius-sm); background: transparent; border: none; color: var(--sp-text-secondary); font-size: 1.2rem; line-height: 1; cursor: pointer; transition: background .15s ease, color .15s ease; text-decoration: none; }
+.table-icon-actions .icon-action:hover, .table-icon-actions .icon-action:focus-visible { background: var(--sp-gray-200); color: var(--sp-text-primary); }
+.table-icon-actions .icon-action:disabled { opacity: .5; cursor: not-allowed; }
+.table-icon-actions .icon-action-edit:hover { color: var(--sp-info); }
+.table-icon-actions .icon-action-warning:hover { color: var(--sp-warning); }
+.table-icon-actions .icon-action-success:hover { color: var(--sp-success); }
+.table-icon-actions .icon-action-danger:hover { color: var(--sp-danger); }
+
 /* Alerts */
 .alert { padding: var(--sp-space-md) var(--sp-space-lg); border-radius: 10px !important; border: 1px solid transparent; margin-bottom: var(--sp-space-md); display: flex; align-items: flex-start; gap: var(--sp-space-sm); font-size: var(--sp-font-size-sm); }
 .alert i { flex-shrink: 0; margin-top: 2px; }

@@ -99,19 +99,19 @@
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <div class="d-flex gap-1 justify-content-end">
+                                        <div class="table-icon-actions">
                                             <a href="<?= sp_route_url('settings.roles.edit', $roleId) ?>"
-                                               class="btn btn-sm btn-outline-secondary" title="Editar">
+                                               class="icon-action icon-action-edit" title="Editar">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </a>
                                             <button type="button"
-                                                    class="btn btn-sm <?= $roleActive ? 'btn-outline-warning' : 'btn-outline-success' ?>"
+                                                    class="icon-action <?= $roleActive ? 'icon-action-warning' : 'icon-action-success' ?>"
                                                     title="<?= $roleActive ? 'Desativar' : 'Ativar' ?>"
                                                     onclick="catalogToggle(this, '<?= sp_route_url('settings.roles.toggle', $roleId) ?>')">
                                                 <i class="bi <?= $roleActive ? 'bi-toggle-on' : 'bi-toggle-off' ?>"></i>
                                             </button>
                                             <button type="button"
-                                                    class="btn btn-sm btn-outline-danger"
+                                                    class="icon-action icon-action-danger"
                                                     title="Excluir nível de acesso"
                                                     onclick="confirmDeleteRole(<?= (int) $roleId ?>, '<?= esc(addslashes($roleName), 'js') ?>')">
                                                 <i class="bi bi-trash-fill"></i>
@@ -237,7 +237,7 @@ async function catalogToggle(btn, url) {
             const active = data.active ?? (data.status === 'active');
             badge.textContent = active ? 'Ativo' : 'Inativo';
             badge.className   = 'badge sp-status-badge ' + (active ? 'bg-success' : 'bg-secondary');
-            btn.className     = 'btn btn-sm ' + (active ? 'btn-outline-warning' : 'btn-outline-success');
+            btn.className     = 'icon-action ' + (active ? 'icon-action-warning' : 'icon-action-success');
             btn.title         = active ? 'Desativar' : 'Ativar';
             btn.querySelector('i').className = 'bi ' + (active ? 'bi-toggle-on' : 'bi-toggle-off');
             if (hashEl && data.csrf_hash) { hashEl.content = data.csrf_hash; }

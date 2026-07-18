@@ -107,6 +107,19 @@ class CatalogSettingsController extends BaseSettingsController
         return $this->toggleCatalog($this->workUnitsService()->toggle((int) $id), 'Unidade não encontrada');
     }
 
+    public function deleteWorkUnit($id)
+    {
+        $this->requireAdminAccess();
+
+        if (!$this->request->is('post')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Método inválido.']);
+        }
+
+        $result = $this->workUnitsService()->delete((int) $id);
+
+        return $this->response->setJSON($result);
+    }
+
     public function departments()
     {
         $this->requireAdminAccess();
