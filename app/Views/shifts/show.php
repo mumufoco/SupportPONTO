@@ -211,11 +211,6 @@ $shiftEnd = substr((string) $shift->end_time, 0, 5);
                             <strong>Ver Todas as Escalas</strong>
                             <small class="d-block text-muted">Consultar escalas que usam este turno</small>
                         </a>
-                        <a href="<?= sp_shifts_edit_url($shift->id) ?>" class="list-group-item list-group-item-action">
-                            <i class="bi bi-pencil-fill text-warning me-2"></i>
-                            <strong>Editar Turno</strong>
-                            <small class="d-block text-muted">Alterar horários, cor, tipo ou intervalo</small>
-                        </a>
                         <form method="POST" action="<?= sp_shifts_clone_url($shift->id) ?>" class="d-inline">
                             <?= csrf_field() ?>
                             <button type="submit" class="list-group-item list-group-item-action text-start w-100">
