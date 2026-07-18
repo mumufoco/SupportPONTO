@@ -8,6 +8,44 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 
 <style>
+    /* ── Section cards (mesmo padrão de employees/create) ───────────────── */
+    .sp-form-card {
+        background: var(--sp-bg-surface);
+        border: 1px solid var(--sp-border);
+        border-radius: 1rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    .sp-form-card__head {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--sp-border);
+        background: var(--sp-gray-50, rgba(0,0,0,.02));
+    }
+    .sp-form-card__icon {
+        width: 2.1rem; height: 2.1rem;
+        border-radius: .5rem;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .sp-form-card__icon.c-blue   { background: rgba(13,110,253,.12);  color: #0d6efd }
+    .sp-form-card__icon.c-green  { background: rgba(25,135, 84,.12);  color: #198754 }
+    .sp-form-card__title { font-weight: 700; font-size: 1rem; margin: 0 }
+    .sp-form-card__sub   { font-size: .78rem; color: var(--sp-text-muted); margin: 0 }
+    .sp-form-card__body  { padding: 1.5rem }
+    .sp-form-actions {
+        display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+        padding: 1.25rem 1.5rem;
+        background: var(--sp-bg-surface);
+        border: 1px solid var(--sp-border);
+        border-radius: 1rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+
     .char-counter { font-size: 0.85rem; color: var(--sp-text-muted); }
     .char-counter.text-warning { color: var(--sp-warning) !important; }
     .char-counter.text-danger  { color: var(--sp-danger) !important; }
@@ -59,7 +97,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="container-fluid sp-module-stack">
+<div class="container-fluid sp-employee-shell sp-responsive-screen">
     <?= view('components/page_header', [
         'title'    => 'Nova Justificativa',
         'subtitle' => 'Preencha os dados para enviar sua justificativa ao gestor.',
@@ -69,157 +107,169 @@
         ],
     ]) ?>
 
-
-    <div style="max-width:720px;margin:0 auto;">
-        <div class="sp-card">
-            <div class="sp-card-header">
-                <h5 class="sp-card-title">
-                    <i class="bi bi-pencil-fill"></i>Formulário de Justificativa
-                </h5>
-            </div>
-            <div class="sp-card-body">
-
-                <div class="sp-alert sp-alert-warning" style="margin-bottom:1.25rem;">
-                    <i class="bi bi-info-circle-fill"></i>
-                    <div>
-                        <strong>Importante:</strong>
-                        Preencha todos os campos obrigatórios. Justificativas são enviadas para aprovação do gestor.
-                        <?php if (in_array(Role::normalize((string) ($employee['role'] ?? Role::Funcionario->value))->value, [Role::Admin->value, Role::Gestor->value, Role::RH->value], true)): ?>
-                            <br><small>Como gestor/admin, suas justificativas serão aprovadas automaticamente.</small>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <form action="<?= sp_safe_url(base_url('justifications')) ?>" method="POST"
-                      enctype="multipart/form-data" id="justificationForm">
-                    <?= csrf_field() ?>
-
-                    <!-- Data -->
-                    <div class="sp-form-group">
-                        <label for="justification_date" class="sp-label">
-                            Data <span style="color:var(--sp-danger);">*</span>
-                        </label>
-                        <input type="text"
-                               class="sp-input <?= session('errors.justification_date') ? 'is-invalid' : '' ?>"
-                               id="justification_date"
-                               name="justification_date"
-                               placeholder="Selecione a data"
-                               value="<?= sp_attr(old('justification_date', $date ?? '')) ?>"
-                               required>
-                        <?php if (session('errors.justification_date')): ?>
-                            <span class="sp-field-error"><?= esc(session('errors.justification_date')) ?></span>
-                        <?php endif; ?>
-                        <span class="sp-field-hint">
-                            <i class="bi bi-calendar-event"></i> Não é permitido justificar datas futuras
-                        </span>
-                    </div>
-
-                    <!-- Tipo -->
-                    <div class="sp-form-group">
-                        <label for="justification_type" class="sp-label">
-                            Tipo de Justificativa <span style="color:var(--sp-danger);">*</span>
-                        </label>
-                        <select class="sp-select <?= session('errors.justification_type') ? 'is-invalid' : '' ?>"
-                                id="justification_type"
-                                name="justification_type"
-                                required>
-                            <option value="">Selecione o tipo</option>
-                            <option value="falta"            <?= old('justification_type') === 'falta'            ? 'selected' : '' ?>>Falta</option>
-                            <option value="atraso"           <?= old('justification_type') === 'atraso'           ? 'selected' : '' ?>>Atraso</option>
-                            <option value="saida-antecipada" <?= old('justification_type') === 'saida-antecipada' ? 'selected' : '' ?>>Saída Antecipada</option>
-                        </select>
-                        <?php if (session('errors.justification_type')): ?>
-                            <span class="sp-field-error"><?= esc(session('errors.justification_type')) ?></span>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Categoria -->
-                    <div class="sp-form-group">
-                        <label for="category" class="sp-label">
-                            Categoria <span style="color:var(--sp-danger);">*</span>
-                        </label>
-                        <select class="sp-select <?= session('errors.category') ? 'is-invalid' : '' ?>"
-                                id="category"
-                                name="category"
-                                required>
-                            <option value="">Selecione a categoria</option>
-                            <option value="doenca"              <?= old('category') === 'doenca'              ? 'selected' : '' ?>>Doença</option>
-                            <option value="compromisso-pessoal" <?= old('category') === 'compromisso-pessoal' ? 'selected' : '' ?>>Compromisso Pessoal</option>
-                            <option value="emergencia-familiar" <?= old('category') === 'emergencia-familiar' ? 'selected' : '' ?>>Emergência Familiar</option>
-                            <option value="outro"               <?= old('category') === 'outro'               ? 'selected' : '' ?>>Outro</option>
-                        </select>
-                        <?php if (session('errors.category')): ?>
-                            <span class="sp-field-error"><?= esc(session('errors.category')) ?></span>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Motivo -->
-                    <div class="sp-form-group">
-                        <label for="reason" class="sp-label">
-                            Motivo Detalhado <span style="color:var(--sp-danger);">*</span>
-                        </label>
-                        <textarea class="sp-textarea <?= session('errors.reason') ? 'is-invalid' : '' ?>"
-                                  id="reason"
-                                  name="reason"
-                                  rows="5"
-                                  placeholder="Descreva o motivo da justificativa com detalhes (mínimo 50 caracteres)"
-                                  minlength="50"
-                                  maxlength="500"
-                                  required><?= sp_text(old('reason')) ?></textarea>
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span class="sp-field-hint">
-                                <i class="bi bi-pencil"></i> Mínimo 50 caracteres, máximo 500
-                            </span>
-                            <span class="char-counter" id="charCounter">
-                                <span id="charCount">0</span> / 500
-                            </span>
-                        </div>
-                        <div id="reasonError" style="color:var(--sp-danger);font-size:.825rem;margin-top:.2rem;min-height:1.1em;"></div>
-                        <?php if (session('errors.reason')): ?>
-                            <span class="sp-field-error"><?= esc(session('errors.reason')) ?></span>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Anexos -->
-                    <div class="sp-form-group">
-                        <label class="sp-label">
-                            Anexos <span class="sp-field-hint" style="display:inline;">(Opcional)</span>
-                        </label>
-                        <div class="file-upload-area" id="fileUploadArea">
-                            <i class="bi bi-cloud-upload"
-                               style="font-size:2.5rem;display:block;margin-bottom:.5rem;color:var(--sp-text-muted);"></i>
-                            <p style="margin-bottom:.5rem;font-weight:500;">Clique ou arraste arquivos aqui</p>
-                            <p class="sp-field-hint" style="margin:0;">
-                                Máximo 3 arquivos &bull; PDF, JPG ou PNG &bull; 5 MB cada
-                            </p>
-                            <input type="file"
-                                   id="attachments"
-                                   name="attachments[]"
-                                   multiple
-                                   accept=".pdf,.jpg,.jpeg,.png"
-                                   style="display:none;">
-                        </div>
-                        <div id="filePreviewContainer" style="margin-top:.75rem;display:flex;flex-wrap:wrap;"></div>
-                        <span class="sp-field-hint" style="margin-top:.5rem;">
-                            <i class="bi bi-info-circle"></i>
-                            Anexe documentos comprobatórios (ex: atestado médico, comprovante)
-                        </span>
-                    </div>
-
-                    <!-- Botões -->
-                    <div style="display:flex;justify-content:space-between;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap;">
-                        <a href="<?= sp_safe_url(base_url('justifications')) ?>" class="sp-btn sp-btn-outline">
-                            <i class="bi bi-x-lg"></i> Cancelar
-                        </a>
-                        <button type="submit" class="sp-btn sp-btn-primary" id="submitBtn">
-                            <i class="bi bi-send-fill"></i> Enviar Justificativa
-                        </button>
-                    </div>
-
-                </form>
-            </div>
+    <div class="sp-callout-warning mb-3">
+        <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Importante</strong>
+        <div class="mt-1">
+            Preencha todos os campos obrigatórios. Justificativas são enviadas para aprovação do gestor.
+            <?php if (in_array(Role::normalize((string) ($employee['role'] ?? Role::Funcionario->value))->value, [Role::Admin->value, Role::Gestor->value, Role::RH->value], true)): ?>
+                <br><small>Como gestor/admin, suas justificativas serão aprovadas automaticamente.</small>
+            <?php endif; ?>
         </div>
     </div>
+
+    <form action="<?= sp_safe_url(base_url('justifications')) ?>" method="POST"
+          enctype="multipart/form-data" id="justificationForm" class="sp-employee-shell">
+        <?= csrf_field() ?>
+
+        <!-- ── 1. Detalhes da ausência ──────────────────────────────────── -->
+        <div class="sp-form-card">
+            <div class="sp-form-card__head">
+                <div class="sp-form-card__icon c-blue"><i class="bi bi-calendar-event-fill"></i></div>
+                <div>
+                    <p class="sp-form-card__title">Detalhes da ausência</p>
+                    <p class="sp-form-card__sub">Informe a data, o tipo e a categoria da justificativa.</p>
+                </div>
+            </div>
+            <div class="sp-form-card__body">
+
+                <!-- Data -->
+                <div class="sp-form-group">
+                    <label for="justification_date" class="sp-label">
+                        Data <span style="color:var(--sp-danger);">*</span>
+                    </label>
+                    <input type="text"
+                           class="sp-input <?= session('errors.justification_date') ? 'is-invalid' : '' ?>"
+                           id="justification_date"
+                           name="justification_date"
+                           placeholder="Selecione a data"
+                           value="<?= sp_attr(old('justification_date', $date ?? '')) ?>"
+                           required>
+                    <?php if (session('errors.justification_date')): ?>
+                        <span class="sp-field-error"><?= esc(session('errors.justification_date')) ?></span>
+                    <?php endif; ?>
+                    <span class="sp-field-hint">
+                        <i class="bi bi-calendar-event"></i> Não é permitido justificar datas futuras
+                    </span>
+                </div>
+
+                <!-- Tipo -->
+                <div class="sp-form-group">
+                    <label for="justification_type" class="sp-label">
+                        Tipo de Justificativa <span style="color:var(--sp-danger);">*</span>
+                    </label>
+                    <select class="sp-select <?= session('errors.justification_type') ? 'is-invalid' : '' ?>"
+                            id="justification_type"
+                            name="justification_type"
+                            required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="falta"            <?= old('justification_type') === 'falta'            ? 'selected' : '' ?>>Falta</option>
+                        <option value="atraso"           <?= old('justification_type') === 'atraso'           ? 'selected' : '' ?>>Atraso</option>
+                        <option value="saida-antecipada" <?= old('justification_type') === 'saida-antecipada' ? 'selected' : '' ?>>Saída Antecipada</option>
+                    </select>
+                    <?php if (session('errors.justification_type')): ?>
+                        <span class="sp-field-error"><?= esc(session('errors.justification_type')) ?></span>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Categoria -->
+                <div class="sp-form-group mb-0">
+                    <label for="category" class="sp-label">
+                        Categoria <span style="color:var(--sp-danger);">*</span>
+                    </label>
+                    <select class="sp-select <?= session('errors.category') ? 'is-invalid' : '' ?>"
+                            id="category"
+                            name="category"
+                            required>
+                        <option value="">Selecione a categoria</option>
+                        <option value="doenca"              <?= old('category') === 'doenca'              ? 'selected' : '' ?>>Doença</option>
+                        <option value="compromisso-pessoal" <?= old('category') === 'compromisso-pessoal' ? 'selected' : '' ?>>Compromisso Pessoal</option>
+                        <option value="emergencia-familiar" <?= old('category') === 'emergencia-familiar' ? 'selected' : '' ?>>Emergência Familiar</option>
+                        <option value="outro"               <?= old('category') === 'outro'               ? 'selected' : '' ?>>Outro</option>
+                    </select>
+                    <?php if (session('errors.category')): ?>
+                        <span class="sp-field-error"><?= esc(session('errors.category')) ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── 2. Motivo e anexos ───────────────────────────────────────── -->
+        <div class="sp-form-card">
+            <div class="sp-form-card__head">
+                <div class="sp-form-card__icon c-green"><i class="bi bi-pencil-fill"></i></div>
+                <div>
+                    <p class="sp-form-card__title">Motivo e anexos</p>
+                    <p class="sp-form-card__sub">Descreva o ocorrido com detalhes e anexe comprovantes, se houver.</p>
+                </div>
+            </div>
+            <div class="sp-form-card__body">
+
+                <!-- Motivo -->
+                <div class="sp-form-group">
+                    <label for="reason" class="sp-label">
+                        Motivo Detalhado <span style="color:var(--sp-danger);">*</span>
+                    </label>
+                    <textarea class="sp-textarea <?= session('errors.reason') ? 'is-invalid' : '' ?>"
+                              id="reason"
+                              name="reason"
+                              rows="5"
+                              placeholder="Descreva o motivo da justificativa com detalhes (mínimo 50 caracteres)"
+                              minlength="50"
+                              maxlength="500"
+                              required><?= sp_text(old('reason')) ?></textarea>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span class="sp-field-hint">
+                            <i class="bi bi-pencil"></i> Mínimo 50 caracteres, máximo 500
+                        </span>
+                        <span class="char-counter" id="charCounter">
+                            <span id="charCount">0</span> / 500
+                        </span>
+                    </div>
+                    <div id="reasonError" style="color:var(--sp-danger);font-size:.825rem;margin-top:.2rem;min-height:1.1em;"></div>
+                    <?php if (session('errors.reason')): ?>
+                        <span class="sp-field-error"><?= esc(session('errors.reason')) ?></span>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Anexos -->
+                <div class="sp-form-group mb-0">
+                    <label class="sp-label">
+                        Anexos <span class="sp-field-hint" style="display:inline;">(Opcional)</span>
+                    </label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <i class="bi bi-cloud-upload"
+                           style="font-size:2.5rem;display:block;margin-bottom:.5rem;color:var(--sp-text-muted);"></i>
+                        <p style="margin-bottom:.5rem;font-weight:500;">Clique ou arraste arquivos aqui</p>
+                        <p class="sp-field-hint" style="margin:0;">
+                            Máximo 3 arquivos &bull; PDF, JPG ou PNG &bull; 5 MB cada
+                        </p>
+                        <input type="file"
+                               id="attachments"
+                               name="attachments[]"
+                               multiple
+                               accept=".pdf,.jpg,.jpeg,.png"
+                               style="display:none;">
+                    </div>
+                    <div id="filePreviewContainer" style="margin-top:.75rem;display:flex;flex-wrap:wrap;"></div>
+                    <span class="sp-field-hint" style="margin-top:.5rem;">
+                        <i class="bi bi-info-circle"></i>
+                        Anexe documentos comprobatórios (ex: atestado médico, comprovante)
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Ações ─────────────────────────────────────────────────────── -->
+        <div class="sp-form-actions">
+            <a href="<?= sp_safe_url(base_url('justifications')) ?>" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary btn-lg px-4" id="submitBtn">
+                <i class="bi bi-send-fill me-1"></i> Enviar Justificativa
+            </button>
+        </div>
+
+    </form>
 </div>
 <?= $this->endSection() ?>
 
