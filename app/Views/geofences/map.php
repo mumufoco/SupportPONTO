@@ -36,6 +36,7 @@
         'subtitle' => 'Visualize e gerencie todas as áreas geográficas cadastradas para controle de ponto.',
         'icon'     => 'bi bi-geo-alt-fill',
         'actions'  => [
+            ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left', 'url' => sp_geofences_index_url(), 'variant' => 'outline-secondary'],
             ['label' => 'Novo Limite', 'icon' => 'bi bi-plus-circle-fill', 'url' => sp_geofences_create_url()],
                     ],
     ]) ?>
