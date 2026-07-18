@@ -187,14 +187,14 @@ $exportQuery = http_build_query(array_filter([
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div class="sp-table-actions" style="justify-content:flex-end;">
+                                    <div class="table-icon-actions">
                                         <?php
                                             $dayUrl = $dateStr
                                                 ? sp_timesheet_day_url($dateStr) . (($targetEmployeeId ?? 0) > 0 ? '?employee_id=' . (int) $targetEmployeeId : '')
                                                 : '#';
                                         ?>
                                         <a href="<?= $dayUrl ?>"
-                                           class="sp-btn sp-btn-sm sp-btn-secondary" title="Ver dia">
+                                           class="icon-action" title="Ver dia">
                                             <i class="bi bi-eye-fill"></i>
                                         </a>
                                     </div>
