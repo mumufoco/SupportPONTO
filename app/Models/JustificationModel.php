@@ -201,9 +201,9 @@ class JustificationModel extends Model
             // Initialize counts
             $counts = [
                 'all' => 0,
-                'pending' => 0,
-                'approved' => 0,
-                'rejected' => 0,
+                'pendente' => 0,
+                'aprovado' => 0,
+                'rejeitado' => 0,
             ];
 
             // Sum from results
@@ -221,9 +221,9 @@ class JustificationModel extends Model
             // Fallback: sempre retorna array com 0s para evitar erros
             return [
                 'all' => 0,
-                'pending' => 0,
-                'approved' => 0,
-                'rejected' => 0,
+                'pendente' => 0,
+                'aprovado' => 0,
+                'rejeitado' => 0,
             ];
         }
     }
@@ -233,13 +233,13 @@ class JustificationModel extends Model
      */
     public function getPending(?int $employeeId = null): array
     {
-        $builder = $this->where('status', 'pending');  // ALTERAÇÃO: Padronizado para 'pending'
+        $builder = $this->where('status', 'pendente');
 
         if ($employeeId) {
             $builder->where('employee_id', $employeeId);
         }
 
-        return $builder->orderBy('date', 'DESC')->findAll();  // ALTERAÇÃO: De 'justification_date' para 'date'
+        return $builder->orderBy('justification_date', 'DESC')->findAll();
     }
 
     /**
@@ -248,9 +248,9 @@ class JustificationModel extends Model
     public function getByDateRange(int $employeeId, string $startDate, string $endDate): array
     {
         return $this->where('employee_id', $employeeId)
-            ->where('date >=', $startDate)  // ALTERAÇÃO: De 'justification_date' para 'date'
-            ->where('date <=', $endDate)    // ALTERAÇÃO: De 'justification_date' para 'date'
-            ->orderBy('date', 'DESC')       // ALTERAÇÃO: De 'justification_date' para 'date'
+            ->where('justification_date >=', $startDate)
+            ->where('justification_date <=', $endDate)
+            ->orderBy('justification_date', 'DESC')
             ->findAll();
     }
 
@@ -260,7 +260,7 @@ class JustificationModel extends Model
     public function approve(int $justificationId, int $approvedBy): bool
     {
         return $this->update($justificationId, [
-            'status'      => 'approved',  // ALTERAÇÃO: Padronizado
+            'status'      => 'aprovado',
             'approved_by' => $approvedBy,
             'approved_at' => date('Y-m-d H:i:s'),
         ]);
@@ -272,7 +272,7 @@ class JustificationModel extends Model
     public function reject(int $justificationId, int $approvedBy, string $reason): bool
     {
         return $this->update($justificationId, [
-            'status'           => 'rejected',  // ALTERAÇÃO: Padronizado
+            'status'           => 'rejeitado',
             'approved_by'      => $approvedBy,
             'approved_at'      => date('Y-m-d H:i:s'),
             'rejection_reason' => $reason,
@@ -282,14 +282,11 @@ class JustificationModel extends Model
     /**
      * Cancela (marca como rejeitada, com motivo explícito) todas as justificativas
      * pendentes de um colaborador — usado ao desligar/desativar (MED-10 na auditoria).
-     * Reaproveita o status 'rejected' em vez de um status novo para não exigir mudanças
-     * em toda a UI/relatórios que já tratam justifications.status como
-     * pending/approved/rejected.
      */
     public function cancelAllPendingForEmployee(int $employeeId, string $reason): int
     {
-        $this->where('employee_id', $employeeId)->where('status', 'pending')->set([
-            'status'           => 'rejected',
+        $this->where('employee_id', $employeeId)->where('status', 'pendente')->set([
+            'status'           => 'rejeitado',
             'rejection_reason' => $reason,
             'approved_at'      => date('Y-m-d H:i:s'),
         ])->update();
@@ -303,8 +300,8 @@ class JustificationModel extends Model
     public function hasApprovedJustification(int $employeeId, string $date): bool
     {
         return $this->where('employee_id', $employeeId)
-            ->where('date', $date)  // ALTERAÇÃO: De 'justification_date' para 'date'
-            ->where('status', 'approved')  // ALTERAÇÃO: Padronizado
+            ->where('justification_date', $date)
+            ->where('status', 'aprovado')
             ->countAllResults() > 0;
     }
 
@@ -313,6 +310,6 @@ class JustificationModel extends Model
      */
     public function getPendingCount(): int
     {
-        return $this->where('status', 'pending')->countAllResults();  // ALTERAÇÃO: Padronizado
+        return $this->where('status', 'pendente')->countAllResults();
     }
 }

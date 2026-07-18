@@ -73,11 +73,16 @@
                     <?php foreach (($justifications ?? []) as $item): ?>
                         <?php
 $summary = $summary ?? [];
-                            $status = (string) ($item->status ?? 'pending');
+                            $status = (string) ($item->status ?? 'pendente');
                             $badgeClass = match ($status) {
-                                'approved' => 'bg-success',
-                                'rejected' => 'bg-danger',
+                                'aprovado' => 'bg-success',
+                                'rejeitado' => 'bg-danger',
                                 default => 'bg-warning text-dark',
+                            };
+                            $statusLabel = match ($status) {
+                                'aprovado' => 'Aprovada',
+                                'rejeitado' => 'Rejeitada',
+                                default => 'Pendente',
                             };
                         ?>
                         <tr>
@@ -85,7 +90,7 @@ $summary = $summary ?? [];
                             <td><?= esc((string) ($item->employee_name ?? '')) ?></td>
                             <td><?= esc((string) ($item->employee_department ?? '')) ?></td>
                             <td><?= esc((string) (($item->reason ?? $item->description ?? 'Sem descrição'))) ?></td>
-                            <td><span class="badge <?= $badgeClass ?>"><?= esc(ucfirst($status)) ?></span></td>
+                            <td><span class="badge <?= $badgeClass ?>"><?= esc($statusLabel) ?></span></td>
                             <td><?= esc(format_datetime_br((string) ($item->created_at ?? ''), false)) ?></td>
                         </tr>
                     <?php endforeach; ?>

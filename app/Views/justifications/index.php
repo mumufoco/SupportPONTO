@@ -134,11 +134,11 @@ if (($navigationContext['enabled'] ?? false) === true) {
                     <tbody>
                         <?php foreach (($justifications ?? []) as $item): ?>
                             <?php
-                            $status = strtolower((string) ($item['status'] ?? 'pending'));
+                            $status = strtolower((string) ($item['status'] ?? 'pendente'));
                             $statusMap = [
-                                'pending'  => ['badge' => 'sp-badge-warning', 'label' => 'Pendente'],
-                                'approved' => ['badge' => 'sp-badge-success', 'label' => 'Aprovada'],
-                                'rejected' => ['badge' => 'sp-badge-danger',  'label' => 'Rejeitada'],
+                                'pendente'  => ['badge' => 'sp-badge-warning', 'label' => 'Pendente'],
+                                'aprovado'  => ['badge' => 'sp-badge-success', 'label' => 'Aprovada'],
+                                'rejeitado' => ['badge' => 'sp-badge-danger',  'label' => 'Rejeitada'],
                             ];
                             $statusData = $statusMap[$status] ?? ['badge' => 'sp-badge-neutral', 'label' => ucfirst($status)];
                             ?>

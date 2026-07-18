@@ -99,8 +99,11 @@ class ReportViewService
             ->where('justification_date >=', $startDate)
             ->where('justification_date <=', $endDate);
 
+        // Filtro da UI usa valores em inglês (pending/approved/rejected), mas o
+        // banco armazena em português (pendente/aprovado/rejeitado).
+        $statusMap = ['pending' => 'pendente', 'approved' => 'aprovado', 'rejected' => 'rejeitado'];
         if ($status !== 'all') {
-            $query->where('status', $status);
+            $query->where('status', $statusMap[$status] ?? $status);
         }
 
         if (($actor['role'] ?? '') === 'gestor') {
@@ -141,9 +144,9 @@ class ReportViewService
             'justifications' => $justifications,
             'summary' => [
                 'total' => count($justifications),
-                'pending' => count(array_filter($justifications, static fn($j): bool => $j->status === 'pending')),
-                'approved' => count(array_filter($justifications, static fn($j): bool => $j->status === 'approved')),
-                'rejected' => count(array_filter($justifications, static fn($j): bool => $j->status === 'rejected')),
+                'pending' => count(array_filter($justifications, static fn($j): bool => $j->status === 'pendente')),
+                'approved' => count(array_filter($justifications, static fn($j): bool => $j->status === 'aprovado')),
+                'rejected' => count(array_filter($justifications, static fn($j): bool => $j->status === 'rejeitado')),
             ],
             'departments' => $this->getDepartments(),
         ];

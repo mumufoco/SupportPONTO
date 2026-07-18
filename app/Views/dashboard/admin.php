@@ -555,15 +555,8 @@ foreach ($primaryStats as $_st):
                 </div>
 
                 <!-- Pending list preview -->
+                <?php $pendingJustificationRows = $dashboardPresentation['pendingJustifications']['rows'] ?? []; ?>
                 <?php if ($_justSummary['pendente'] > 0 && $pendingJustificationRows !== []): ?>
-                    <?php
-                    // BAIXO-05 (auditoria) / correção: este preview usava uma query bruta
-                    // interpolada direto na view (referenciando $_db, que não existe neste
-                    // escopo -- disparava um erro fatal sempre que houvesse justificativa
-                    // pendente). Reaproveita $pendingJustificationRows, já calculado por
-                    // DashboardAdminService/AdminDashboardViewPresenter com a mesma
-                    // finalidade (nome do funcionário, tipo, data), sem SQL na view.
-                    ?>
                     <ul class="list-unstyled mb-3" style="font-size:.82rem">
                         <?php foreach (array_slice($pendingJustificationRows, 0, 4) as $_j): ?>
                             <li class="d-flex align-items-center gap-2 py-1 border-bottom" style="border-color:var(--sp-border)!important">

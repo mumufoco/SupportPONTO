@@ -76,7 +76,7 @@ class DashboardManagerService
             'pending_justifications' => $this->justificationModel
                 ->join('employees', 'employees.id = justifications.employee_id')
                 ->where('employees.department', $department)
-                ->where('justifications.status', 'pending')
+                ->where('justifications.status', 'pendente')
                 ->countAllResults(),
             'team_hours_month' => $this->departmentHoursMonth($department),
         ];

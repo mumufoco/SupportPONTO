@@ -38,11 +38,11 @@ class DashboardAdminService
         'intervalo_fim'    => 'Fim intervalo',
     ];
 
-    /** Mapa entre o status canônico (JustificationModel) e a chave em português exibida no dashboard. */
+    /** Mapa entre o status real gravado em justifications.status e a chave exibida no dashboard. */
     private const JUSTIFICATION_STATUS_KEYS = [
-        'pending'  => 'pendente',
-        'approved' => 'aprovada',
-        'rejected' => 'reprovada',
+        'pendente'  => 'pendente',
+        'aprovado'  => 'aprovada',
+        'rejeitado' => 'reprovada',
     ];
 
     private readonly EmployeeModel $employeeModel;
@@ -185,8 +185,8 @@ class DashboardAdminService
                 ->where('punch_time >=', $monthStart)
                 ->where('punch_time <', $nextMonthStart)
                 ->countAllResults(),
-            'pending_justifications' => $this->justificationModel->where('status', 'pending')->countAllResults(),
-            'active_warnings' => $this->warningModel->where('status', 'pending')->countAllResults(),
+            'pending_justifications' => $this->justificationModel->where('status', 'pendente')->countAllResults(),
+            'active_warnings' => $this->warningModel->where('status', 'pendente-assinatura')->countAllResults(),
             'employees_present' => $this->employeesPresent(),
         ];
     }
@@ -202,7 +202,7 @@ class DashboardAdminService
             'justifications' => $this->justificationModel
                 ->select('justifications.*, employees.name as employee_name')
                 ->join('employees', 'employees.id = justifications.employee_id')
-                ->where('justifications.status', 'pending')
+                ->where('justifications.status', 'pendente')
                 ->orderBy('justifications.created_at', 'DESC')
                 ->limit(5)
                 ->find(),

@@ -94,9 +94,9 @@ class EmployeeApiService
             ],
             'justifications' => [
                 'total' => count($justifications),
-                'pending' => count(array_filter($justifications, fn($j) => $j->status === 'pending')),
-                'approved' => count(array_filter($justifications, fn($j) => $j->status === 'approved')),
-                'rejected' => count(array_filter($justifications, fn($j) => $j->status === 'rejected')),
+                'pending' => count(array_filter($justifications, fn($j) => $j->status === 'pendente')),
+                'approved' => count(array_filter($justifications, fn($j) => $j->status === 'aprovado')),
+                'rejected' => count(array_filter($justifications, fn($j) => $j->status === 'rejeitado')),
             ],
         ];
     }

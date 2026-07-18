@@ -81,7 +81,7 @@ class DashboardEmployeeService
             'hours_balance' => (float) $this->userValue($currentUser, 'hours_balance', 0),
             'pending_justifications' => $this->justificationModel
                 ->where('employee_id', $employeeId)
-                ->where('status', 'pending')
+                ->where('status', 'pendente')
                 ->countAllResults(),
             'late_count_month' => $this->lateCountMonth($employeeId),
         ];
