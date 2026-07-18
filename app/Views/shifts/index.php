@@ -160,14 +160,10 @@
                                                     <i class="bi bi-copy"></i>
                                                 </button>
                                             </form>
-                                            <form method="POST" action="<?= sp_shifts_delete_url($shift->id) ?>" class="d-inline"
-                                                onsubmit="return confirm('Excluir este turno?')">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <button type="submit" class="icon-action icon-action-danger" title="Excluir">
-                                                    <i class="bi bi-trash-fill"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="icon-action icon-action-danger" title="Excluir"
+                                                    onclick="confirmDeleteShift(<?= (int) $shift->id ?>, '<?= esc(addslashes($shift->name ?? ''), 'js') ?>')">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -180,4 +176,48 @@
     </div>
 
 </div>
+
+<!-- Modal confirmação de exclusão -->
+<div class="modal fade" id="deleteShiftModal" tabindex="-1" aria-labelledby="deleteShiftModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-danger" id="deleteShiftModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o turno <strong id="deleteShiftName"></strong>?</p>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Esta ação não pode ser desfeita.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteShiftForm" method="post" class="d-inline">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill me-2"></i>Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+const SHIFT_DELETE_URL_TEMPLATE = '<?= sp_shifts_delete_url(999999999) ?>';
+
+function confirmDeleteShift(id, name) {
+    document.getElementById('deleteShiftName').textContent = name;
+    document.getElementById('deleteShiftForm').action = SHIFT_DELETE_URL_TEMPLATE.replace('999999999', id);
+    new bootstrap.Modal(document.getElementById('deleteShiftModal')).show();
+}
+</script>
 <?= $this->endSection() ?>
