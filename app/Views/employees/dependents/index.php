@@ -103,7 +103,8 @@
                                         <?php if (!empty($dep->has_disability)): ?><span class="badge bg-warning text-dark" title="Possui deficiência">PCD</span><?php endif; ?>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge <?= $isActive ? 'bg-success' : 'bg-secondary' ?>">
+                                        <span class="sp-badge <?= $isActive ? 'sp-badge-success' : 'sp-badge-danger' ?>">
+                                            <i class="bi <?= $isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill' ?>"></i>
                                             <?= $isActive ? 'Ativo' : 'Inativo' ?>
                                         </span>
                                     </td>
