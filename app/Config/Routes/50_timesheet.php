@@ -81,5 +81,6 @@ $routes->group('manager/pending-punches', ['filter' => ['auth', 'manager']], sta
     $routes->get('/', 'Timesheet\PendingPunchController::managerPanel', ['as' => 'manager.pending.punches']);
     $routes->post('(:num)/approve', 'Timesheet\PendingPunchController::approve/$1', ['as' => 'manager.pending.approve']);
     $routes->post('(:num)/reject',  'Timesheet\PendingPunchController::reject/$1',  ['as' => 'manager.pending.reject']);
+    $routes->post('violations/(:num)/resolve', 'Timesheet\PendingPunchController::resolveViolation/$1', ['as' => 'manager.pending.violations.resolve']);
 });
 

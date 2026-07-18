@@ -69,3 +69,4 @@ Events::on('pre_system', static function (): void {
  */
 Events::on('timePunchRegistered', [new \App\Listeners\AuditTimePunchListener(), 'handle']);
 Events::on('timePunchRegistered', [new \App\Listeners\TimesheetConsolidationListener(), 'handle']);
+Events::on('timePunchRegistered', [new \App\Listeners\PunchComplianceListener(), 'handle']);

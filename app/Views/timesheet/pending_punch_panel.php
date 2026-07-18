@@ -75,6 +75,66 @@
     </div>
 
     <?php endif; ?>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+        <h4 class="mb-0"><i class="bi bi-shield-exclamation me-2"></i>Irregularidades de conformidade (CLT)</h4>
+        <span class="badge bg-info text-dark fs-6"><?= count($violationList ?? []) ?> pendente(s)</span>
+    </div>
+
+    <?php if (empty($violationList)): ?>
+    <div class="alert alert-success d-flex align-items-center gap-2">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>Nenhuma irregularidade trabalhista detectada no momento.</span>
+    </div>
+    <?php else: ?>
+
+    <div class="row g-3">
+        <?php foreach ($violationList as $v): ?>
+        <?php
+            $violationType = \App\Enums\PunchViolationType::tryFrom((string) $v->violation_type);
+            $details = $violationModel->decodeDetails($v);
+        ?>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100 border-info border-start border-3">
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong><?= esc($v->employee_name ?? 'Colaborador') ?></strong>
+                            <span class="badge bg-secondary ms-2"><?= esc($v->department ?? '') ?></span>
+                        </div>
+                        <small class="text-muted"><?= esc(date('d/m/Y', strtotime($v->reference_date))) ?></small>
+                    </div>
+
+                    <p class="mb-1 small">
+                        <span class="fw-semibold"><?= esc($violationType?->label() ?? ucfirst(str_replace('_', ' ', $v->violation_type))) ?></span>
+                        <span class="badge bg-light text-dark border ms-1"><?= esc($violationType?->legalReference() ?? '') ?></span>
+                    </p>
+
+                    <?php if (!empty($details)): ?>
+                    <p class="mb-2 small text-muted border-start border-3 ps-2">
+                        <?php foreach ($details as $key => $value): ?>
+                            <?= esc(ucfirst(str_replace('_', ' ', (string) $key))) ?>: <strong><?= esc((string) $value) ?></strong><br>
+                        <?php endforeach; ?>
+                    </p>
+                    <?php endif; ?>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="button"
+                                class="btn btn-sm btn-info flex-grow-1 js-resolve-violation-btn"
+                                data-id="<?= (int) $v->id ?>"
+                                data-name="<?= esc($v->employee_name ?? '') ?>">
+                            <i class="bi bi-check2-square me-1"></i>Marcar como tratada
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+
+    <?php endif; ?>
 </div>
 
 <!-- Modal: Aprovar -->
@@ -127,6 +187,29 @@
     </div>
 </div>
 
+<!-- Modal: Marcar irregularidade como tratada -->
+<div class="modal fade" id="resolveViolationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:440px">
+        <div class="modal-content">
+            <div class="modal-header bg-info border-0">
+                <h5 class="modal-title"><i class="bi bi-check2-square me-2"></i>Marcar como tratada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Providência tomada para a irregularidade de <strong id="resolveViolationEmployeeName"></strong>: <span class="text-danger">*</span></p>
+                <textarea id="resolveViolationNotes" class="form-control form-control-sm" rows="3" maxlength="500" required
+                          placeholder="Ex: ajustado no banco de horas, conversado com o colaborador..."></textarea>
+            </div>
+            <div class="modal-footer border-0 gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-info btn-sm" id="btnConfirmResolveViolation">
+                    <i class="bi bi-check2-square me-1"></i>Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script <?= csp_script_nonce_attr() ?> src="<?= sp_safe_url(asset_url('js/csrf-fetch.js')) ?>"></script>
 <script <?= csp_script_nonce_attr() ?>>
 (() => {
@@ -140,8 +223,10 @@
     // Instancia modais de forma lazy para evitar erro se Bootstrap ainda não carregou
     const getModalApprove = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('approveModal'));
     const getModalReject  = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('rejectModal'));
+    const getModalResolveViolation = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('resolveViolationModal'));
     const feedbackEl      = document.getElementById('panelFeedback');
     let   pendingId       = null;
+    let   violationId     = null;
 
     function showFeedback(msg, type) {
         const icons = {success:'check-circle-fill', danger:'x-circle-fill', warning:'exclamation-triangle-fill'};
@@ -234,6 +319,40 @@
                 showFeedback(xEsc(data.message ?? 'Não foi possível rejeitar.'), 'danger');
             }
         } catch { getModalReject().hide(); showFeedback('Falha de comunicação. Tente novamente.', 'danger'); }
+        this.disabled = false; this.innerHTML = orig;
+    });
+
+    // ── Marcar irregularidade como tratada ──────────────────────────────────────
+    document.querySelectorAll('.js-resolve-violation-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            violationId = btn.dataset.id;
+            document.getElementById('resolveViolationEmployeeName').textContent = btn.dataset.name;
+            document.getElementById('resolveViolationNotes').value = '';
+            document.getElementById('resolveViolationNotes').classList.remove('is-invalid');
+            getModalResolveViolation().show();
+        });
+    });
+
+    document.getElementById('btnConfirmResolveViolation')?.addEventListener('click', async function () {
+        if (!violationId) return;
+        const notes = document.getElementById('resolveViolationNotes').value.trim();
+        if (!notes) {
+            document.getElementById('resolveViolationNotes').classList.add('is-invalid');
+            return;
+        }
+        const orig = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...';
+        try {
+            const data = await doAction(baseUrl + 'violations/' + violationId + '/resolve', notes);
+            getModalResolveViolation().hide();
+            if (data.success) {
+                showFeedback(xEsc(data.message ?? 'Irregularidade marcada como tratada.'), 'success');
+                setTimeout(() => location.reload(), 1400);
+            } else {
+                showFeedback(xEsc(data.message ?? 'Não foi possível atualizar.'), 'danger');
+            }
+        } catch { getModalResolveViolation().hide(); showFeedback('Falha de comunicação. Tente novamente.', 'danger'); }
         this.disabled = false; this.innerHTML = orig;
     });
 

@@ -66,6 +66,8 @@ class SystemSettingsController extends BaseSettingsController
             'early_tolerance_minutes' => 'integer',
             'overtime_tolerance_minutes' => 'integer',
             'business_days' => 'json',
+            'min_interjornada_hours' => 'string',
+            'max_daily_overtime_hours' => 'string',
         ], 'Configurações de jornada salvas', 'workday');
     }
 

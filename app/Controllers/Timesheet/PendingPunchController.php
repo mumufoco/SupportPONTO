@@ -3,6 +3,7 @@
 namespace App\Controllers\Timesheet;
 
 use App\Controllers\BaseController;
+use App\Models\PunchRuleViolationModel;
 use App\Services\Timesheet\PendingPunchAttemptStore;
 use App\Services\Timesheet\PendingPunchService;
 use App\Services\Timesheet\PunchMethodReadinessService;
@@ -19,6 +20,7 @@ class PendingPunchController extends BaseController
     protected PendingPunchService         $pendingPunchService;
     protected PunchMethodReadinessService $readinessService;
     protected PendingPunchAttemptStore    $attemptStore;
+    protected PunchRuleViolationModel     $violationModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
@@ -26,6 +28,7 @@ class PendingPunchController extends BaseController
         $this->pendingPunchService = new PendingPunchService();
         $this->readinessService    = new PunchMethodReadinessService();
         $this->attemptStore        = new PendingPunchAttemptStore();
+        $this->violationModel      = new PunchRuleViolationModel();
         helper(['datetime', 'format']);
     }
 
@@ -133,11 +136,49 @@ class PendingPunchController extends BaseController
             : null; // admin/RH vê todos
 
         $pending = $this->pendingPunchService->listPendingForManager($department);
+        $violations = $this->violationModel->listPendingForManager($department);
 
         return view('timesheet/pending_punch_panel', [
             'pendingList' => $pending,
+            'violationList' => $violations,
+            'violationModel' => $this->violationModel,
             'title'       => 'Aprovação de Registros Pendentes',
         ]);
+    }
+
+    /**
+     * Marca uma irregularidade de conformidade (CLT) como tratada.
+     * POST /manager/pending-punches/violations/{id}/resolve
+     */
+    public function resolveViolation(int $id): ResponseInterface
+    {
+        $this->requireAuth();
+
+        if (!$this->can('justifications.approve') && !$this->can('justifications.approve.team')) {
+            return $this->approvalResponse(false, 'Acesso negado.', null, 403);
+        }
+
+        $notes = trim((string) ($this->request->getPost('review_notes') ?: ''));
+        if ($notes === '') {
+            return $this->approvalResponse(false, 'Descreva a providência tomada antes de marcar como tratada.', null, 400);
+        }
+
+        $violation = $this->violationModel->find($id);
+        if (!$violation) {
+            return $this->approvalResponse(false, 'Irregularidade não encontrada.', null, 404);
+        }
+
+        $actorRole = $this->authorizationService->getRole($this->currentUser);
+        if ($actorRole === 'gestor') {
+            $employee = model(\App\Models\EmployeeModel::class)->find((int) $violation->employee_id);
+            if (!$employee || (string) $employee->department !== (string) ($this->currentUser->department ?? '')) {
+                return $this->approvalResponse(false, 'Você só pode tratar irregularidades do seu departamento.', null, 403);
+            }
+        }
+
+        $ok = $this->violationModel->markResolved($id, (int) $this->currentUser->id, $notes);
+
+        return $this->approvalResponse($ok, $ok ? 'Irregularidade marcada como tratada.' : 'Não foi possível atualizar a irregularidade.', null, $ok ? 200 : 400);
     }
 
     /**

@@ -136,6 +136,22 @@
                                                value="<?= esc($settings['workday']['overtime_tolerance_minutes'] ?? '10') ?>">
                                     </div>
                                 </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Descanso mínimo entre jornadas (h)</label>
+                                        <input type="number" class="form-control" name="min_interjornada_hours"
+                                               min="0" max="24" step="0.5"
+                                               value="<?= esc($settings['workday']['min_interjornada_hours'] ?? '11') ?>">
+                                        <div class="form-text">Art. 66 CLT — mínimo legal: 11h.</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Limite diário de hora extra (h)</label>
+                                        <input type="number" class="form-control" name="max_daily_overtime_hours"
+                                               min="0" max="10" step="0.5"
+                                               value="<?= esc($settings['workday']['max_daily_overtime_hours'] ?? '2') ?>">
+                                        <div class="form-text">Art. 58/59 CLT — limite padrão: 2h sem acordo de compensação.</div>
+                                    </div>
+                                </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold d-block">Dias úteis</label>
                                     <div class="d-flex gap-3 flex-wrap">
