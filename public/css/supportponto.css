@@ -335,7 +335,7 @@ a:hover { color: var(--sp-primary); text-decoration: underline; }
   --sp-sidebar-bg: #11161a;
   --sp-sidebar-elevate: #171d23;
   --sp-sidebar-text: #aab4bd;
-  --sp-sidebar-accent: #3fc079;
+  --sp-sidebar-accent: var(--sp-primary);
   --sp-sidebar-transition: 160ms ease;
 }
 

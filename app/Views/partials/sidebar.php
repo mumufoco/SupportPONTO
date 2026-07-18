@@ -34,7 +34,7 @@ $menuStructure = [
             'match' => ['timesheet', 'punch', 'justifications', 'manager/pending-punches'],
             'submenu' => [
                 ['label' => 'Bater ponto',        'icon' => 'clock',        'url' => 'timesheet/punch'],
-                ['label' => 'Espelho de Ponto',    'icon' => 'grid',        'url' => 'timesheet', 'exclude' => ['timesheet/punch', 'timesheet/history', 'timesheet/balance', 'justifications', 'manager/pending-punches']],
+                ['label' => 'Espelho de Ponto',    'icon' => 'bar-chart',   'url' => 'timesheet', 'exclude' => ['timesheet/punch', 'timesheet/history', 'timesheet/balance', 'justifications', 'manager/pending-punches']],
                 ['label' => 'Histórico de ponto', 'icon' => 'list',         'url' => 'timesheet/history'],
                 ['label' => 'Banco de horas',     'icon' => 'activity',     'url' => 'timesheet/balance'],
                 ['label' => 'Justificativas',     'icon' => 'file-text',    'url' => 'justifications'],
@@ -54,7 +54,7 @@ $menuStructure = [
                 'settings/positions',
             ],
             'submenu' => [
-                ['label' => 'Listagem',       'icon' => 'list',         'url' => 'employees'],
+                ['label' => 'Listagem',       'icon' => 'list',         'url' => 'employees', 'exclude' => ['employees/pending']],
                 ['label' => 'Pendências',      'icon' => 'alert-circle', 'url' => 'employees/pending'],
                 ['label' => 'Unidades',        'icon' => 'building',     'url' => route_to('settings.work-units')],
                 ['label' => 'Departamentos',   'icon' => 'layers',       'url' => route_to('settings.departments')],
@@ -96,7 +96,7 @@ $menuStructure = [
             'url' => 'audit',
             'match' => ['audit', 'compliance', 'lgpd', 'settings/consent-terms', 'biometric/consent-terms', 'admin/facial-fraud-alerts'],
             'submenu' => [
-                ['label' => 'Auditoria', 'icon' => 'search', 'url' => 'audit'],
+                ['label' => 'Auditoria', 'icon' => 'search', 'url' => 'audit', 'exclude' => ['audit/compliance']],
                 ['label' => 'LGPD', 'icon' => 'shield-check', 'url' => 'lgpd/consents'],
                 ['label' => 'Diagnóstico MTE', 'icon' => 'activity', 'url' => 'audit/compliance'],
                 ['label' => 'Termos e Aceites', 'icon' => 'clipboard-check', 'url' => 'biometric/consent-terms/list'],
@@ -205,7 +205,7 @@ $menuStructure = [
             'url' => 'audit',
             'match' => ['audit', 'compliance', 'lgpd', 'settings/consent-terms', 'biometric/consent-terms', 'admin/facial-fraud-alerts'],
             'submenu' => [
-                ['label' => 'Auditoria', 'icon' => 'search', 'url' => 'audit'],
+                ['label' => 'Auditoria', 'icon' => 'search', 'url' => 'audit', 'exclude' => ['audit/compliance']],
                 ['label' => 'LGPD', 'icon' => 'shield-check', 'url' => 'lgpd/consents'],
                 ['label' => 'Diagnóstico MTE', 'icon' => 'activity', 'url' => 'audit/compliance'],
                 ['label' => 'Termos e Aceites', 'icon' => 'clipboard-check', 'url' => 'biometric/consent-terms/list'],
@@ -215,7 +215,7 @@ $menuStructure = [
     ],
     'auditor' => [
         ['type' => 'section', 'label' => 'Auditoria'],
-        ['label' => 'Trilha de auditoria', 'icon' => 'search', 'url' => 'compliance/audit-advanced', 'match' => ['compliance/audit-advanced', 'compliance']],
+        ['label' => 'Trilha de auditoria', 'icon' => 'search', 'url' => 'compliance/audit-advanced', 'match' => ['compliance/audit-advanced']],
         [
             'label' => 'Compliance',
             'icon' => 'clipboard-check',
@@ -235,12 +235,12 @@ $menuStructure = [
         ['type' => 'section', 'label' => 'Meu espaço'],
         ['label' => 'Dashboard', 'icon' => 'dashboard', 'url' => 'dashboard/employee', 'match' => ['dashboard', 'dashboard/employee']],
         ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch', 'match' => ['timesheet/punch']],
-        ['label' => 'Espelho de Ponto', 'icon' => 'grid', 'url' => 'timesheet', 'match' => ['timesheet'], 'exclude' => ['timesheet/punch', 'timesheet/history', 'timesheet/balance', 'timesheet/employee']],
+        ['label' => 'Espelho de Ponto', 'icon' => 'bar-chart', 'url' => 'timesheet', 'match' => ['timesheet'], 'exclude' => ['timesheet/punch', 'timesheet/history', 'timesheet/balance', 'timesheet/employee']],
         ['label' => 'Histórico de ponto', 'icon' => 'list', 'url' => 'timesheet/history', 'match' => ['timesheet/history', 'timesheet/employee']],
         ['label' => 'Banco de horas', 'icon' => 'activity', 'url' => 'timesheet/balance', 'match' => ['timesheet/balance']],
         ['label' => 'Minhas escalas', 'icon' => 'calendar', 'url' => 'my-schedules', 'match' => ['my-schedules']],
         ['label' => 'Justificativas', 'icon' => 'file-text', 'url' => 'justifications', 'match' => ['justifications']],
-        ['label' => 'Meu perfil', 'icon' => 'user', 'url' => 'profile', 'match' => ['profile']],
+        ['label' => 'Meu perfil', 'icon' => 'user', 'url' => 'profile', 'match' => ['profile'], 'exclude' => ['profile/security']],
         ['label' => 'Segurança da conta', 'icon' => 'lock', 'url' => 'profile/security', 'match' => ['profile/security']],
         ['label' => 'Privacidade (LGPD)', 'icon' => 'shield-check', 'url' => 'lgpd/consents', 'match' => ['lgpd']],
     ],
