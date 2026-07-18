@@ -71,39 +71,34 @@
                                             <i class="bi bi-shield-fill me-1"></i>Ativo
                                         </span>
                                     <?php else: ?>
-                                        <div class="d-flex align-items-center justify-content-center gap-2">
-                                            <span id="badge-<?= $empId ?>"
-                                                  class="sp-badge <?= $isActive ? 'sp-badge-success' : 'sp-badge-danger' ?>">
-                                                <i class="bi <?= $isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill' ?>"></i>
-                                                <?= $isActive ? 'Ativo' : 'Inativo' ?>
-                                            </span>
-                                            <div class="form-check form-switch mb-0" style="min-height:0">
-                                                <input class="form-check-input emp-toggle"
-                                                       type="checkbox"
-                                                       role="switch"
-                                                       id="toggle-<?= $empId ?>"
-                                                       data-id="<?= $empId ?>"
-                                                       data-name="<?= esc(addslashes($emp->name ?? '')) ?>"
-                                                       <?= $isActive ? 'checked' : '' ?>
-                                                       title="<?= $isActive ? 'Clique para desativar' : 'Clique para ativar' ?>"
-                                                       style="cursor:pointer;width:2.5rem;height:1.25rem;">
-                                            </div>
-                                        </div>
+                                        <span id="badge-<?= $empId ?>"
+                                              class="sp-badge <?= $isActive ? 'sp-badge-success' : 'sp-badge-danger' ?>">
+                                            <i class="bi <?= $isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill' ?>"></i>
+                                            <?= $isActive ? 'Ativo' : 'Inativo' ?>
+                                        </span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div class="sp-table-actions" style="justify-content:flex-end;">
+                                    <div class="table-icon-actions">
                                         <a href="<?= site_url('employees/' . $empId) ?>"
-                                           class="sp-btn sp-btn-sm sp-btn-secondary"
-                                           title="Visualizar">
+                                           class="icon-action" title="Visualizar">
                                             <i class="bi bi-eye-fill"></i>
                                         </a>
                                         <?php if ($isActive): ?>
                                             <a href="<?= site_url('employees/' . $empId . '/edit') ?>"
-                                               class="sp-btn sp-btn-sm sp-btn-outline"
-                                               title="Editar">
+                                               class="icon-action icon-action-edit" title="Editar">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </a>
+                                        <?php endif; ?>
+                                        <?php if (!$isAdmin): ?>
+                                            <button type="button"
+                                                    class="icon-action emp-toggle-btn <?= $isActive ? 'icon-action-warning' : 'icon-action-success' ?>"
+                                                    id="toggle-<?= $empId ?>"
+                                                    data-id="<?= $empId ?>"
+                                                    data-name="<?= esc(addslashes($emp->name ?? '')) ?>"
+                                                    title="<?= $isActive ? 'Desativar' : 'Ativar' ?>">
+                                                <i class="bi <?= $isActive ? 'bi-toggle-on' : 'bi-toggle-off' ?>"></i>
+                                            </button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -411,8 +406,8 @@ function empToast(msg, ok) {
 }
 
 // ─── Toggle ativar / desativar colaborador ────────────────────────────────────
-document.addEventListener('change', async function(e) {
-    const toggle = e.target.closest('.emp-toggle');
+document.addEventListener('click', async function(e) {
+    const toggle = e.target.closest('.emp-toggle-btn');
     if (!toggle) return;
 
     const id     = parseInt(toggle.dataset.id, 10);
@@ -459,9 +454,10 @@ document.addEventListener('change', async function(e) {
                 badge.innerHTML = '<i class="bi ' + (isNowActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill') + '"></i> ' + (isNowActive ? 'Ativo' : 'Inativo');
             }
 
-            // Atualizar toggle state para refletir estado real do servidor
-            toggle.checked = isNowActive;
-            toggle.title = isNowActive ? 'Clique para desativar' : 'Clique para ativar';
+            // Atualizar ícone do toggle para refletir estado real do servidor
+            toggle.className = 'icon-action emp-toggle-btn ' + (isNowActive ? 'icon-action-warning' : 'icon-action-success');
+            toggle.title = isNowActive ? 'Desativar' : 'Ativar';
+            toggle.querySelector('i').className = 'bi ' + (isNowActive ? 'bi-toggle-on' : 'bi-toggle-off');
 
             // Atualizar row opacity
             const row = document.getElementById('emp-row-' + id);
@@ -478,13 +474,10 @@ document.addEventListener('change', async function(e) {
             empToast(json.message || (isNowActive ? name + ' ativado.' : name + ' desativado.'), true);
 
         } else {
-            // Reverter toggle para o estado anterior
-            toggle.checked = !toggle.checked;
             empToast(json.message || 'Não foi possível alterar o status.', false);
         }
 
     } catch (err) {
-        toggle.checked = !toggle.checked;
         empToast('Erro: ' + (err.message || 'Falha de comunicação com o servidor.'), false);
     } finally {
         toggle.disabled = false;
