@@ -104,6 +104,35 @@ class TimePunchModel extends Model
     protected $allowCallbacks = true;
     protected $beforeInsert   = ['syncLocationAliases', 'generateNSR', 'generateHash'];
     protected $beforeUpdate   = ['syncLocationAliases'];
+    protected $afterFind      = ['castBooleans'];
+
+    /**
+     * O driver Postgres retorna colunas boolean como string 't'/'f', que
+     * filter_var($v, FILTER_VALIDATE_BOOLEAN) não reconhece, fazendo
+     * registros válidos/dentro-da-geofence aparecerem como inválidos/fora.
+     * Mesmo padrão de fix já usado em RoleModel/GeofenceModel::castBooleans().
+     */
+    protected function castBooleans(array $data): array
+    {
+        if (empty($data['data'])) {
+            return $data;
+        }
+
+        $rows = $data['singleton'] ? [$data['data']] : $data['data'];
+
+        foreach ($rows as $row) {
+            if (is_object($row)) {
+                if (property_exists($row, 'is_valid')) {
+                    $row->is_valid = in_array($row->is_valid, [true, 't', '1', 1, 'true'], true);
+                }
+                if (property_exists($row, 'within_geofence')) {
+                    $row->within_geofence = in_array($row->within_geofence, [true, 't', '1', 1, 'true'], true);
+                }
+            }
+        }
+
+        return $data;
+    }
 
     protected function syncLocationAliases(array $data): array
     {

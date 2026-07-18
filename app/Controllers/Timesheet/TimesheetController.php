@@ -282,7 +282,7 @@ class TimesheetController extends BaseController
         $punches = [];
         $invalidCount = 0;
         foreach ($rawPunches as $p) {
-            $isValid = filter_var($p->is_valid ?? true, FILTER_VALIDATE_BOOLEAN);
+            $isValid = $p->is_valid ?? true;
             if (! $isValid) {
                 $invalidCount++;
             }
@@ -300,7 +300,7 @@ class TimesheetController extends BaseController
                 'status'         => $p->status ?? 'approved',
                 'rejection_reason' => $p->rejection_reason ?? '',
                 'notes'          => $p->notes ?? '',
-                'within_geofence'=> $p->within_geofence ?? null,
+                'within_geofence'=> (bool) ($p->within_geofence ?? false),
                 'geofence_name'  => $p->geofence_name ?? null,
                 'lat'            => $lat !== null ? (float) $lat : null,
                 'lng'            => $lng !== null ? (float) $lng : null,

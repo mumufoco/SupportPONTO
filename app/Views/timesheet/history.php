@@ -172,7 +172,7 @@ $exportQuery = http_build_query(array_filter([
                                 default            => ucfirst(str_replace('_', ' ', $punch->punch_type ?? '-')),
                             };
                             $methodLabel = ucfirst($punch->method ?? '-');
-                            $isValid     = filter_var($punch->is_valid ?? true, FILTER_VALIDATE_BOOLEAN);
+                            $isValid     = $punch->is_valid ?? true;
                             ?>
                             <tr>
                                 <td><?= esc($dateFmt) ?></td>

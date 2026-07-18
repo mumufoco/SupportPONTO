@@ -187,7 +187,7 @@ class TimesheetHistoryExportService
             $punchTime = (string) ($punch->punch_time ?? '');
             $dateFmt = $punchTime ? date('d/m/Y', strtotime($punchTime)) : '—';
             $timeFmt = $punchTime ? date('H:i', strtotime($punchTime)) : '—';
-            $isValid = filter_var($punch->is_valid ?? true, FILTER_VALIDATE_BOOLEAN);
+            $isValid = $punch->is_valid ?? true;
             $rowCls = $i % 2 === 0 ? '' : 'stripe';
 
             $h .= '<tr class="' . $rowCls . '">';
@@ -283,7 +283,7 @@ class TimesheetHistoryExportService
         $dataRow = $headerRow + 1;
         foreach ($punches as $punch) {
             $punchTime = (string) ($punch->punch_time ?? '');
-            $isValid = filter_var($punch->is_valid ?? true, FILTER_VALIDATE_BOOLEAN);
+            $isValid = $punch->is_valid ?? true;
 
             $sheet->fromArray([
                 $punchTime ? date('d/m/Y', strtotime($punchTime)) : '—',
@@ -328,7 +328,7 @@ class TimesheetHistoryExportService
 
         foreach ($punches as $punch) {
             $punchTime = (string) ($punch->punch_time ?? '');
-            $isValid = filter_var($punch->is_valid ?? true, FILTER_VALIDATE_BOOLEAN);
+            $isValid = $punch->is_valid ?? true;
 
             $lines[] = $this->csvLine([
                 $punchTime ? date('d/m/Y', strtotime($punchTime)) : '—',
