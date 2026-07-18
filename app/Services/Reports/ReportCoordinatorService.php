@@ -66,9 +66,9 @@ class ReportCoordinatorService
         return $this->viewService->getAttendanceViewData($employee, $startDate, $endDate, $department);
     }
 
-    public function lateArrivalsViewData(array $employee, string $startDate, string $endDate, ?string $department): array
+    public function lateArrivalsViewData(array $employee, string $startDate, string $endDate, ?string $department, ?string $employeeId = null): array
     {
-        return $this->viewService->getLateArrivalsViewData($employee, $startDate, $endDate, $department);
+        return $this->viewService->getLateArrivalsViewData($employee, $startDate, $endDate, $department, $employeeId);
     }
 
     public function justificationsViewData(array $employee, string $startDate, string $endDate, ?string $department, ?string $employeeId = null): array

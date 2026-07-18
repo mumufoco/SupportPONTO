@@ -207,7 +207,33 @@ class ReportController extends BaseController
 
     public function lateArrivals()
     {
-        return $this->monthRangeView('late_arrivals', 'lateArrivalsData', fn (array $employee, string $start, string $end, ?string $department): array => $this->reportCoordinatorService->lateArrivalsViewData($employee, $start, $end, $department));
+        $employee = $this->requireOperationalReportsViewAccessOrRedirect();
+        if ($employee === null) {
+            return redirect()->to(route_to('dashboard'))->with('error', 'Acesso negado.');
+        }
+
+        $month = $this->reportControllerActionService->monthOrCurrent($this->request->getGet('month'));
+        $selectedDepartment = $this->request->getGet('department');
+        $selectedEmployee = $this->request->getGet('employee_id');
+        $range = $this->reportControllerActionService->monthRange($month);
+
+        $viewData = $this->reportCoordinatorService->lateArrivalsViewData(
+            $employee,
+            $range['start_date'],
+            $range['end_date'],
+            $selectedDepartment,
+            $selectedEmployee
+        );
+
+        return view('reports/late_arrivals', [
+            'employee' => $employee,
+            'lateArrivalsData' => $viewData['lateArrivalsData'],
+            'month' => $month,
+            'selectedDepartment' => $selectedDepartment,
+            'selectedEmployee' => $selectedEmployee,
+            'departments' => $viewData['departments'],
+            'employees' => $this->reportCoordinatorService->getEmployeesForReports($employee),
+        ]);
     }
 
     public function justifications()

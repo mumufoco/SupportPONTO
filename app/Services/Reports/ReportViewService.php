@@ -83,9 +83,9 @@ class ReportViewService
         ];
     }
 
-    public function getLateArrivalsViewData(array $actor, string $startDate, string $endDate, ?string $department): array
+    public function getLateArrivalsViewData(array $actor, string $startDate, string $endDate, ?string $department, ?string $employeeId = null): array
     {
-        $employees = $this->getEmployeeScope($actor, $department, null);
+        $employees = $this->getEmployeeScope($actor, $department, $employeeId);
         $lateArrivalsData = [];
 
         foreach ($employees as $emp) {
