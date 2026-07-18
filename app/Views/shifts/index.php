@@ -141,7 +141,8 @@
                                         <span class="sp-badge <?= $ec > 0 ? 'sp-badge-primary' : 'sp-badge-neutral' ?>"><?= $ec ?></span>
                                     </td>
                                     <td>
-                                        <span class="sp-status <?= !empty($shift->active) ? 'sp-status-active' : 'sp-status-inactive' ?>">
+                                        <span class="sp-badge <?= !empty($shift->active) ? 'sp-badge-success' : 'sp-badge-danger' ?>">
+                                            <i class="bi <?= !empty($shift->active) ? 'bi-check-circle-fill' : 'bi-x-circle-fill' ?>"></i>
                                             <?= !empty($shift->active) ? 'Ativo' : 'Inativo' ?>
                                         </span>
                                     </td>
