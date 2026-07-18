@@ -67,6 +67,13 @@
         <div class="alert alert-info">Nenhum espelho encontrado para o colaborador e mês informados.</div>
     <?php endif; ?>
 
+    <?php
+        $exportQuery = [
+            'month' => $month,
+            'employee_id' => $selectedEmployee,
+            'department' => $selectedDepartment,
+        ];
+    ?>
     <?php foreach (($timesheets ?? []) as $sheet): ?>
         <?php $employeeData = $sheet['employee']; $summary = $sheet['summary']; ?>
         <div class="sp-data-card mb-4">
@@ -75,7 +82,19 @@
                     <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-person-badge-fill"></i></span>
                     <?= esc((string) ($employeeData->name ?? 'Colaborador')) ?>
                 </h2>
-                <div class="text-muted small"><?= esc((string) ($employeeData->department ?? 'Sem departamento')) ?></div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-muted small"><?= esc((string) ($employeeData->department ?? 'Sem departamento')) ?></div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i>Exportar
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="<?= route_to('reports.timesheet.export.pdf') . '?' . http_build_query($exportQuery) ?>"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF</a></li>
+                            <li><a class="dropdown-item" href="<?= route_to('reports.timesheet.export.excel') . '?' . http_build_query($exportQuery) ?>"><i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel</a></li>
+                            <li><a class="dropdown-item" href="<?= route_to('reports.timesheet.export.csv') . '?' . http_build_query($exportQuery) ?>"><i class="bi bi-file-earmark-text me-2 text-secondary"></i>CSV</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class="sp-data-card__body">
                 <div class="sp-grid-4 mb-3">

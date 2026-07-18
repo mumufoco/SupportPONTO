@@ -67,6 +67,77 @@ class ReportController extends BaseController
         ]);
     }
 
+    public function timesheetExportPdf(): ResponseInterface
+    {
+        return $this->timesheetExport('pdf');
+    }
+
+    public function timesheetExportExcel(): ResponseInterface
+    {
+        return $this->timesheetExport('excel');
+    }
+
+    public function timesheetExportCsv(): ResponseInterface
+    {
+        return $this->timesheetExport('csv');
+    }
+
+    /**
+     * Exporta o espelho consolidado (reports/timesheet.php) com os mesmos
+     * filtros da tela (month/employee_id/department), reaproveitando a
+     * mesma fonte de dados (generateMonthlyTimesheet) para que o arquivo
+     * bata exatamente com o que está na tela.
+     */
+    protected function timesheetExport(string $format): ResponseInterface
+    {
+        $employee = $this->requireOperationalReportsViewAccessOrRedirect();
+        if ($employee === null) {
+            return redirect()->to(route_to('dashboard'))->with('error', 'Acesso negado.');
+        }
+
+        $month = $this->reportControllerActionService->monthOrCurrent($this->request->getGet('month'));
+        $selectedEmployee = $this->request->getGet('employee_id');
+        $selectedDepartment = $this->request->getGet('department');
+
+        if (empty($selectedEmployee)) {
+            return redirect()->to(route_to('reports.timesheet') . '?month=' . urlencode($month))
+                ->with('error', 'Selecione um colaborador para exportar o espelho de ponto.');
+        }
+
+        $viewData = $this->reportCoordinatorService->timesheetViewData($employee, $month, $selectedDepartment, $selectedEmployee);
+        $sheet = $viewData['timesheets'][0] ?? null;
+        if ($sheet === null) {
+            return redirect()->back()->with('error', 'Nenhum espelho encontrado para exportar.');
+        }
+
+        $exporter = new \App\Services\Reports\MonthlyTimesheetExportService();
+        $result = match ($format) {
+            'pdf' => $exporter->buildPdf($sheet['employee'], $sheet['daily_records'], $sheet['summary'], $month),
+            'excel' => $exporter->buildExcel($sheet['employee'], $sheet['daily_records'], $sheet['summary'], $month),
+            default => $exporter->buildCsv($sheet['daily_records']),
+        };
+
+        $mimeType = match ($format) {
+            'pdf' => 'application/pdf',
+            'csv' => 'text/csv; charset=UTF-8',
+            default => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
+
+        supportponto_log_event('info', 'reports', 'timesheet_exported', [
+            'user_id' => $this->session?->get('user_id'),
+            'target_employee_id' => (int) $selectedEmployee,
+            'month' => $month,
+            'format' => $format,
+        ]);
+
+        return $this->response
+            ->setHeader('Content-Type', $mimeType)
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"')
+            ->setHeader('Content-Length', (string) strlen($result['content']))
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody($result['content']);
+    }
+
     public function attendance()
     {
         return $this->monthRangeView('attendance', 'attendanceData', fn (array $employee, string $start, string $end, ?string $department): array => $this->reportCoordinatorService->attendanceViewData($employee, $start, $end, $department));
