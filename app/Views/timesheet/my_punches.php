@@ -82,9 +82,10 @@
                                     </td>
                                     <td class="text-end">
                                         <?php if (!empty($punch->id)): ?>
-                                            <a href="<?= sp_timesheet_receipt_url((int) $punch->id) ?>" class="btn btn-sm btn-outline-primary">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    onclick="spDownloadReceipt(this, '<?= esc(sp_timesheet_receipt_url((int) $punch->id), 'js') ?>')">
                                                 <i class="fas fa-file-download me-1"></i>Comprovante
-                                            </a>
+                                            </button>
                                         <?php else: ?>
                                             <span class="text-muted small">Indisponível</span>
                                         <?php endif; ?>
@@ -103,4 +104,28 @@
         <?php endif; ?>
     </div>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+async function spDownloadReceipt(btn, url) {
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    try {
+        const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const json = await resp.json();
+        if (json.success !== false && json.data && json.data.download_url) {
+            window.location.href = json.data.download_url;
+        } else {
+            alert(json.message || 'Erro ao gerar comprovante.');
+        }
+    } catch (err) {
+        alert('Erro de comunicação ao gerar comprovante.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+</script>
 <?= $this->endSection() ?>

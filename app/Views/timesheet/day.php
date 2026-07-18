@@ -88,9 +88,10 @@
 
                                                 <?php if (! empty($punch['id'])): ?>
                                                     <div class="table-icon-actions ms-auto">
-                                                        <a href="<?= sp_timesheet_receipt_url((int) $punch['id']) ?>" class="icon-action icon-action-edit" title="Baixar comprovante">
+                                                        <button type="button" class="icon-action icon-action-edit" title="Baixar comprovante"
+                                                                onclick="spDownloadReceipt(this, '<?= esc(sp_timesheet_receipt_url((int) $punch['id']), 'js') ?>')">
                                                             <i class="bi bi-file-earmark-arrow-down-fill"></i>
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 <?php endif; ?>
                                             </div>
@@ -132,4 +133,28 @@
         </div>
     </div>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script <?= csp_script_nonce_attr() ?>>
+async function spDownloadReceipt(btn, url) {
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+    try {
+        const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const json = await resp.json();
+        if (json.success !== false && json.data && json.data.download_url) {
+            window.location.href = json.data.download_url;
+        } else {
+            alert(json.message || 'Erro ao gerar comprovante.');
+        }
+    } catch (err) {
+        alert('Erro de comunicação ao gerar comprovante.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+</script>
 <?= $this->endSection() ?>
