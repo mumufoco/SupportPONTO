@@ -272,15 +272,30 @@ class TimesheetController extends BaseController
             ->findAll();
 
         $punches = [];
+        $invalidCount = 0;
         foreach ($rawPunches as $p) {
+            $isValid = filter_var($p->is_valid ?? true, FILTER_VALIDATE_BOOLEAN);
+            if (! $isValid) {
+                $invalidCount++;
+            }
+
+            $lat = $p->location_lat ?? $p->latitude ?? null;
+            $lng = $p->location_lng ?? $p->longitude ?? null;
+
             $punches[] = [
-                'id'     => $p->id,
-                'type'   => $p->punch_type,
-                'time'   => date('H:i', strtotime((string) $p->punch_time)),
-                'method' => $p->method ?? '-',
-                'is_valid' => filter_var($p->is_valid ?? true, FILTER_VALIDATE_BOOLEAN),
-                'status'   => $p->status ?? 'approved',
-                'notes'    => $p->notes ?? '',
+                'id'             => $p->id,
+                'type'           => $p->punch_type,
+                'time'           => date('H:i', strtotime((string) $p->punch_time)),
+                'method'         => $p->method ?? '-',
+                'nsr'            => $p->nsr ?? null,
+                'is_valid'       => $isValid,
+                'status'         => $p->status ?? 'approved',
+                'rejection_reason' => $p->rejection_reason ?? '',
+                'notes'          => $p->notes ?? '',
+                'within_geofence'=> $p->within_geofence ?? null,
+                'geofence_name'  => $p->geofence_name ?? null,
+                'lat'            => $lat !== null ? (float) $lat : null,
+                'lng'            => $lng !== null ? (float) $lng : null,
             ];
         }
 
@@ -311,9 +326,12 @@ class TimesheetController extends BaseController
             'date_formatted' => date('d/m/Y', strtotime($date)) . ' (' . ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][date('w', strtotime($date))] . ')',
             'punches'        => $punches,
             'day_summary'    => [
-                'hours_worked' => $hoursWorked,
-                'status'       => $status,
-                'total_punches'=> count($rawPunches),
+                'hours_worked'    => $hoursWorked,
+                'status'          => $status,
+                'total_punches'   => count($rawPunches),
+                'inconsistencies' => $invalidCount,
+                'first_punch'     => $rawPunches ? date('H:i', strtotime((string) $rawPunches[0]->punch_time)) : '-',
+                'last_punch'      => $rawPunches ? date('H:i', strtotime((string) $rawPunches[count($rawPunches) - 1]->punch_time)) : '-',
             ],
         ]);
     }
