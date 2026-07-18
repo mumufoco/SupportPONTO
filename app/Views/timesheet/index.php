@@ -22,10 +22,9 @@
         'subtitle' => 'Consulte o período desejado, acompanhe indicadores mensais e exporte dados rapidamente.',
         'icon' => 'bi bi-calendar-range-fill',
         'actions' => [
-            ['label' => 'Exportar Excel', 'icon' => 'bi bi-file-earmark-excel-fill', 'url' => base_url('timesheet/history/export/excel?' . $exportQuery), 'class' => 'sp-page-chip--primary'],
             ['label' => 'Exportar PDF',   'icon' => 'bi bi-file-earmark-pdf-fill',   'url' => base_url('timesheet/history/export/pdf?' . $exportQuery),   'class' => 'sp-page-chip--primary'],
+            ['label' => 'Exportar Excel', 'icon' => 'bi bi-file-earmark-excel-fill', 'url' => base_url('timesheet/history/export/excel?' . $exportQuery), 'class' => 'sp-page-chip--primary'],
             ['label' => 'Exportar CSV',   'icon' => 'bi bi-filetype-csv',            'url' => base_url('timesheet/history/export/csv?' . $exportQuery),   'class' => 'sp-page-chip--primary'],
-            ['label' => 'Histórico', 'icon' => 'bi bi-clock-history', 'url' => sp_timesheet_history_url()],
         ],
     ]) ?>
 
