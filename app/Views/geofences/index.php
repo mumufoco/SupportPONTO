@@ -117,27 +117,30 @@
                                     </td>
                                     <td><span class="badge bg-info"><?= (int) $geofence->radius_meters ?> metros</span></td>
                                     <td>
-                                        <form action="<?= sp_geofences_toggle_url((int) ($geofence->id ?? 0)) ?>" method="POST" class="d-inline">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-sm <?= $geofence->active ? 'btn-success' : 'btn-secondary' ?>">
-                                                <i class="fas fa-<?= $geofence->active ? 'check' : 'times' ?> me-1"></i>
-                                                <?= $geofence->active ? 'Ativa' : 'Inativa' ?>
-                                            </button>
-                                        </form>
+                                        <span class="badge <?= $geofence->active ? 'bg-success' : 'bg-secondary' ?>">
+                                            <i class="fas fa-<?= $geofence->active ? 'check' : 'times' ?> me-1"></i>
+                                            <?= $geofence->active ? 'Ativa' : 'Inativa' ?>
+                                        </span>
                                     </td>
                                     <td><small class="text-muted"><?= date('d/m/Y H:i', strtotime($geofence->created_at)) ?></small></td>
                                     <td class="text-end">
-                                        <div class="btn-group" role="group">
-                                            <a href="<?= sp_geofences_show_url((int) ($geofence->id ?? 0)) ?>" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                        <div class="table-icon-actions">
+                                            <a href="<?= sp_geofences_show_url((int) ($geofence->id ?? 0)) ?>" class="icon-action" title="Visualizar">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="<?= sp_geofences_edit_url((int) ($geofence->id ?? 0)) ?>" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <a href="<?= sp_geofences_edit_url((int) ($geofence->id ?? 0)) ?>" class="icon-action icon-action-edit" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            <form action="<?= sp_geofences_toggle_url((int) ($geofence->id ?? 0)) ?>" method="POST" class="d-inline">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-action <?= $geofence->active ? 'icon-action-warning' : 'icon-action-success' ?>" title="<?= $geofence->active ? 'Desativar' : 'Ativar' ?>">
+                                                    <i class="fas fa-<?= $geofence->active ? 'toggle-on' : 'toggle-off' ?>"></i>
+                                                </button>
+                                            </form>
                                             <form action="<?= sp_geofences_delete_url((int) ($geofence->id ?? 0)) ?>" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este limite virtual?');">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="_method" value="DELETE">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                <button type="submit" class="icon-action icon-action-danger" title="Excluir">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
