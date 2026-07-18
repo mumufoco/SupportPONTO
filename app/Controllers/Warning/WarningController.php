@@ -365,6 +365,46 @@ class WarningController extends BaseController
         return $this->response->download($data['filepath'], null)->setFileName('advertencia_' . $id . '.pdf');
     }
 
+    /**
+     * Evidências ficam em WRITEPATH/uploads (fora do webroot público, por design -
+     * ver SafeUploadService) e nunca devem ser servidas via URL publica direta.
+     * Resolve e transmite o arquivo pelo indice dentro de evidence_files, com o
+     * mesmo controle de acesso usado para o PDF da advertencia.
+     */
+    public function downloadEvidence($id = null, $index = null)
+    {
+        $employee = $this->requireAuthenticatedEmployee();
+        if ($employee instanceof ResponseInterface) {
+            return $employee;
+        }
+
+        $warning = $this->warningModel->find((int) $id);
+        if (! $warning) {
+            return $this->warningNotFoundRedirect();
+        }
+
+        if (! $this->accessService->canViewWarning($employee, $warning)) {
+            return $this->denyAccess();
+        }
+
+        $files = is_array($warning->evidence_files ?? null) ? $warning->evidence_files : [];
+        $storedPath = $files[(int) $index] ?? null;
+        if (! $storedPath) {
+            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Evidência não encontrada.');
+        }
+
+        helper('file_upload');
+        $uploadSecurity = new \App\Services\Upload\SafeUploadService();
+        $absolute = $uploadSecurity->safeDownloadPath(
+            WRITEPATH . str_replace('/', DIRECTORY_SEPARATOR, ltrim((string) $storedPath, '/\\'))
+        );
+        if ($absolute === null) {
+            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Arquivo de evidência não encontrado.');
+        }
+
+        return $this->response->download($absolute, null)->setFileName(basename($absolute));
+    }
+
     public function delete($id = null)
     {
         $employee = $this->requireAuthenticatedEmployee();

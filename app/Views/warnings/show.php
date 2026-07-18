@@ -1,160 +1,136 @@
 <?= $this->extend('layouts/main') ?>
 
-<?= $this->section('title') ?>Advertencia #<?= esc($warning->id ?? '') ?><?= $this->endSection() ?>
+<?= $this->section('title') ?>Advertência #<?= esc($warning->id ?? '') ?><?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="container-fluid sp-module-stack">
     <?= view('components/page_header', [
-        'title'    => 'Detalhes da advertencia #' . esc((string) ($warning->id ?? '')),
-        'subtitle' => 'Consulte dados da ocorrencia, status de assinatura, evidencias e historico relacionado.',
+        'title'    => 'Detalhes da advertência #' . esc((string) ($warning->id ?? '')),
+        'subtitle' => 'Consulte dados da ocorrência, status de assinatura, evidências e histórico relacionado.',
         'icon'     => 'bi bi-exclamation-triangle-fill',
         'actions'  => [
             ['label' => 'Voltar para lista', 'icon' => 'bi bi-arrow-left-circle', 'url' => sp_warning_index_url()],
-            ['label' => 'Nova advertencia',  'icon' => 'bi bi-plus-circle',       'url' => sp_warning_create_url()],
         ],
     ]) ?>
 
-    <div class="sp-warning-show-grid"
-         style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start;">
+    <div class="row g-3">
+        <div class="col-lg-8 d-flex flex-column gap-3">
 
-        <!-- Coluna principal -->
-        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <?php
+                $typeLabels = ['verbal' => 'Verbal', 'escrita' => 'Escrita', 'suspensao' => 'Suspensão'];
+                $typeBadges = ['verbal' => 'sp-badge-warning', 'escrita' => 'sp-badge-danger', 'suspensao' => 'sp-badge-neutral'];
+                $wType = $warning->warning_type ?? '';
 
-            <!-- Resumo da advertencia -->
-            <div class="sp-card">
-                <div class="sp-card-header">
-                    <h5 class="sp-card-title">
-                        <i class="bi bi-file-earmark-text-fill"></i>Resumo da advertencia
-                    </h5>
+                $statusLabels = ['pendente-assinatura' => 'Pendente', 'assinado' => 'Assinado', 'recusado' => 'Recusado'];
+                $statusBadges = ['pendente-assinatura' => 'sp-badge-warning', 'assinado' => 'sp-badge-success', 'recusado' => 'sp-badge-danger'];
+                $wStatus = $warning->status ?? '';
+            ?>
+
+            <div class="sp-data-card">
+                <div class="sp-data-card__header">
+                    <h2 class="sp-data-card__title">
+                        <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(220,53,69,.12);color:#dc3545;"><i class="bi bi-file-earmark-text-fill"></i></span>
+                        Resumo da advertência
+                    </h2>
                 </div>
-                <div class="sp-card-body">
-                    <div class="sp-info-list">
-                        <div class="sp-info-item">
-                            <span class="sp-info-label">Funcionario</span>
-                            <span class="sp-info-value"><?= esc($warningEmployee->name ?? '-') ?></span>
+                <div class="sp-data-card__body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small">Funcionário</div>
+                            <div class="fw-semibold"><?= esc($warningEmployee->name ?? '—') ?></div>
                         </div>
-                        <div class="sp-info-item">
-                            <span class="sp-info-label">Tipo</span>
-                            <span class="sp-info-value">
-                                <?php
-                                $typeLabels = ['verbal' => 'Verbal', 'escrita' => 'Escrita', 'suspensao' => 'Suspensao'];
-                                $typeBadges = ['verbal' => 'sp-badge-warning', 'escrita' => 'sp-badge-danger', 'suspensao' => 'sp-badge-neutral'];
-                                $wType = $warning->warning_type ?? '';
-                                ?>
-                                <span class="sp-badge <?= esc($typeBadges[$wType] ?? 'sp-badge-neutral') ?>">
-                                    <?= esc($typeLabels[$wType] ?? ucfirst($wType) ?: '-') ?>
-                                </span>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Tipo</div>
+                            <span class="sp-badge <?= esc($typeBadges[$wType] ?? 'sp-badge-neutral') ?>">
+                                <?= esc($typeLabels[$wType] ?? (ucfirst($wType) ?: '—')) ?>
                             </span>
                         </div>
-                        <div class="sp-info-item">
-                            <span class="sp-info-label">Data da ocorrencia</span>
-                            <span class="sp-info-value">
-                                <?= !empty($warning->occurrence_date) ? date('d/m/Y', strtotime($warning->occurrence_date)) : '-' ?>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Status</div>
+                            <span class="sp-badge <?= esc($statusBadges[$wStatus] ?? 'sp-badge-neutral') ?>">
+                                <?= esc($statusLabels[$wStatus] ?? (ucfirst($wStatus) ?: '—')) ?>
                             </span>
                         </div>
-                        <div class="sp-info-item">
-                            <span class="sp-info-label">Status</span>
-                            <span class="sp-info-value">
-                                <?php
-                                $statusBadges = [
-                                    'pendente-assinatura' => ['class' => 'sp-badge-warning', 'label' => 'Pendente'],
-                                    'assinado'            => ['class' => 'sp-badge-success', 'label' => 'Assinado'],
-                                    'recusado'            => ['class' => 'sp-badge-danger',  'label' => 'Recusado'],
-                                ];
-                                $wStatus = $warning->status ?? '';
-                                $sData   = $statusBadges[$wStatus] ?? ['class' => 'sp-badge-neutral', 'label' => ucfirst($wStatus) ?: '-'];
-                                ?>
-                                <span class="sp-badge <?= esc($sData['class']) ?>"><?= esc($sData['label']) ?></span>
-                            </span>
+                        <div class="col-md-6">
+                            <div class="text-muted small">Data da ocorrência</div>
+                            <div class="fw-semibold"><?= !empty($warning->occurrence_date) ? esc(format_date_br((string) $warning->occurrence_date)) : '—' ?></div>
                         </div>
-                        <div class="sp-info-item">
-                            <span class="sp-info-label">Motivo</span>
-                            <span class="sp-info-value" style="white-space:pre-line;">
-                                <?= esc($warning->reason ?? '-') ?>
-                            </span>
+                        <div class="col-12">
+                            <div class="text-muted small">Motivo</div>
+                            <div style="white-space:pre-line;"><?= esc($warning->reason ?? '—') ?></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Alerta de assinatura pendente -->
-            <?php if (($warning->status ?? '') === 'pendente-assinatura'): ?>
-            <div class="sp-card" style="border-left:4px solid var(--sp-warning);">
-                <div class="sp-card-body" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <?php if ($wStatus === 'pendente-assinatura'): ?>
+                <div class="alert alert-warning d-flex align-items-center justify-content-between gap-3 flex-wrap mb-0">
                     <div>
-                        <div style="font-weight:600;color:var(--sp-text-primary);">
-                            <i class="bi bi-pen-fill me-1 text-warning"></i>
-                            Aguardando assinatura de <strong><?= esc($warningEmployee->name ?? 'colaborador') ?></strong>
-                        </div>
-                        <div style="font-size:.8rem;color:var(--sp-text-muted);margin-top:.25rem;">
-                            O colaborador precisa acessar o sistema para assinar a advertencia.
-                        </div>
+                        <div class="fw-semibold"><i class="bi bi-pen-fill me-1"></i>Aguardando assinatura de <?= esc($warningEmployee->name ?? 'colaborador') ?></div>
+                        <div class="small">O colaborador precisa acessar o sistema para assinar a advertência.</div>
                     </div>
-                    <div style="display:flex;gap:.5rem;flex-shrink:0;">
-                        <a href="<?= site_url(route_to('warnings.sign.form', $warning->id ?? 0)) ?>"
-                           class="sp-btn sp-btn-sm sp-btn-outline"
-                           target="_blank">
-                            <i class="bi bi-box-arrow-up-right"></i> Abrir formulario
+                    <div class="d-flex gap-2 flex-shrink-0">
+                        <a href="<?= site_url(route_to('warnings.sign.form', $warning->id ?? 0)) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir formulário
                         </a>
-                        <button type="button"
-                                class="sp-btn sp-btn-sm sp-btn-outline"
-                                id="btn-copy-sign-link"
-                                onclick="copySignLink(this)"
-                                data-url="<?= esc(site_url(route_to('warnings.sign.form', $warning->id ?? 0))) ?>">
-                            <i class="bi bi-clipboard"></i> Copiar link
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-copy-sign-link" data-url="<?= esc(site_url(route_to('warnings.sign.form', $warning->id ?? 0))) ?>">
+                            <i class="bi bi-clipboard me-1"></i>Copiar link
                         </button>
                     </div>
                 </div>
-            </div>
+
+                <?php if (!empty($canAddWitness) && in_array($employee['role'] ?? '', ['admin', 'gestor', 'rh'])): ?>
+                    <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 flex-wrap mb-0">
+                        <div>
+                            <div class="fw-semibold"><i class="bi bi-person-plus-fill me-1"></i>Mais de 48 horas sem assinatura</div>
+                            <div class="small">É possível formalizar a ocorrência com uma testemunha.</div>
+                        </div>
+                        <a href="<?= sp_warning_witness_form_url((int) $warning->id) ?>" class="btn btn-sm btn-primary flex-shrink-0">
+                            <i class="bi bi-person-plus me-1"></i>Adicionar testemunha
+                        </a>
+                    </div>
+                <?php endif; ?>
+            <?php elseif ($wStatus === 'recusado'): ?>
+                <div class="alert alert-danger mb-0">
+                    <div class="fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Assinatura recusada pelo colaborador</div>
+                    <div class="small">O colaborador recusou assinar a advertência. Documente o incidente e, se necessário, acione o RH para procedimento alternativo.</div>
+                </div>
             <?php endif; ?>
 
-            <!-- Alerta de recusa -->
-            <?php if (($warning->status ?? '') === 'recusado'): ?>
-            <div class="sp-card" style="border-left:4px solid var(--sp-danger);">
-                <div class="sp-card-body">
-                    <div style="font-weight:600;color:var(--sp-danger);">
-                        <i class="bi bi-x-circle-fill me-1"></i>
-                        Assinatura recusada pelo colaborador
-                    </div>
-                    <div style="font-size:.85rem;color:var(--sp-text-muted);margin-top:.35rem;">
-                        O colaborador recusou assinar a advertencia. Documente o incidente e, se necessario, acione o RH para procedimento alternativo.
-                    </div>
+            <div class="sp-data-card">
+                <div class="sp-data-card__header">
+                    <h2 class="sp-data-card__title">
+                        <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-paperclip"></i></span>
+                        Evidências
+                    </h2>
                 </div>
-            </div>
-            <?php endif; ?>
-
-            <!-- Evidencias -->
-            <div class="sp-card">
-                <div class="sp-card-header">
-                    <h5 class="sp-card-title">
-                        <i class="bi bi-paperclip"></i>Evidencias
-                    </h5>
-                </div>
-                <div class="sp-card-body">
+                <div class="sp-data-card__body">
                     <?php if (empty($attachments ?? [])): ?>
                         <div class="sp-empty">
                             <div class="sp-empty-icon"><i class="bi bi-file-earmark-x"></i></div>
-                            <p class="sp-empty-title">Nenhuma evidencia anexada</p>
+                            <p class="sp-empty-title">Nenhuma evidência anexada</p>
                         </div>
                     <?php else: ?>
-                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;">
+                        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
                             <?php foreach (($attachments ?? []) as $attachment): ?>
-                                <a href="<?= sp_safe_url($attachment['url'] ?? '#') ?>" target="_blank"
-                                   style="display:flex;flex-direction:column;align-items:center;padding:.75rem;border:1px solid var(--sp-border);border-radius:var(--sp-radius-sm);text-decoration:none;color:var(--sp-text-primary);transition:background .2s;"
-                                   onmouseover="this.style.background='var(--sp-gray-100)'"
-                                   onmouseout="this.style.background=''">
-                                    <?php if (($attachment['type'] ?? '') === 'image'): ?>
-                                        <img src="<?= sp_safe_url($attachment['url'] ?? '#') ?>"
-                                             alt="<?= sp_attr($attachment['name'] ?? 'Anexo') ?>"
-                                             style="width:100%;height:80px;object-fit:cover;border-radius:var(--sp-radius-sm);margin-bottom:.5rem;">
-                                    <?php else: ?>
-                                        <i class="bi bi-file-earmark-pdf-fill"
-                                           style="font-size:2.5rem;color:var(--sp-danger);margin-bottom:.5rem;"></i>
-                                    <?php endif; ?>
-                                    <strong style="font-size:.8rem;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">
-                                        <?= esc($attachment['name'] ?? 'Anexo') ?>
-                                    </strong>
-                                </a>
+                                <div class="col">
+                                    <a href="<?= sp_safe_url($attachment['url'] ?? '#') ?>" target="_blank" class="warning-evidence-tile">
+                                        <?php if (($attachment['type'] ?? '') === 'image'): ?>
+                                            <img src="<?= sp_safe_url($attachment['url'] ?? '#') ?>" alt="<?= sp_attr($attachment['name'] ?? 'Anexo') ?>" class="warning-evidence-tile__thumb">
+                                        <?php else: ?>
+                                            <?php
+                                                $ext = $attachment['ext'] ?? '';
+                                                $icon = match (true) {
+                                                    $ext === 'pdf' => 'bi-file-earmark-pdf-fill text-danger',
+                                                    in_array($ext, ['doc', 'docx'], true) => 'bi-file-earmark-word-fill text-primary',
+                                                    default => 'bi-file-earmark-fill text-secondary',
+                                                };
+                                            ?>
+                                            <i class="bi <?= esc($icon) ?> warning-evidence-tile__icon"></i>
+                                        <?php endif; ?>
+                                        <strong class="warning-evidence-tile__name"><?= esc($attachment['name'] ?? 'Anexo') ?></strong>
+                                    </a>
+                                </div>
                             <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
@@ -162,78 +138,67 @@
             </div>
         </div>
 
-        <!-- Coluna lateral: andamento -->
-        <div>
-            <div class="sp-card">
-                <div class="sp-card-header">
-                    <h5 class="sp-card-title">
-                        <i class="bi bi-clock-history"></i>Andamento
-                    </h5>
+        <div class="col-lg-4">
+            <div class="sp-data-card">
+                <div class="sp-data-card__header">
+                    <h2 class="sp-data-card__title">
+                        <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-clock-history"></i></span>
+                        Andamento
+                    </h2>
                 </div>
-                <div class="sp-card-body">
-                    <div style="display:flex;flex-direction:column;gap:0;position:relative;">
-                        <div style="position:absolute;left:10px;top:8px;bottom:8px;width:2px;background:var(--sp-border);z-index:0;"></div>
-
-                        <div style="display:flex;gap:.75rem;align-items:flex-start;position:relative;z-index:1;padding-bottom:1.25rem;">
-                            <div style="width:20px;height:20px;border-radius:50%;background:var(--sp-primary-dark);border:2px solid var(--sp-primary-dark);flex-shrink:0;margin-top:2px;"></div>
+                <div class="sp-data-card__body">
+                    <div class="sp-warning-timeline">
+                        <div class="sp-warning-timeline__item">
+                            <div class="sp-warning-timeline__dot" style="background:var(--sp-primary-dark);border-color:var(--sp-primary-dark);"></div>
                             <div>
-                                <strong style="font-size:.875rem;color:var(--sp-text-primary);">Advertencia emitida</strong>
-                                <div style="font-size:.8rem;color:var(--sp-text-muted);margin-top:.125rem;">
-                                    <?= esc($warning->created_at ?? '-') ?>
-                                </div>
+                                <strong class="d-block small">Advertência emitida</strong>
+                                <span class="text-muted small"><?= esc(format_datetime_br((string) ($warning->created_at ?? ''), false)) ?></span>
                             </div>
                         </div>
 
                         <?php if (!empty($warning->employee_signed_at ?? null)): ?>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start;position:relative;z-index:1;padding-bottom:1.25rem;">
-                            <div style="width:20px;height:20px;border-radius:50%;background:var(--sp-success);border:2px solid var(--sp-success);flex-shrink:0;margin-top:2px;"></div>
+                        <div class="sp-warning-timeline__item">
+                            <div class="sp-warning-timeline__dot" style="background:var(--sp-success);border-color:var(--sp-success);"></div>
                             <div>
-                                <strong style="font-size:.875rem;color:var(--sp-text-primary);">Assinado por <?= esc($warningEmployee->name ?? 'colaborador') ?></strong>
-                                <div style="font-size:.8rem;color:var(--sp-text-muted);margin-top:.125rem;">
-                                    <?= esc($warning->employee_signed_at) ?>
-                                </div>
+                                <strong class="d-block small">Assinado por <?= esc($warningEmployee->name ?? 'colaborador') ?></strong>
+                                <span class="text-muted small"><?= esc(format_datetime_br((string) $warning->employee_signed_at, false)) ?></span>
                             </div>
                         </div>
                         <?php endif; ?>
 
                         <?php if (!empty($warning->witness_signed_at ?? null)): ?>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start;position:relative;z-index:1;">
-                            <div style="width:20px;height:20px;border-radius:50%;background:var(--sp-info);border:2px solid var(--sp-info);flex-shrink:0;margin-top:2px;"></div>
+                        <div class="sp-warning-timeline__item">
+                            <div class="sp-warning-timeline__dot" style="background:var(--sp-info);border-color:var(--sp-info);"></div>
                             <div>
-                                <strong style="font-size:.875rem;color:var(--sp-text-primary);">Testemunha: <?= esc($warning->witness_name ?? '-') ?></strong>
-                                <div style="font-size:.8rem;color:var(--sp-text-muted);margin-top:.125rem;">
-                                    <?= esc($warning->witness_signed_at) ?>
-                                </div>
+                                <strong class="d-block small">Testemunha: <?= esc($warning->witness_name ?? '—') ?></strong>
+                                <span class="text-muted small"><?= esc(format_datetime_br((string) $warning->witness_signed_at, false)) ?></span>
                             </div>
                         </div>
                         <?php endif; ?>
 
-                        <?php if (($warning->status ?? '') === 'pendente-assinatura'): ?>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start;position:relative;z-index:1;">
-                            <div style="width:20px;height:20px;border-radius:50%;background:var(--sp-warning);border:2px solid var(--sp-warning);flex-shrink:0;margin-top:2px;"></div>
+                        <?php if ($wStatus === 'pendente-assinatura'): ?>
+                        <div class="sp-warning-timeline__item sp-warning-timeline__item--last">
+                            <div class="sp-warning-timeline__dot" style="background:var(--sp-warning);border-color:var(--sp-warning);"></div>
                             <div>
-                                <strong style="font-size:.875rem;color:var(--sp-text-primary);">Aguardando assinatura</strong>
-                                <div style="font-size:.8rem;color:var(--sp-text-muted);margin-top:.125rem;">
-                                    <?= esc($warningEmployee->name ?? 'Colaborador') ?> ainda nao assinou
-                                </div>
+                                <strong class="d-block small">Aguardando assinatura</strong>
+                                <span class="text-muted small"><?= esc($warningEmployee->name ?? 'Colaborador') ?> ainda não assinou</span>
                             </div>
                         </div>
-                        <?php elseif (($warning->status ?? '') === 'recusado'): ?>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start;position:relative;z-index:1;">
-                            <div style="width:20px;height:20px;border-radius:50%;background:var(--sp-danger);border:2px solid var(--sp-danger);flex-shrink:0;margin-top:2px;"></div>
+                        <?php elseif ($wStatus === 'recusado'): ?>
+                        <div class="sp-warning-timeline__item sp-warning-timeline__item--last">
+                            <div class="sp-warning-timeline__dot" style="background:var(--sp-danger);border-color:var(--sp-danger);"></div>
                             <div>
-                                <strong style="font-size:.875rem;color:var(--sp-danger);">Recusado pelo colaborador</strong>
-                                <div style="font-size:.8rem;color:var(--sp-text-muted);margin-top:.125rem;">Contate o RH para procedimento</div>
+                                <strong class="d-block small text-danger">Recusado pelo colaborador</strong>
+                                <span class="text-muted small">Contate o RH para procedimento</span>
                             </div>
                         </div>
                         <?php endif; ?>
                     </div>
 
                     <?php if (!empty($warning->pdf_path)): ?>
-                        <div style="margin-top:1.25rem;border-top:1px solid var(--sp-border);padding-top:1rem;">
-                            <a href="<?= sp_warning_download_url((int) $warning->id) ?>"
-                               class="sp-btn sp-btn-outline sp-btn-full">
-                                <i class="bi bi-download"></i> Baixar PDF
+                        <div class="mt-3 pt-3 border-top">
+                            <a href="<?= sp_warning_download_url((int) $warning->id) ?>" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-download me-1"></i>Baixar PDF
                             </a>
                         </div>
                     <?php endif; ?>
@@ -242,27 +207,39 @@
         </div>
     </div>
 </div>
+
+<style>
+.sp-warning-timeline { display: flex; flex-direction: column; position: relative; }
+.sp-warning-timeline__item { display: flex; gap: .75rem; align-items: flex-start; position: relative; padding-bottom: 1.25rem; }
+.sp-warning-timeline__item--last { padding-bottom: 0; }
+.sp-warning-timeline__item:not(:last-child)::before {
+    content: ''; position: absolute; left: 9px; top: 20px; bottom: -1.25rem; width: 2px; background: var(--sp-border);
+}
+.sp-warning-timeline__dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid; flex-shrink: 0; margin-top: 2px; position: relative; z-index: 1; }
+.warning-evidence-tile { display: flex; flex-direction: column; align-items: center; padding: .75rem; border: 1px solid var(--sp-border); border-radius: var(--sp-radius-sm); text-decoration: none; color: var(--sp-text-primary); transition: background .15s ease; height: 100%; }
+.warning-evidence-tile:hover { background: var(--sp-gray-100); }
+.warning-evidence-tile__thumb { width: 100%; height: 80px; object-fit: cover; border-radius: var(--sp-radius-sm); margin-bottom: .5rem; }
+.warning-evidence-tile__icon { font-size: 2.5rem; margin-bottom: .5rem; }
+.warning-evidence-tile__name { font-size: .8rem; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+</style>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script <?= csp_script_nonce_attr() ?>>
-    const grid = document.querySelector('.sp-warning-show-grid');
-    function adjustGrid() {
-        if (grid) grid.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '1fr 300px';
-    }
-    adjustGrid();
-    window.addEventListener('resize', adjustGrid);
+(function () {
+    var btn = document.getElementById('btn-copy-sign-link');
+    if (!btn) return;
 
-    function copySignLink(btn) {
-        const url = btn.getAttribute('data-url');
-        navigator.clipboard.writeText(url).then(function() {
-            const orig = btn.innerHTML;
-            btn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copiado!';
-            btn.style.color = 'var(--sp-success)';
-            setTimeout(function() { btn.innerHTML = orig; btn.style.color = ''; }, 2000);
-        }).catch(function() {
+    btn.addEventListener('click', function () {
+        var url = btn.getAttribute('data-url');
+        navigator.clipboard.writeText(url).then(function () {
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Copiado!';
+            setTimeout(function () { btn.innerHTML = orig; }, 2000);
+        }).catch(function () {
             prompt('Copie o link manualmente:', url);
         });
-    }
+    });
+})();
 </script>
 <?= $this->endSection() ?>

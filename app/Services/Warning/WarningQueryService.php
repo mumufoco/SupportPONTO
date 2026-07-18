@@ -99,14 +99,24 @@ class WarningQueryService
             $rawFiles = json_decode($rawFiles, true) ?? [];
         }
         $rawFiles = is_array($rawFiles) ? $rawFiles : [];
-        $attachments = array_map(static function (string $file): array {
+
+        // Evidencias ficam em WRITEPATH/uploads (fora do webroot), nao em public/uploads -
+        // base_url() apontava para um caminho publico que nunca existiu. O link correto
+        // passa pela rota de download controlada (WarningController::downloadEvidence()).
+        $attachments = [];
+        foreach ($rawFiles as $index => $file) {
+            $file = trim((string) $file);
+            if ($file === '') {
+                continue;
+            }
             $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-            return [
-                'url'  => base_url('uploads/warnings/' . $file),
+            $attachments[] = [
+                'url'  => route_to('warnings.evidence.download', $warningId, (int) $index),
                 'name' => basename($file),
+                'ext'  => $ext,
                 'type' => in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'image' : 'file',
             ];
-        }, array_filter(array_map('strval', $rawFiles)));
+        }
 
         $warningEmployee = $this->employeeModel->find($warning->employee_id);
 

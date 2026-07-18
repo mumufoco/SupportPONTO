@@ -45,6 +45,7 @@ $routes->group('warnings', ['filter' => 'auth'], static function ($routes) {
     $routes->post('(:num)/sign', 'Warning\WarningController::sign/$1', ['as' => 'warnings.sign']);
     $routes->post('(:num)/send-sms', 'Warning\WarningController::sendSMSCode/$1', ['as' => 'warnings.sign.sms']);
     $routes->get('(:num)/download', 'Warning\WarningController::downloadPDF/$1', ['as' => 'warnings.download']);
+    $routes->get('(:num)/evidence/(:num)', 'Warning\WarningController::downloadEvidence/$1/$2', ['as' => 'warnings.evidence.download']);
 });
 
 $routes->group('warnings', ['filter' => ['auth', 'manager']], static function ($routes) {
