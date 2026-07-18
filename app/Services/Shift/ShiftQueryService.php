@@ -140,6 +140,14 @@ class ShiftQueryService
                 ->where('shift_id', $shiftId)
                 ->where('date >=', date('Y-m-d'))
                 ->countAllResults(),
+            'completed_schedules' => $this->scheduleModel
+                ->where('shift_id', $shiftId)
+                ->where('status', 'completed')
+                ->countAllResults(),
+            'cancelled_schedules' => $this->scheduleModel
+                ->where('shift_id', $shiftId)
+                ->where('status', 'cancelled')
+                ->countAllResults(),
         ];
     }
 
