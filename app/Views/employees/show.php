@@ -73,7 +73,9 @@ $uploadUrl            = site_url('employees/' . ($emp->id ?? '') . '/photo');
         'title'    => esc($emp->name ?? 'Colaborador'),
         'subtitle' => 'Dados principais, vínculo profissional e atalhos de gestão.',
         'icon'     => 'bi bi-person-badge-fill',
-        'actions'  => [],
+        'actions'  => [
+            ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => site_url('employees')],
+        ],
     ]) ?>
 
 
