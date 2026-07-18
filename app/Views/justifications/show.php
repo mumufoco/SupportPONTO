@@ -205,7 +205,6 @@ $empInitials = $empName
         'icon'     => 'bi bi-file-earmark-text-fill',
         'actions'  => [
             ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => site_url('justifications')],
-            ['label' => 'Nova', 'icon' => 'bi bi-plus-circle', 'url' => site_url('justifications/create')],
         ],
     ]) ?>
 
