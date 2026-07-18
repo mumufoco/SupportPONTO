@@ -50,6 +50,7 @@ class TimesheetReadService
         $totalOwed = 0.0;
         $lateArrivals = 0;
         $daysWorked = 0;
+        $inconsistencies = 0;
         $warning = null;
 
         if (! $this->consolidatedModel->tableExists()) {
@@ -71,12 +72,17 @@ class TimesheetReadService
                     $lateArrivals++;
                 }
 
+                $isIncomplete = ! ($slots['entrada'] && $slots['saida']);
+                if ($isIncomplete) {
+                    $inconsistencies++;
+                }
+
                 $dailyRecords[] = $this->buildDailyRecord(
                     $date,
                     $slots,
                     $workedHours,
                     0.0,
-                    ! ($slots['entrada'] && $slots['saida']),
+                    $isIncomplete,
                     $isLate
                 );
             }
@@ -111,12 +117,17 @@ class TimesheetReadService
                     $lateArrivals++;
                 }
 
+                $isIncomplete = (bool) ($record->incomplete ?? false);
+                if ($isIncomplete) {
+                    $inconsistencies++;
+                }
+
                 $dailyRecords[] = $this->buildDailyRecord(
                     (string) $record->date,
                     $slots,
                     (float) $record->total_worked,
                     (float) ($record->extra - $record->owed),
-                    (bool) ($record->incomplete ?? false),
+                    $isIncomplete,
                     $isLate
                 );
             }
@@ -132,6 +143,7 @@ class TimesheetReadService
                 'days_worked' => $daysWorked,
                 'expected_days' => 22,
                 'late_arrivals' => $lateArrivals,
+                'inconsistencies' => $inconsistencies,
             ],
             'warning' => $warning,
         ];

@@ -65,6 +65,11 @@ class TimesheetController extends BaseController
 
         $monthData = $this->timesheetReadService->getMonthlyTimesheetData($targetEmployeeId, $selectedMonth);
 
+        $isManager = in_array($actor['role'] ?? '', ['admin', 'rh', 'gestor'], true);
+        $employeesList = $isManager
+            ? $this->employeeModel->select('id, name')->where('active', true)->orderBy('name', 'ASC')->findAll()
+            : [];
+
         return view('timesheet/index', [
             'employee' => $actor,
             'viewingEmployee' => $access['employee'],
@@ -72,6 +77,9 @@ class TimesheetController extends BaseController
             'summary' => $monthData['summary'],
             'dailyRecords' => $monthData['dailyRecords'],
             'warning' => $monthData['warning'],
+            'employeesList' => $employeesList,
+            'isManager' => $isManager,
+            'targetEmployeeId' => $targetEmployeeId,
         ]);
     }
 
