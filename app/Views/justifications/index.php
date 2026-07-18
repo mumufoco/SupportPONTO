@@ -158,9 +158,9 @@ if (($navigationContext['enabled'] ?? false) === true) {
                                 </td>
                                 <td><?= esc($item['updated_at'] ?? $item['created_at'] ?? '-') ?></td>
                                 <td>
-                                    <div class="sp-table-actions" style="justify-content:flex-end;">
+                                    <div class="table-icon-actions">
                                         <a href="<?= site_url('justifications/' . ($item['id'] ?? '')) ?>"
-                                           class="sp-btn sp-btn-sm sp-btn-secondary" title="Visualizar">
+                                           class="icon-action" title="Visualizar">
                                             <i class="bi bi-eye-fill"></i>
                                         </a>
                                     </div>
