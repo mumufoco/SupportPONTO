@@ -36,7 +36,10 @@ class WarningQueryService
             ->join('employees AS iss', 'iss.id = warnings.issued_by', 'left');
 
         if ($managedIds !== null) {
-            $query->whereIn('warnings.employee_id', $managedIds);
+            // $managedIds pode vir vazio (gestor sem colaboradores ativos no departamento) -
+            // whereIn() com array vazio gera "IN ()", erro de sintaxe no Postgres. [0] garante
+            // que a condicao simplesmente nao bate com nenhum registro, sem quebrar a query.
+            $query->whereIn('warnings.employee_id', $managedIds ?: [0]);
         }
 
         if ($warningType !== 'all') {
@@ -170,7 +173,7 @@ class WarningQueryService
         $scoped = function () use ($managedIds) {
             $b = $this->warningModel->builder();
             if ($managedIds !== null) {
-                $b->whereIn('employee_id', $managedIds);
+                $b->whereIn('employee_id', $managedIds ?: [0]);
             }
             return $b;
         };
