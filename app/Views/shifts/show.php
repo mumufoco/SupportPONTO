@@ -199,27 +199,38 @@ $shiftEnd = substr((string) $shift->end_time, 0, 5);
                 <div class="sp-card-header">
                     <span class="sp-card-title"><i class="bi bi-lightning-fill"></i> Ações Rápidas</span>
                 </div>
-                <div class="sp-card-body d-grid gap-2">
-                    <a href="<?= sp_schedules_create_url() ?>?shift_id=<?= rawurlencode((string) $shift->id) ?>" class="btn btn-primary w-100">
-                        <i class="bi bi-calendar-plus-fill me-1"></i>Criar Escala
-                    </a>
-                    <a href="<?= sp_schedules_index_url() ?>?shift_id=<?= rawurlencode((string) $shift->id) ?>" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-calendar3 me-1"></i>Ver Todas as Escalas
-                    </a>
-                    <a href="<?= sp_shifts_edit_url($shift->id) ?>" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-pencil-fill me-1"></i>Editar Turno
-                    </a>
-                    <form method="POST" action="<?= sp_shifts_clone_url($shift->id) ?>">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-outline-info w-100">
-                            <i class="bi bi-copy me-1"></i>Clonar Turno
+                <div class="sp-card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="<?= sp_schedules_create_url() ?>?shift_id=<?= rawurlencode((string) $shift->id) ?>" class="list-group-item list-group-item-action">
+                            <i class="bi bi-calendar-plus-fill text-primary me-2"></i>
+                            <strong>Criar Escala</strong>
+                            <small class="d-block text-muted">Agendar este turno para um colaborador</small>
+                        </a>
+                        <a href="<?= sp_schedules_index_url() ?>?shift_id=<?= rawurlencode((string) $shift->id) ?>" class="list-group-item list-group-item-action">
+                            <i class="bi bi-calendar3 text-info me-2"></i>
+                            <strong>Ver Todas as Escalas</strong>
+                            <small class="d-block text-muted">Consultar escalas que usam este turno</small>
+                        </a>
+                        <a href="<?= sp_shifts_edit_url($shift->id) ?>" class="list-group-item list-group-item-action">
+                            <i class="bi bi-pencil-fill text-warning me-2"></i>
+                            <strong>Editar Turno</strong>
+                            <small class="d-block text-muted">Alterar horários, cor, tipo ou intervalo</small>
+                        </a>
+                        <form method="POST" action="<?= sp_shifts_clone_url($shift->id) ?>" class="d-inline">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="list-group-item list-group-item-action text-start w-100">
+                                <i class="bi bi-copy text-secondary me-2"></i>
+                                <strong>Clonar Turno</strong>
+                                <small class="d-block text-muted">Criar uma cópia deste turno (inativa)</small>
+                            </button>
+                        </form>
+                        <button type="button" class="list-group-item list-group-item-action text-start w-100"
+                                onclick="confirmDeleteShift(<?= (int) $shift->id ?>, '<?= esc(addslashes($shift->name ?? ''), 'js') ?>')">
+                            <i class="bi bi-trash-fill text-danger me-2"></i>
+                            <strong class="text-danger">Excluir Turno</strong>
+                            <small class="d-block text-muted">Remover permanentemente este turno</small>
                         </button>
-                    </form>
-                    <hr class="my-1">
-                    <button type="button" class="btn btn-outline-danger w-100"
-                            onclick="confirmDeleteShift(<?= (int) $shift->id ?>, '<?= esc(addslashes($shift->name ?? ''), 'js') ?>')">
-                        <i class="bi bi-trash-fill me-1"></i>Excluir Turno
-                    </button>
+                    </div>
                 </div>
             </div>
 
