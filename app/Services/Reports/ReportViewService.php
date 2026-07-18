@@ -17,7 +17,21 @@ class ReportViewService
 
     public function getTimesheetViewData(array $actor, string $month, ?string $department, ?string $employeeId): array
     {
-        $employees = $this->getEmployeeScope($actor, $department, $employeeId);
+        // Exige um colaborador especifico: gerar o espelho mensal completo de todos os
+        // funcionarios de uma vez (sem filtro) nao escala conforme o quadro cresce e nunca
+        // foi o proposito real desta tela (ver /reports para relatorios agregados).
+        if (empty($employeeId)) {
+            return [
+                'timesheets' => [],
+                'departments' => $this->getDepartments(),
+            ];
+        }
+
+        // Departamento aqui so filtra a lista do seletor de colaborador (ver
+        // reports/timesheet.php) - uma vez que um colaborador especifico foi escolhido, o
+        // departamento nao deve co-restringir a consulta (evita retornar vazio
+        // silenciosamente se as duas selecoes ficarem dessincronizadas).
+        $employees = $this->getEmployeeScope($actor, null, $employeeId);
         $timesheets = [];
 
         foreach ($employees as $emp) {

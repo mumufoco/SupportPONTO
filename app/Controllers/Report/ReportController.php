@@ -63,6 +63,7 @@ class ReportController extends BaseController
             'selectedEmployee' => $selectedEmployee,
             'selectedDepartment' => $selectedDepartment,
             'departments' => $viewData['departments'],
+            'employees' => $this->reportCoordinatorService->getEmployeesForReports($employee),
         ]);
     }
 
