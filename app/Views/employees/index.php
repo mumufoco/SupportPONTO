@@ -200,6 +200,30 @@
           #inviteModal .modal-header * { color: #fff !important; }
           #inviteModal .btn-close { filter: invert(1) !important; opacity: .85 !important; }
           #inviteModal .modal-dialog { pointer-events: auto !important; }
+          /* Mesmo padrão de caixas (sp-form-card) usado em employees/create.php */
+          #inviteModal .sp-form-card {
+            background: var(--sp-bg-surface);
+            border: 1px solid var(--sp-border);
+            border-radius: .85rem;
+            margin: 0 1.25rem 1rem;
+          }
+          #inviteModal .sp-form-card:last-child { margin-bottom: 1.25rem; }
+          #inviteModal .sp-form-card__head {
+            display: flex; align-items: center; gap: .75rem;
+            padding: .85rem 1.25rem;
+            border-bottom: 1px solid var(--sp-border);
+            background: var(--sp-gray-50, rgba(0,0,0,.02));
+          }
+          #inviteModal .sp-form-card__icon {
+            width: 2rem; height: 2rem; border-radius: .5rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .95rem; flex-shrink: 0;
+          }
+          #inviteModal .sp-form-card__icon.c-blue  { background: rgba(13,110,253,.12); color: #0d6efd }
+          #inviteModal .sp-form-card__icon.c-green { background: rgba(25,135,84,.12);  color: #198754 }
+          #inviteModal .sp-form-card__title { font-weight: 700; font-size: .92rem; margin: 0 }
+          #inviteModal .sp-form-card__sub   { font-size: .75rem; color: var(--sp-text-muted); margin: 0 }
+          #inviteModal .sp-form-card__body  { padding: 1.25rem }
           </style>
           <div class="modal-body p-0">
 
@@ -208,11 +232,18 @@
               <form id="formInvite" autocomplete="off" novalidate>
                 <?= csrf_field() ?>
 
+                <div class="pt-3">
+
                 <!-- Seção 1: Identificação -->
-                <div class="px-4 pt-4 pb-3">
-                  <p class="text-muted small text-uppercase fw-semibold mb-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-person-fill text-primary"></i> Identificação
-                  </p>
+                <div class="sp-form-card">
+                  <div class="sp-form-card__head">
+                    <div class="sp-form-card__icon c-blue"><i class="bi bi-person-fill"></i></div>
+                    <div>
+                      <p class="sp-form-card__title">Identificação</p>
+                      <p class="sp-form-card__sub">Dados do colaborador que receberá o convite.</p>
+                    </div>
+                  </div>
+                  <div class="sp-form-card__body">
                   <div class="row g-3">
                     <div class="col-12">
                       <label class="form-label fw-semibold" for="inv_email">
@@ -280,15 +311,19 @@
                       </select>
                     </div>
                   </div>
+                  </div>
                 </div>
 
-                <hr class="mx-4 my-0" style="opacity:.08;">
-
                 <!-- Seção 2: Configurações do link -->
-                <div class="px-4 py-3">
-                  <p class="text-muted small text-uppercase fw-semibold mb-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-link-45deg text-primary"></i> Configurações do convite
-                  </p>
+                <div class="sp-form-card">
+                  <div class="sp-form-card__head">
+                    <div class="sp-form-card__icon c-green"><i class="bi bi-link-45deg"></i></div>
+                    <div>
+                      <p class="sp-form-card__title">Configurações do convite</p>
+                      <p class="sp-form-card__sub">Validade do link e mensagem de boas-vindas.</p>
+                    </div>
+                  </div>
+                  <div class="sp-form-card__body">
                   <div class="row g-3">
                     <div class="col-md-5">
                       <label class="form-label fw-semibold" for="inv_expires">Validade do link</label>
@@ -322,6 +357,9 @@
                       </div>
                     </div>
                   </div>
+                  </div>
+                </div>
+
                 </div>
               </form>
             </div>
