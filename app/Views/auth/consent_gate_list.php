@@ -96,8 +96,4 @@
 
     </div>
 </div>
-
-<div class="auth-footer">
-    &copy; <?= date('Y') ?> Support Solo Sondagens &middot; SupportPONTO
-</div>
 <?= $this->endSection() ?>
