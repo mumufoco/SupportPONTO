@@ -7,9 +7,6 @@
         'title'    => 'Backup',
         'subtitle' => 'Status real do backup, histórico de checagens e registro de teste de restauração.',
         'icon'     => 'bi bi-cloud-arrow-down-fill',
-        'actions'  => [
-            ['label' => 'Configurações', 'icon' => 'bi bi-grid-fill', 'url' => sp_admin_settings_index_url()],
-        ],
     ]) ?>
 
     <?php
@@ -202,16 +199,52 @@
                     <i class="bi bi-exclamation-triangle-fill me-1"></i>Nenhum teste de restauração registrado ainda.
                 </div>
             <?php endif; ?>
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-                <input type="text" class="form-control form-control-sm" id="restoreTestNotes"
-                       placeholder="Observações (opcional)" style="max-width:320px">
-                <button type="button" class="btn btn-sm btn-outline-success" onclick="recordRestoreTest()">
-                    <i class="bi bi-check2-square me-1"></i>Registrar teste de restauração
-                </button>
-            </div>
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="recordRestoreTest()">
+                <i class="bi bi-check2-square me-1"></i>Registrar teste de restauração
+            </button>
         </div>
     </div>
 
 </div>
+
+<!-- Toast de feedback -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="sp-toast" class="toast align-items-center text-white border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="sp-toast-msg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: confirmação de senha (substitui prompt()/confirm() nativos do navegador) -->
+<div class="modal fade" id="actionPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="actionPasswordModalTitle"><i class="bi bi-shield-lock-fill me-2"></i>Confirme sua senha</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p id="actionPasswordModalMessage" class="text-muted small mb-3"></p>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold" for="actionPasswordInput">Senha atual</label>
+                    <input type="password" class="form-control" id="actionPasswordInput" autocomplete="current-password">
+                </div>
+                <div id="actionPasswordNotesGroup" style="display:none">
+                    <label class="form-label small fw-semibold" for="actionPasswordNotesInput">Observações (opcional)</label>
+                    <input type="text" class="form-control" id="actionPasswordNotesInput" placeholder="Ex.: restaurado em ambiente de homologação">
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="actionPasswordConfirmBtn">
+                    <i class="bi bi-check-lg me-1"></i>Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= view('admin/settings/partials/backup_scripts') ?>
 <?= $this->endSection() ?>
