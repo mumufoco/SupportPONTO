@@ -34,7 +34,8 @@ $menuStructure = [
             'match' => ['timesheet', 'punch', 'justifications', 'manager/pending-punches'],
             'submenu' => [
                 ['label' => 'Bater ponto',        'icon' => 'clock',        'url' => 'timesheet/punch'],
-                ['label' => 'Espelho de Ponto',    'icon' => 'bar-chart',   'url' => 'timesheet', 'exclude' => ['timesheet/punch', 'timesheet/history', 'timesheet/balance', 'justifications', 'manager/pending-punches']],
+                ['label' => 'Minhas pendências',  'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias'],
+                ['label' => 'Espelho de Ponto',    'icon' => 'bar-chart',   'url' => 'timesheet', 'exclude' => ['timesheet/punch', 'timesheet/punch/pendencias', 'timesheet/history', 'timesheet/balance', 'justifications', 'manager/pending-punches']],
                 ['label' => 'Histórico de ponto', 'icon' => 'list',         'url' => 'timesheet/history'],
                 ['label' => 'Banco de horas',     'icon' => 'activity',     'url' => 'timesheet/balance'],
                 ['label' => 'Justificativas',     'icon' => 'file-text',    'url' => 'justifications'],
@@ -148,6 +149,7 @@ $menuStructure = [
             'match' => ['timesheet'],
             'submenu' => [
                 ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch'],
+                ['label' => 'Minhas pendências', 'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias'],
                 ['label' => 'Espelho', 'icon' => 'list', 'url' => 'timesheet/history'],
                 ['label' => 'Banco de horas', 'icon' => 'activity', 'url' => 'timesheet/balance'],
             ],
@@ -189,6 +191,7 @@ $menuStructure = [
             'match' => ['timesheet'],
             'submenu' => [
                 ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch'],
+                ['label' => 'Minhas pendências', 'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias'],
                 ['label' => 'Espelho', 'icon' => 'list', 'url' => 'timesheet/history'],
                 ['label' => 'Banco de horas', 'icon' => 'activity', 'url' => 'timesheet/balance'],
             ],
@@ -235,7 +238,8 @@ $menuStructure = [
         ['type' => 'section', 'label' => 'Meu espaço'],
         ['label' => 'Dashboard', 'icon' => 'dashboard', 'url' => 'dashboard/employee', 'match' => ['dashboard', 'dashboard/employee']],
         ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch', 'match' => ['timesheet/punch']],
-        ['label' => 'Espelho de Ponto', 'icon' => 'bar-chart', 'url' => 'timesheet', 'match' => ['timesheet'], 'exclude' => ['timesheet/punch', 'timesheet/history', 'timesheet/balance', 'timesheet/employee']],
+        ['label' => 'Pendências', 'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias', 'match' => ['timesheet/punch/pendencias']],
+        ['label' => 'Espelho de Ponto', 'icon' => 'bar-chart', 'url' => 'timesheet', 'match' => ['timesheet'], 'exclude' => ['timesheet/punch', 'timesheet/punch/pendencias', 'timesheet/history', 'timesheet/balance', 'timesheet/employee']],
         ['label' => 'Histórico de ponto', 'icon' => 'list', 'url' => 'timesheet/history', 'match' => ['timesheet/history', 'timesheet/employee']],
         ['label' => 'Banco de horas', 'icon' => 'activity', 'url' => 'timesheet/balance', 'match' => ['timesheet/balance']],
         ['label' => 'Minhas escalas', 'icon' => 'calendar', 'url' => 'my-schedules', 'match' => ['my-schedules']],
@@ -429,3 +433,4 @@ $chevronSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" vi
         </button>
     </div>
 </aside>
+
