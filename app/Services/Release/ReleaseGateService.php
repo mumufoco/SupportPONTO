@@ -878,6 +878,20 @@ class ReleaseGateService
 
     private function closureAuditResult(string $label, array $checks): array
     {
+        // Lista de checks vazia (rodadas 340A-340H/355A-355F, stubs sem
+        // implementação real) nunca deve virar 'ok': antes disso, o loop
+        // abaixo simplesmente não executava e o status ficava 'ok' por
+        // default, fazendo o gate reportar essas rodadas como aprovadas
+        // sem nenhuma verificação de fato ter rodado. 'warning' reflete
+        // corretamente "não verificado", sem travar o gate como 'failed'.
+        if ($checks === []) {
+            return [
+                'status' => 'warning',
+                'summary' => sprintf('Rodada %s sem checks implementados — não verificado.', $label),
+                'checks' => [],
+            ];
+        }
+
         $status = 'ok';
         foreach ($checks as $check) {
             if (($check['status'] ?? 'warning') === 'failed') {
