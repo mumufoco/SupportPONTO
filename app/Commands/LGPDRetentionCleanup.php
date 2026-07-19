@@ -53,6 +53,8 @@ class LGPDRetentionCleanup extends BaseCommand
 
     public function run(array $params): void
     {
+        $startTime = microtime(true);
+
         $this->anonymizationService = new DataAnonymizationService();
         $this->employeeModel        = new EmployeeModel();
         $this->auditModel           = new AuditModel();
@@ -103,7 +105,7 @@ class LGPDRetentionCleanup extends BaseCommand
         }
 
         CLI::write('');
-        CLI::write('✅ Job concluído em ' . round(microtime(true) - FCPATH, 2) . 's', 'green');
+        CLI::write('✅ Job concluído em ' . round(microtime(true) - $startTime, 2) . 's', 'green');
     }
 
     // ── Etapa 1: Funcionários desligados ─────────────────────────────────────
