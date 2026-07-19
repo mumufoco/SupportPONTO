@@ -192,15 +192,20 @@ class BiometricConsentController extends BaseController
         }
 
         return view('biometric/consent_list', [
-            'records'      => $records,
-            'page'         => $page,
-            'perPage'      => $perPage,
-            'total'        => $total,
-            'search'       => $search,
-            'status'       => $status,
-            'filterType'   => $filterType,
-            'consentTypes' => self::CONSENT_TYPE_LABELS,
-            'title'        => 'Termos e Aceites LGPD',
+            'records'         => $records,
+            'page'            => $page,
+            'perPage'         => $perPage,
+            'total'           => $total,
+            'search'          => $search,
+            'status'          => $status,
+            'filterType'      => $filterType,
+            'consentTypes'    => self::CONSENT_TYPE_LABELS,
+            // A rota classica (settings/consent-terms) e restrita a admin; DPO tambem
+            // pode gerenciar templates via biometric/consent-terms/manage. auditor/rh
+            // (que tambem acessam esta listagem) nao tem permissao para nenhuma das
+            // duas - o botao so deve aparecer para quem realmente pode usa-lo.
+            'canManageTerms'  => $this->hasAnyRole(['admin', 'dpo']),
+            'title'           => 'Termos e Aceites LGPD',
         ]);
     }
 
