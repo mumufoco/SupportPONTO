@@ -1,15 +1,16 @@
 // SupportPONTO - Advanced Service Worker
-// Version: 1.1.500
+// Version: 1.1.502
 // Description: Professional PWA with advanced caching, offline support, and background sync
 
-const CACHE_VERSION = '1.1.501-nocache';
+const CACHE_VERSION = '1.1.502-network-first-default';
 const CACHE_PREFIX = 'supportponto';
 const CACHE_CORE = `${CACHE_PREFIX}-core-v${CACHE_VERSION}`;
 const CACHE_STATIC = `${CACHE_PREFIX}-static-v${CACHE_VERSION}`;
-const CACHE_DYNAMIC = `${CACHE_PREFIX}-dynamic-v${CACHE_VERSION}`;
-const MAX_DYNAMIC_CACHE_SIZE = 50;
+const MAX_CORE_CACHE_SIZE = 20;
 
-// Core assets - cached immediately on install
+// Core assets - cached immediately on install. Estas sao as UNICAS paginas
+// HTML que ficam disponiveis offline (landing/acesso rapido); tudo o mais e
+// network-only por padrao (ver FETCH EVENT abaixo).
 const CORE_ASSETS = [
   '/',
   '/registro-rapido',
@@ -33,34 +34,6 @@ const STATIC_CACHE_PATTERNS = [
   /\.webp$/
 ];
 
-// Network-only patterns - never cache
-// HTML pages are ALWAYS fetched from network (dynamic content)
-const NETWORK_ONLY_PATTERNS = [
-  /\/api\//,
-  /\/auth\//,
-  /\/logout/,
-  /\/login/,
-  /\/register/,
-  /\/admin/,
-  /\/settings/,
-  /\/dashboard/,
-  /\/timesheet/,
-  /\/employees/,   // matches /employees AND /employees/...
-  /\/reports/,
-  /\/shifts/,
-  /\/schedules/,
-  /\/compliance/,
-  /\/warnings/,
-  /\/justifications/,
-  /\/geofences/,
-  /\/profile/,
-  /\/organizational/,
-  /\/biometric/,
-  /\/acesso/,
-  /\/minha-biometria/,
-  /\/perfil/,
-];
-
 // Offline fallback pages
 const OFFLINE_PAGE = '/registro-rapido';
 const OFFLINE_IMAGE = '/assets/img/icon-192.png';
@@ -69,8 +42,8 @@ const OFFLINE_IMAGE = '/assets/img/icon-192.png';
 // INSTALL EVENT - Cache core assets
 // ============================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing v' + CACHE_VERSION + ' (all pages network-only)');
-  
+  console.log('[SW] Installing v' + CACHE_VERSION + ' (all pages network-only by default)');
+
   event.waitUntil(
     caches.open(CACHE_CORE)
       .then((cache) => {
@@ -89,7 +62,7 @@ self.addEventListener('install', (event) => {
 // ============================================================================
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating Service Worker v' + CACHE_VERSION);
-  
+
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -97,10 +70,9 @@ self.addEventListener('activate', (event) => {
           cacheNames
             .filter((cacheName) => {
               // Delete old caches that don't match current version
-              return cacheName.startsWith(CACHE_PREFIX) && 
-                     cacheName !== CACHE_CORE && 
-                     cacheName !== CACHE_STATIC && 
-                     cacheName !== CACHE_DYNAMIC;
+              return cacheName.startsWith(CACHE_PREFIX) &&
+                     cacheName !== CACHE_CORE &&
+                     cacheName !== CACHE_STATIC;
             })
             .map((cacheName) => {
               console.log('[SW] Deleting old cache:', cacheName);
@@ -117,6 +89,17 @@ self.addEventListener('activate', (event) => {
 
 // ============================================================================
 // FETCH EVENT - Advanced caching strategies
+//
+// Estrategia (invertida — antes dependia de uma lista NETWORK_ONLY_PATTERNS
+// manual que precisava listar toda rota dinamica do app, e ficava
+// desatualizada toda vez que uma rota nova era criada, fazendo paginas
+// esquecidas ficarem presas em cache desatualizado indefinidamente, sem
+// nenhuma revalidacao — ja aconteceu em /lgpd/consents e /my-schedules):
+//
+//   1. Asset estatico (css/js/fonte/imagem)  -> cache-first
+//   2. Pagina de entrada do PWA (CORE_ASSETS) -> cache-first com fallback de rede
+//   3. Qualquer outra coisa (toda pagina HTML dinamica do app)
+//                                              -> SEMPRE rede (network-only)
 // ============================================================================
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -127,21 +110,24 @@ self.addEventListener('fetch', (event) => {
 
   // Parse URL
   const requestURL = new URL(url);
-  
-  // Check if request should be network-only
-  if (isNetworkOnly(requestURL.pathname)) {
-    event.respondWith(networkOnly(request));
-    return;
-  }
 
-  // Check if request is for static assets
+  // 1) Assets estaticos: cache-first, raramente mudam.
   if (isStaticAsset(requestURL.pathname)) {
     event.respondWith(cacheFirstStrategy(request, CACHE_STATIC));
     return;
   }
 
-  // Default: Cache with network fallback for HTML pages
-  event.respondWith(cacheFirstWithNetworkFallback(request, CACHE_DYNAMIC));
+  // 2) Paginas de entrada do PWA cacheadas no install: mantem fallback de
+  //    cache para funcionar offline.
+  if (CORE_ASSETS.includes(requestURL.pathname)) {
+    event.respondWith(cacheFirstWithNetworkFallback(request, CACHE_CORE));
+    return;
+  }
+
+  // 3) Padrao: qualquer outra pagina (dashboard, timesheet, employees,
+  //    my-schedules, lgpd, notifications, chat, audit, qrcode, o que vier a
+  //    ser criado no futuro, etc.) e sempre buscada da rede.
+  event.respondWith(networkOnly(request));
 });
 
 // ============================================================================
@@ -156,7 +142,7 @@ async function cacheFirstStrategy(request, cacheName) {
   try {
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       console.log('[SW] Cache hit:', request.url);
       return cachedResponse;
@@ -164,11 +150,11 @@ async function cacheFirstStrategy(request, cacheName) {
 
     console.log('[SW] Cache miss, fetching:', request.url);
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse && networkResponse.status === 200) {
       cache.put(request, networkResponse.clone());
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.error('[SW] Cache first strategy failed:', error);
@@ -184,19 +170,19 @@ async function cacheFirstWithNetworkFallback(request, cacheName) {
   try {
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       return cachedResponse;
     }
 
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-      // Limit dynamic cache size
-      await limitCacheSize(cacheName, MAX_DYNAMIC_CACHE_SIZE);
+      // Limit core cache size (paginas de entrada do PWA — lista curta e fixa)
+      await limitCacheSize(cacheName, MAX_CORE_CACHE_SIZE);
       cache.put(request, networkResponse.clone());
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.log('[SW] Offline, serving fallback for:', request.url);
@@ -206,33 +192,20 @@ async function cacheFirstWithNetworkFallback(request, cacheName) {
 
 /**
  * Network Only Strategy - Always fetch from network
- * Best for API calls and authentication
+ * Default strategy for every dynamic HTML page in the app.
  */
 async function networkOnly(request) {
   try {
     return await fetch(request);
   } catch (error) {
     console.error('[SW] Network request failed:', error);
-    return new Response('Network request failed', {
-      status: 503,
-      statusText: 'Service Unavailable',
-      headers: new Headers({
-        'Content-Type': 'text/plain'
-      })
-    });
+    return await getOfflineFallback(request);
   }
 }
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-
-/**
- * Check if URL should be network-only
- */
-function isNetworkOnly(pathname) {
-  return NETWORK_ONLY_PATTERNS.some(pattern => pattern.test(pathname));
-}
 
 /**
  * Check if URL is a static asset
@@ -246,15 +219,15 @@ function isStaticAsset(pathname) {
  */
 async function getOfflineFallback(request) {
   const cache = await caches.open(CACHE_CORE);
-  
+
   if (request.destination === 'document') {
     return await cache.match(OFFLINE_PAGE) || new Response('Offline', { status: 503 });
   }
-  
+
   if (request.destination === 'image') {
     return await cache.match(OFFLINE_IMAGE) || new Response('Offline', { status: 503 });
   }
-  
+
   return new Response('Offline', { status: 503 });
 }
 
@@ -265,7 +238,7 @@ async function getOfflineFallback(request) {
 async function limitCacheSize(cacheName, maxSize) {
   const cache = await caches.open(cacheName);
   const keys = await cache.keys();
-  
+
   // Remove oldest entries if cache exceeds max size
   while (keys.length > maxSize) {
     console.log(`[SW] Cache ${cacheName} exceeds ${maxSize} items, removing oldest entry`);
@@ -278,7 +251,7 @@ async function limitCacheSize(cacheName, maxSize) {
 // ============================================================================
 self.addEventListener('sync', (event) => {
   console.log('[SW] Background sync triggered:', event.tag);
-  
+
   if (event.tag === 'sync-timepunches') {
     event.waitUntil(syncTimePunches());
   }
@@ -304,7 +277,7 @@ async function syncTimePunches() {
 // ============================================================================
 self.addEventListener('push', (event) => {
   console.log('[SW] Push notification received');
-  
+
   let notificationData = {
     title: 'SupportPONTO',
     body: 'Você tem uma nova notificação',
@@ -344,11 +317,11 @@ self.addEventListener('notificationclick', (event) => {
 // ============================================================================
 self.addEventListener('message', (event) => {
   console.log('[SW] Message received:', event.data);
-  
+
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
+
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({
       version: CACHE_VERSION
