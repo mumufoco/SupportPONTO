@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Model;
 
 /**
@@ -50,12 +51,46 @@ class FacialFraudAlertModel extends Model
         return (bool) $this->insert($data);
     }
 
-    /** @return list<object> */
-    public function listWithEmployee(?string $status = null, ?int $employeeId = null): array
+    /**
+     * @return list<object>
+     */
+    public function listWithEmployee(?string $status = null, ?int $employeeId = null, ?string $department = null, int $limit = 0, int $offset = 0): array
     {
-        $builder = $this->select('facial_fraud_alerts.*, employees.name AS employee_name, employees.unique_code AS employee_code')
-            ->join('employees', 'employees.id = facial_fraud_alerts.employee_id')
+        $builder = $this->scopedBuilder($status, $employeeId, $department)
+            ->select('facial_fraud_alerts.*, employees.name AS employee_name, employees.unique_code AS employee_code')
             ->orderBy('facial_fraud_alerts.created_at', 'DESC');
+
+        if ($limit > 0) {
+            $builder->limit($limit, $offset);
+        }
+
+        return $builder->get()->getResult();
+    }
+
+    public function countScoped(?string $status = null, ?int $employeeId = null, ?string $department = null): int
+    {
+        $row = $this->scopedBuilder($status, $employeeId, $department)
+            ->select('COUNT(DISTINCT facial_fraud_alerts.id) AS aggregate_count', false)
+            ->get()
+            ->getRow();
+
+        return (int) ($row->aggregate_count ?? 0);
+    }
+
+    /**
+     * Builder novo a cada chamada (via $this->db->table(), nao $this->where()/$this->join())
+     * - o builder interno de um Model do CI4 acumula condicoes entre chamadas sucessivas na
+     * mesma instancia, e este model e usado varias vezes seguidas na mesma requisicao
+     * (contagem por status + listagem), o que faria a 2a chamada herdar filtros da 1a.
+     * Mesmo cuidado ja aplicado em WarningQueryService/AuditQueryService nesta sessao.
+     */
+    private function scopedBuilder(?string $status = null, ?int $employeeId = null, ?string $department = null): BaseBuilder
+    {
+        // LEFT JOIN (nao INNER): um alerta nunca deve sumir da listagem so porque o
+        // colaborador referenciado nao existe mais (fica "Colaborador removido" na tela
+        // em vez de o registro de auditoria desaparecer silenciosamente).
+        $builder = $this->db->table('facial_fraud_alerts')
+            ->join('employees', 'employees.id = facial_fraud_alerts.employee_id', 'left');
 
         if ($status !== null && $status !== '') {
             $builder->where('facial_fraud_alerts.status', $status);
@@ -65,12 +100,18 @@ class FacialFraudAlertModel extends Model
             $builder->where('facial_fraud_alerts.employee_id', $employeeId);
         }
 
-        return $builder->findAll();
+        // Gestor so pode ver/revisar alertas da propria equipe - mesma restricao ja
+        // aplicada em outras telas (auditoria, relatorios) para o papel gestor.
+        if ($department !== null && $department !== '') {
+            $builder->where('employees.department', $department);
+        }
+
+        return $builder;
     }
 
-    public function countByStatus(string $status): int
+    public function countByStatus(string $status, ?string $department = null): int
     {
-        return $this->where('status', $status)->countAllResults();
+        return $this->countScoped($status, null, $department);
     }
 
     public function markReviewed(int $id, int $reviewerId, string $status, string $notes = ''): bool
