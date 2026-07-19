@@ -51,10 +51,14 @@ class InformationController extends BaseController
 
         $fields = [
             'company_name', 'company_trade_name', 'company_cnpj',
-            'company_ie', 'company_cei', 'company_address', 'company_cep',
-            'company_city', 'company_state', 'company_phone', 'company_email',
+            'company_ie', 'company_cei', 'company_municipal_registration',
+            'company_address', 'company_cep', 'company_city', 'company_state',
+            'company_phone', 'company_whatsapp', 'company_email', 'company_website',
             'company_code', 'timezone', 'date_format', 'time_format',
             'default_language', 'currency',
+            'legal_rep_name', 'legal_rep_position', 'legal_rep_phone',
+            'legal_rep_email', 'legal_rep_cpf',
+            'tech_rep_name', 'tech_rep_position', 'tech_rep_crea', 'tech_rep_cpf',
         ];
 
         try {

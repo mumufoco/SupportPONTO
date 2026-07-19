@@ -89,7 +89,8 @@ class BiometricConsentController extends BaseController
         $actorId      = (int)  ($this->currentUser->id   ?? 0);
         $actorName    = (string)($this->currentUser->name ?? '');
         $now          = date('Y-m-d H:i:s');
-        $evidenceData = $employeeId . '|biometric_face|' . $term->version . '|' . $term->body . '|' . $now;
+        $resolvedBody = sp_apply_consent_variables($term->body);
+        $evidenceData = $employeeId . '|biometric_face|' . $term->version . '|' . $resolvedBody . '|' . $now;
 
         \Config\Database::connect()->table('user_consents')->insert([
             'employee_id'        => $employeeId,
@@ -100,7 +101,7 @@ class BiometricConsentController extends BaseController
             'granted_at'         => $now,
             'ip_address'         => $this->request->getIPAddress(),
             'user_agent'         => (string) $this->request->getUserAgent(),
-            'consent_text'       => $term->body,
+            'consent_text'       => $resolvedBody,
             'version'            => $term->version,
             'evidence_hash'      => hash('sha256', $evidenceData),
             'processing_context' => json_encode([
@@ -436,10 +437,11 @@ class BiometricConsentController extends BaseController
             return $this->redirectAfterConsent($type, $employeeId);
         }
 
-        $actorId   = (int)  ($this->currentUser->id   ?? 0);
-        $actorName = (string)($this->currentUser->name ?? '');
-        $now       = date('Y-m-d H:i:s');
-        $evidence  = $employeeId . '|' . $type . '|' . $term->version . '|' . $term->body . '|' . $now;
+        $actorId      = (int)  ($this->currentUser->id   ?? 0);
+        $actorName    = (string)($this->currentUser->name ?? '');
+        $now          = date('Y-m-d H:i:s');
+        $resolvedBody = sp_apply_consent_variables($term->body);
+        $evidence     = $employeeId . '|' . $type . '|' . $term->version . '|' . $resolvedBody . '|' . $now;
 
         \Config\Database::connect()->table('user_consents')->insert([
             'employee_id'             => $employeeId,
@@ -452,7 +454,7 @@ class BiometricConsentController extends BaseController
             'granted_at'              => $now,
             'ip_address'              => $this->request->getIPAddress(),
             'user_agent'              => (string) $this->request->getUserAgent(),
-            'consent_text'            => $term->body,
+            'consent_text'            => $resolvedBody,
             'version'                 => $term->version,
             'evidence_hash'           => hash('sha256', $evidence),
             'processing_context'      => json_encode([

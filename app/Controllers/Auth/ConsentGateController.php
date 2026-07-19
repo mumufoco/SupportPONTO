@@ -135,7 +135,7 @@ class ConsentGateController extends BaseController
 
         // Busca o texto do termo ativo; usa descrição padrão como fallback.
         $term        = $termModel->getActiveTerm($type);
-        $consentText = $term?->body ?? $meta['description'];
+        $consentText = sp_apply_consent_variables($term?->body ?? $meta['description']);
         $version     = $term?->version ?? '1.0';
         $legalBasis  = $term?->legal_basis ?? $meta['legal_basis'];
 

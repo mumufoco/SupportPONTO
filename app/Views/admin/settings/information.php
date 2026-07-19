@@ -52,6 +52,12 @@
                                value="<?= esc($settings['company_cei'] ?? '') ?>"
                                placeholder="Cadastro Específico do INSS">
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Inscrição Municipal</label>
+                        <input type="text" class="form-control" name="company_municipal_registration"
+                               value="<?= esc($settings['company_municipal_registration'] ?? '') ?>"
+                               placeholder="Número da inscrição municipal">
+                    </div>
                 </div>
             </div>
         </div>
@@ -70,10 +76,22 @@
                                placeholder="(00) 0000-0000">
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label fw-semibold">WhatsApp</label>
+                        <input type="text" class="form-control" name="company_whatsapp"
+                               value="<?= esc($settings['company_whatsapp'] ?? '') ?>"
+                               placeholder="(00) 00000-0000">
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold">E-mail corporativo</label>
                         <input type="email" class="form-control" id="company_email" name="company_email"
                                value="<?= esc($settings['company_email'] ?? '') ?>"
                                placeholder="contato@empresa.com.br">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Site</label>
+                        <input type="text" class="form-control" name="company_website"
+                               value="<?= esc($settings['company_website'] ?? '') ?>"
+                               placeholder="https://www.empresa.com.br">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Código interno</label>
@@ -114,6 +132,82 @@
                         <input type="text" class="form-control" id="company_state" name="company_state"
                                value="<?= esc($settings['company_state'] ?? '') ?>"
                                maxlength="2" placeholder="SP">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Responsável Legal -->
+        <div class="sp-card mb-3">
+            <div class="sp-card-header">
+                <span class="sp-card-title"><i class="bi bi-person-badge-fill"></i> Responsável Legal</span>
+            </div>
+            <div class="sp-card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Nome</label>
+                        <input type="text" class="form-control" name="legal_rep_name"
+                               value="<?= esc($settings['legal_rep_name'] ?? '') ?>"
+                               placeholder="Nome completo">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Cargo</label>
+                        <input type="text" class="form-control" name="legal_rep_position"
+                               value="<?= esc($settings['legal_rep_position'] ?? '') ?>"
+                               placeholder="Ex.: Sócio-administrador">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">CPF</label>
+                        <input type="text" class="form-control" id="legal_rep_cpf" name="legal_rep_cpf"
+                               value="<?= esc($settings['legal_rep_cpf'] ?? '') ?>"
+                               placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Telefone</label>
+                        <input type="text" class="form-control" name="legal_rep_phone"
+                               value="<?= esc($settings['legal_rep_phone'] ?? '') ?>"
+                               placeholder="(00) 00000-0000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">E-mail</label>
+                        <input type="email" class="form-control" name="legal_rep_email"
+                               value="<?= esc($settings['legal_rep_email'] ?? '') ?>"
+                               placeholder="responsavel@empresa.com.br">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Responsável Técnico -->
+        <div class="sp-card mb-3">
+            <div class="sp-card-header">
+                <span class="sp-card-title"><i class="bi bi-person-gear"></i> Responsável Técnico</span>
+            </div>
+            <div class="sp-card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Nome</label>
+                        <input type="text" class="form-control" name="tech_rep_name"
+                               value="<?= esc($settings['tech_rep_name'] ?? '') ?>"
+                               placeholder="Nome completo">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Cargo</label>
+                        <input type="text" class="form-control" name="tech_rep_position"
+                               value="<?= esc($settings['tech_rep_position'] ?? '') ?>"
+                               placeholder="Ex.: Engenheiro de Segurança do Trabalho">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">CREA</label>
+                        <input type="text" class="form-control" name="tech_rep_crea"
+                               value="<?= esc($settings['tech_rep_crea'] ?? '') ?>"
+                               placeholder="Número do registro CREA">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">CPF</label>
+                        <input type="text" class="form-control" id="tech_rep_cpf" name="tech_rep_cpf"
+                               value="<?= esc($settings['tech_rep_cpf'] ?? '') ?>"
+                               placeholder="000.000.000-00" maxlength="14">
                     </div>
                 </div>
             </div>
@@ -203,6 +297,8 @@
 <?= $this->section('scripts') ?>
 <script <?= csp_script_nonce_attr() ?>>
 SupportPontoValidation.bindEmailFormatField(document.getElementById('company_email'));
+SupportPontoValidation.bindCpfField(document.getElementById('legal_rep_cpf'));
+SupportPontoValidation.bindCpfField(document.getElementById('tech_rep_cpf'));
 SupportPontoValidation.bindCepField(document.getElementById('company_cep'), {
     fields: {
         logradouroCombined: 'company_address',

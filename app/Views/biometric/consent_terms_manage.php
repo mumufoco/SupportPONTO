@@ -165,12 +165,16 @@ if (!function_exists('sp_lgpd_parse_sections')) {
                         </div>
                     </header>
 
+                    <?php
+                        $isRichPreview = trim(strip_tags($activeTerm->body)) !== trim($activeTerm->body);
+                        $previewBody   = sp_apply_consent_variables($activeTerm->body, $isRichPreview);
+                    ?>
                     <div class="lgpd-paper__body">
-                        <?php if (trim(strip_tags($activeTerm->body)) !== trim($activeTerm->body)): ?>
-                            <?php // Termo redigido no editor rico -- ja sanitizado (ConsentTermSanitizerService) no momento do save, seguro pra ecoar direto. ?>
-                            <div class="lgpd-rich-body"><?= $activeTerm->body ?></div>
+                        <?php if ($isRichPreview): ?>
+                            <?php // Termo redigido no editor rico -- ja sanitizado (ConsentTermSanitizerService) no momento do save, seguro pra ecoar direto. Valores das variaveis {{...}} vem escapados (sp_apply_consent_variables($body, true)). ?>
+                            <div class="lgpd-rich-body"><?= $previewBody ?></div>
                         <?php else: ?>
-                            <?php foreach (sp_lgpd_parse_sections($activeTerm->body) as $section): ?>
+                            <?php foreach (sp_lgpd_parse_sections($previewBody) as $section): ?>
                                 <?php if ($section['heading']): ?>
                                     <section class="lgpd-clause">
                                         <h4 class="lgpd-clause__title"><?= esc($section['heading']) ?></h4>
@@ -240,6 +244,23 @@ if (!function_exists('sp_lgpd_parse_sections')) {
                             <div class="lgpd-hint">
                                 Use o botão <i class="bi bi-code-slash"></i> na barra do editor pra ver/editar o código-fonte (HTML) diretamente.
                                 Este texto será exibido ao colaborador no momento do aceite e gravado no registro.
+                            </div>
+                            <div class="lgpd-vars">
+                                <div class="lgpd-vars__title">
+                                    <i class="bi bi-braces"></i> Variáveis disponíveis
+                                    <span class="text-muted fw-normal">— clique para copiar, cole no texto do termo</span>
+                                </div>
+                                <div class="lgpd-vars__list">
+                                    <?php foreach (sp_consent_term_variables() as $var => $val): ?>
+                                        <button type="button" class="lgpd-var-chip js-copy-var" data-var="<?= esc($var) ?>"
+                                                title="<?= $val !== '' ? esc($val) : 'Não preenchido em Configurações → Informações da Empresa' ?>">
+                                            <?= esc($var) ?>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div class="lgpd-hint mb-0">
+                                    Os valores vêm de <a href="<?= site_url('admin/settings/information') ?>" target="_blank">Configurações → Informações da Empresa</a> e são substituídos automaticamente ao exibir/gravar o aceite do colaborador.
+                                </div>
                             </div>
                         </div>
                         <button type="submit" class="lgpd-submit"
@@ -417,6 +438,16 @@ if (!function_exists('sp_lgpd_parse_sections')) {
 .lgpd-textarea { font-family: 'SFMono-Regular', Consolas, monospace; line-height: 1.6; resize: vertical; }
 .lgpd-input:focus, .lgpd-textarea:focus { outline: none; border-color: var(--sp-primary); box-shadow: 0 0 0 3px var(--sp-primary-light); }
 .lgpd-hint { font-size: .72rem; color: var(--sp-text-muted); margin-top: .35rem; }
+.lgpd-vars { margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed var(--sp-border); }
+.lgpd-vars__title { font-size: .78rem; font-weight: 600; color: var(--sp-text-secondary); margin-bottom: .5rem; }
+.lgpd-vars__list { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .5rem; }
+.lgpd-var-chip {
+    font-family: 'SFMono-Regular', Consolas, monospace; font-size: .7rem; border: 1px solid var(--sp-border);
+    background: var(--sp-bg-page); color: var(--sp-primary); border-radius: var(--sp-radius-full, 999px);
+    padding: .25rem .65rem; cursor: pointer; transition: var(--sp-transition, all .15s ease);
+}
+.lgpd-var-chip:hover { background: var(--sp-primary-light); border-color: var(--sp-primary); }
+.lgpd-var-chip.is-copied { background: var(--sp-success-light); color: var(--sp-success); border-color: var(--sp-success); }
 .lgpd-submit {
     width: 100%; background: var(--sp-primary); color: #fff; border: none; border-radius: var(--sp-radius-md, 6px);
     padding: .7rem; font-weight: 600; font-size: .88rem; transition: var(--sp-transition, all .15s ease);
@@ -494,5 +525,20 @@ if (!function_exists('sp_lgpd_parse_sections')) {
         ],
     });
 })();
+
+document.querySelectorAll('.js-copy-var').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var text = btn.dataset.var || '';
+        navigator.clipboard.writeText(text).then(function () {
+            btn.classList.add('is-copied');
+            var original = btn.textContent;
+            btn.textContent = 'Copiado!';
+            setTimeout(function () {
+                btn.classList.remove('is-copied');
+                btn.textContent = original;
+            }, 1200);
+        });
+    });
+});
 </script>
 <?= $this->endSection() ?>
