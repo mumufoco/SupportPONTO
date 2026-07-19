@@ -3,6 +3,7 @@
 namespace App\Services\Timesheet\Endpoint;
 
 use App\Models\AuditModel;
+use App\Models\EmployeeModel;
 use App\Models\SettingModel;
 use App\Models\TimePunchModel;
 use chillerlan\QRCode\QRCode;
@@ -17,10 +18,11 @@ class TimePunchReceiptService
         private readonly AuditModel $auditModel,
         private readonly SettingModel $settingModel,
         private readonly TimePunchEndpointResultFactory $resultFactory = new TimePunchEndpointResultFactory(),
+        private readonly EmployeeModel $employeeModel = new EmployeeModel(),
     ) {
     }
 
-    public function generateReceipt(int $punchId, int $actorEmployeeId, bool $canManage = false): array
+    public function generateReceipt(int $punchId, int $actorEmployeeId, string $actorRole = '', string $actorDepartment = ''): array
     {
         if ($actorEmployeeId <= 0) {
             return $this->resultFactory->error('Usuário não autenticado.', 401);
@@ -31,7 +33,7 @@ class TimePunchReceiptService
             return $this->resultFactory->error('Registro não encontrado.', 404);
         }
 
-        $authorization = $this->authorizePunchAccess($punch, $actorEmployeeId, $canManage);
+        $authorization = $this->authorizePunchAccess($punch, $actorEmployeeId, $actorRole, $actorDepartment);
         if ($authorization !== null) {
             return $authorization;
         }
@@ -91,7 +93,7 @@ class TimePunchReceiptService
         ];
     }
 
-    public function resolveReceiptPath(string $year, string $month, string $filename, int $actorEmployeeId, bool $canManage = false): array
+    public function resolveReceiptPath(string $year, string $month, string $filename, int $actorEmployeeId, string $actorRole = '', string $actorDepartment = ''): array
     {
         if ($actorEmployeeId <= 0) {
             return $this->resultFactory->error('Usuário não autenticado.', 401);
@@ -107,7 +109,7 @@ class TimePunchReceiptService
             return $this->resultFactory->error('Registro não encontrado.', 404);
         }
 
-        $authorization = $this->authorizePunchAccess($punch, $actorEmployeeId, $canManage);
+        $authorization = $this->authorizePunchAccess($punch, $actorEmployeeId, $actorRole, $actorDepartment);
         if ($authorization !== null) {
             return $authorization;
         }
@@ -131,10 +133,30 @@ class TimePunchReceiptService
         ];
     }
 
-    private function authorizePunchAccess(object $punch, int $actorEmployeeId, bool $canManage): ?array
+    /**
+     * ALTO-xx (auditoria): antes bastava ser admin/gestor/rh (qualquer
+     * departamento) para baixar o comprovante -- nome + CPF descriptografado
+     * -- de QUALQUER colaborador. Mesmo padrao de escopo por departamento ja
+     * usado em TimePunchIntegrityService::canActorAccessPunch().
+     */
+    private function authorizePunchAccess(object $punch, int $actorEmployeeId, string $actorRole, string $actorDepartment): ?array
     {
-        if ($canManage) {
+        $normalizedRole = strtolower(trim($actorRole));
+
+        if (in_array($normalizedRole, ['admin', 'rh'], true)) {
             return null;
+        }
+
+        if ($normalizedRole === 'gestor') {
+            $targetEmployee = $this->employeeModel->find((int) $punch->employee_id);
+            if ($targetEmployee
+                && (string) ($targetEmployee->department ?? '') !== ''
+                && (string) ($targetEmployee->department ?? '') === $actorDepartment
+            ) {
+                return null;
+            }
+
+            return $this->resultFactory->error('Você não tem permissão para acessar este comprovante.', 403);
         }
 
         if ((int) $punch->employee_id !== $actorEmployeeId) {

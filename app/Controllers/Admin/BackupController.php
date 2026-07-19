@@ -76,9 +76,13 @@ class BackupController extends BaseController
             return redirect()->back()->with('error', 'Método inválido');
         }
 
+        // Teto elevado de 365 para 1825 dias (5 anos): o valor antigo era
+        // estruturalmente incompativel com a retencao minima legal CLT/MTE
+        // (5 anos) usada em outros pontos do sistema -- um admin nao conseguia
+        // configurar retencao de backup alinhada a esse minimo nem que quisesse.
         $days = (int) $this->request->getPost('backup_retention_days');
-        if ($days < 1 || $days > 365) {
-            return redirect()->back()->with('error', 'Retenção deve ser entre 1 e 365 dias.');
+        if ($days < 1 || $days > 1825) {
+            return redirect()->back()->with('error', 'Retenção deve ser entre 1 e 1825 dias (5 anos).');
         }
 
         $this->settingModel->setSetting('backup_retention_days', (string) $days, 'integer', 'backup');

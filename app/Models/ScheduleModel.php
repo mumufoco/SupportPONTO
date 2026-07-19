@@ -212,18 +212,28 @@ class ScheduleModel extends Model
 
     /**
      * Get schedule statistics
+     *
+     * $this->db->table() gera um builder novo a cada chamada -- encadear
+     * where()/like() direto no Model (com countAllResults(false), que pula o
+     * reset) faz cada linha herdar as condicoes das anteriores, ja que todas
+     * rodam sobre o mesmo builder cacheado da instancia. Antes disso, exceto
+     * a primeira linha ('total_schedules'), todas as demais ficavam com
+     * "status = X AND status = Y" (contraditorio, sempre 0). Mesmo padrao ja
+     * usado em outros pontos do sistema (ex.: FacialFraudAlertModel).
      */
     public function getScheduleStatistics(string $month): array
     {
-        $stats = [
-            'total_schedules' => $this->like('date', $month, 'after')->countAllResults(false),
-            'completed' => $this->like('date', $month, 'after')->where('status', 'completed')->countAllResults(false),
-            'scheduled' => $this->like('date', $month, 'after')->where('status', 'scheduled')->countAllResults(false),
-            'absent' => $this->like('date', $month, 'after')->where('status', 'absent')->countAllResults(false),
-            'cancelled' => $this->like('date', $month, 'after')->where('status', 'cancelled')->countAllResults(false)
-        ];
+        $scoped = function () use ($month) {
+            return $this->db->table($this->table)->like('date', $month, 'after');
+        };
 
-        return $stats;
+        return [
+            'total_schedules' => $scoped()->countAllResults(),
+            'completed' => $scoped()->where('status', 'completed')->countAllResults(),
+            'scheduled' => $scoped()->where('status', 'scheduled')->countAllResults(),
+            'absent' => $scoped()->where('status', 'absent')->countAllResults(),
+            'cancelled' => $scoped()->where('status', 'cancelled')->countAllResults(),
+        ];
     }
 
     /**

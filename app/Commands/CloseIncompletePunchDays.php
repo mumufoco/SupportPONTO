@@ -99,14 +99,25 @@ class CloseIncompletePunchDays extends BaseCommand
                 continue;
             }
 
-            $pendingModel->insert([
-                'employee_id'         => $employeeId,
-                'intended_punch_type' => $expectedType->value,
-                'intended_time'       => $intendedTime,
-                'justification_text'  => $placeholder,
-                'situation_type'      => 'missing_checkout',
-                'status'              => 'awaiting_employee',
-            ]);
+            // Isolado por colaborador: sem isso, um insert() com falha (blip de
+            // conexao, linha invalida) interrompia o foreach inteiro e os
+            // colaboradores seguintes na lista simplesmente nao eram
+            // processados naquela execucao -- sem nenhum aviso, ja que o cron
+            // roda desatendido a noite (mesmo padrao de risco ja corrigido em
+            // LGPDRetentionCleanup nesta sessao).
+            try {
+                $pendingModel->insert([
+                    'employee_id'         => $employeeId,
+                    'intended_punch_type' => $expectedType->value,
+                    'intended_time'       => $intendedTime,
+                    'justification_text'  => $placeholder,
+                    'situation_type'      => 'missing_checkout',
+                    'status'              => 'awaiting_employee',
+                ]);
+            } catch (\Throwable $e) {
+                log_message('error', 'Falha ao criar pendencia de ponto para colaborador #{id}: {msg}', ['id' => $employeeId, 'msg' => $e->getMessage()]);
+                continue;
+            }
 
             try {
                 $notificationService->notify(

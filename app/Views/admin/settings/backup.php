@@ -105,8 +105,8 @@
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Retenção (dias)</label>
                     <input type="number" class="form-control" name="backup_retention_days"
-                           value="<?= esc($retentionDays) ?>" min="1" max="365">
-                    <div class="form-text">Backups locais mais antigos são removidos automaticamente.</div>
+                           value="<?= esc($retentionDays) ?>" min="1" max="1825">
+                    <div class="form-text">Backups locais mais antigos são removidos automaticamente (máx. 1825 dias / 5 anos).</div>
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-primary">

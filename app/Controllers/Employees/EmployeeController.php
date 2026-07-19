@@ -660,10 +660,19 @@ class EmployeeController extends BaseController
     {
         $this->requireAuth();
 
-        // Only self-upload or manager
+        // Only self-upload or manager -- requireManager() sozinho e so checagem
+        // de papel (admin/gestor/rh de qualquer departamento); um gestor de
+        // outro departamento conseguia sobrescrever a foto de colaborador que
+        // nao gerencia. resolveManagerAccess() aplica o mesmo escopo por
+        // departamento ja usado em show()/edit()/update() deste controller.
         $isSelf = isset($this->currentUser) && (int)($this->currentUser->id ?? 0) === $id;
         if (!$isSelf) {
             $this->requireManager();
+
+            $access = $this->employeeControllerActionService->resolveManagerAccess($this->currentUser, $id);
+            if (!($access['success'] ?? false)) {
+                return $this->respondError($access['message'] ?? 'Você não tem permissão para gerenciar este colaborador.', null, 403);
+            }
         }
 
         $employeeModel = new \App\Models\EmployeeModel();

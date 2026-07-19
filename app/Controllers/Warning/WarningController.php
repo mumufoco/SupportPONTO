@@ -217,6 +217,10 @@ class WarningController extends BaseController
             return $this->warningNotFoundRedirect();
         }
 
+        if (! $this->accessService->canManageEmployee($employee, (int) $details['warning']->employee_id)) {
+            return $this->denyAccess();
+        }
+
         if (! $details['canAddWitness']) {
             return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Testemunha só pode ser adicionada após 48 horas sem assinatura.');
         }
@@ -236,6 +240,12 @@ class WarningController extends BaseController
             return $this->requestExpectsJson()
                 ? $this->jsonError('Advertência não encontrada.')
                 : $this->warningNotFoundRedirect();
+        }
+
+        if (! $this->accessService->canManageEmployee($employee, (int) $warning->employee_id)) {
+            return $this->requestExpectsJson()
+                ? $this->jsonError('Você não tem permissão para gerenciar esta advertência.')
+                : $this->denyAccess();
         }
 
         if (! $this->controllerActionService->canAddWitnessByTime($warning)) {
@@ -284,6 +294,10 @@ class WarningController extends BaseController
         $warning = $this->findWarningForJson((int) $id);
         if ($warning instanceof ResponseInterface) {
             return $warning;
+        }
+
+        if (! $this->accessService->canManageEmployee($employee, (int) $warning->employee_id)) {
+            return $this->jsonError('Você não tem permissão para gerenciar esta advertência.');
         }
 
         if (! $this->controllerActionService->canAddWitnessByTime($warning)) {

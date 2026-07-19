@@ -6,49 +6,10 @@
  * Functions for date/time formatting in Brazilian Portuguese
  */
 
-if (!function_exists('format_date_br')) {
-    /**
-     * Format date to Brazilian format (dd/mm/yyyy)
-     *
-     * @param string|null $date
-     * @return string
-     */
-    function format_date_br(?string $date): string
-    {
-        if (!$date) {
-            return '';
-        }
-
-        try {
-            return date('d/m/Y', strtotime($date));
-        } catch (\Exception $e) {
-            return $date;
-        }
-    }
-}
-
-if (!function_exists('format_datetime_br')) {
-    /**
-     * Format datetime to Brazilian format (dd/mm/yyyy HH:mm)
-     *
-     * @param string|null $datetime
-     * @param bool $showSeconds
-     * @return string
-     */
-    function format_datetime_br(?string $datetime, bool $showSeconds = false): string
-    {
-        if (!$datetime) {
-            return '';
-        }
-
-        try {
-            $format = $showSeconds ? 'd/m/Y H:i:s' : 'd/m/Y H:i';
-            return date($format, strtotime($datetime));
-        } catch (\Exception $e) {
-            return $datetime;
-        }
-    }
-}
+// format_date_br() e format_datetime_br() foram removidas daqui: ja existiam
+// (com defaults diferentes) em custom_helper.php, que carrega antes de
+// 'datetime' em Config/Autoload.php -- essas versoes nunca eram chamadas,
+// armadilha de manutencao (editar aqui nao tinha efeito nenhum em producao).
 
 if (!function_exists('format_time')) {
     /**

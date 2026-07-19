@@ -177,7 +177,12 @@ class LGPDRetentionCleanup extends BaseCommand
         $db         = \Config\Database::connect();
         $cutoffDate = Time::now()->subDays($biometricRetentionDays)->toDateString();
 
-        // Funcionários com biometria mas sem consentimento ativo ou revogado
+        // Funcionários com biometria mas sem consentimento ativo ou revogado.
+        // 'biometric_data' entra na lista porque o cadastro facial via API de
+        // auto-enrollment (ApiFaceBiometricService) grava consentimento sob
+        // esse tipo generico, nao 'biometric_face' -- sem isso, um colaborador
+        // com consentimento valido via aquele fluxo era tratado como "sem
+        // consentimento" e tinha a biometria purgada por engano.
         $query = "
             SELECT e.id, e.name, e.has_face_biometric, e.has_fingerprint_biometric
             FROM employees e
@@ -185,7 +190,7 @@ class LGPDRetentionCleanup extends BaseCommand
             AND NOT EXISTS (
                 SELECT 1 FROM user_consents uc
                 WHERE uc.employee_id = e.id
-                AND uc.consent_type IN ('biometric_face', 'biometric_fingerprint')
+                AND uc.consent_type IN ('biometric_face', 'biometric_fingerprint', 'biometric_data')
                 AND uc.granted = TRUE
                 AND uc.revoked_at IS NULL
             )
@@ -242,7 +247,17 @@ class LGPDRetentionCleanup extends BaseCommand
 
         $result = $this->auditModel->verifyIntegrity(5000);
 
-        if ($result['valid']) {
+        // forensic_review_required pode ficar true mesmo com valid=true --
+        // caso do modo de continuidade tolerante (anonimizacao LGPD legitima
+        // quebrando o checksum armazenado de registros antigos, nao
+        // adulteracao de verdade). Antes isso nunca era sinalizado em lugar
+        // nenhum (nem no CLI, nem por e-mail); agora ao menos aparece como
+        // aviso -- sem disparar o alerta de "ADULTERACAO CRITICA", que e
+        // reservado para tampered_ids de fato.
+        if ($result['valid'] && ! empty($result['forensic_review_required'])) {
+            CLI::write("  ⚠️  Cadeia válida, mas com continuidade tolerante em {$result['checked']} registros — revisão forense recomendada (provável efeito de anonimização LGPD).", 'yellow');
+            log_message('warning', '[LGPD-Retention] Cadeia de auditoria válida porém com forensic_review_required=true (modo de continuidade tolerante).');
+        } elseif ($result['valid']) {
             CLI::write("  ✅ Cadeia íntegra — {$result['checked']} registros verificados", 'green');
         } else {
             $tampered = implode(', ', array_slice($result['tampered_ids'], 0, 10));

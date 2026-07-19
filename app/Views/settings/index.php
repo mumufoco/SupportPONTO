@@ -332,7 +332,7 @@
                                         <label class="form-label fw-semibold">Retenção (dias)</label>
                                         <input type="number" class="form-control" name="backup_retention_days"
                                                value="<?= esc($settings['backup']['backup_retention_days'] ?? '30') ?>"
-                                               min="1" max="365">
+                                               min="1" max="1825">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold">Armazenamento</label>

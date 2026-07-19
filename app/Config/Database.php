@@ -52,7 +52,10 @@ class Database extends Config
         'DSN'          => '',
         'hostname'     => '127.0.0.1',
         'username'     => 'postgres',
-        'password'     => 'postgres',
+        // Sem senha hardcoded no repo -- assim como $default acima, este valor
+        // e sobrescrito automaticamente por database.tests.password no .env
+        // (convencao de BaseConfig::initEnvValue()) quando definido.
+        'password'     => '',
         'database'     => 'supportponto_test',
         'DBDriver'     => 'Postgre',
         'DBPrefix'     => '',

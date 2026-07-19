@@ -164,21 +164,33 @@ class ReportQueueModel extends Model
      * @param int $daysOld Jobs older than this many days
      * @return int Number of deleted records
      */
+    /**
+     * Sem groupStart()/groupEnd(), "status='completed' OR status='failed' AND
+     * completed_at < cutoff" e interpretado pela precedencia SQL padrao como
+     * "status='completed' OR (status='failed' AND completed_at < cutoff)" --
+     * ou seja, TODO job 'completed' seria apagado, independente da idade, nao
+     * so os antigos. Tambem trocado para $this->db->table() (builder novo a
+     * cada chamada) em vez de encadear direto no Model, que herdava condicoes
+     * entre as tres chamadas sequenciais na mesma instancia.
+     */
     public function cleanOldJobs(int $daysOld = 30): int
     {
         $cutoffDate = date('Y-m-d H:i:s', strtotime("-{$daysOld} days"));
 
-        $count = $this->where('status', 'completed')
-            ->orWhere('status', 'failed')
-            ->where('completed_at <', $cutoffDate)
-            ->countAllResults(false);
+        $scoped = function () use ($cutoffDate) {
+            return $this->db->table($this->table)
+                ->groupStart()
+                    ->where('status', 'completed')
+                    ->orWhere('status', 'failed')
+                ->groupEnd()
+                ->where('completed_at <', $cutoffDate);
+        };
+
+        $count = $scoped()->countAllResults();
 
         if ($count > 0) {
             // Delete associated files first
-            $jobs = $this->where('status', 'completed')
-                ->orWhere('status', 'failed')
-                ->where('completed_at <', $cutoffDate)
-                ->findAll();
+            $jobs = $scoped()->get()->getResult();
 
             foreach ($jobs as $job) {
                 if ($job->result_file_path && file_exists($job->result_file_path)) {
@@ -187,10 +199,7 @@ class ReportQueueModel extends Model
             }
 
             // Delete records
-            $this->where('status', 'completed')
-                ->orWhere('status', 'failed')
-                ->where('completed_at <', $cutoffDate)
-                ->delete();
+            $scoped()->delete();
         }
 
         return $count;

@@ -153,7 +153,8 @@ class TimePunchController extends BaseController
         return $this->respondPunchResult($this->endpointService->generateReceipt(
             $punchId,
             (int) ($this->currentUser->id ?? 0),
-            $this->isManager()
+            (string) ($this->currentUser->role ?? ''),
+            (string) ($this->currentUser->department ?? '')
         ));
     }
 
@@ -171,7 +172,8 @@ class TimePunchController extends BaseController
             $month,
             $filename,
             (int) ($this->currentUser->id ?? 0),
-            $this->isManager()
+            (string) ($this->currentUser->role ?? ''),
+            (string) ($this->currentUser->department ?? '')
         );
 
         if (!($result['success'] ?? false)) {

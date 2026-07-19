@@ -50,6 +50,16 @@ class FaceRecognitionController extends BaseController
             return redirect()->to(site_url('biometric/manage'));
         }
 
+        // requireBiometricManagerArea() acima so checa papel (admin/gestor/rh
+        // de qualquer departamento); sem este segundo check, um gestor de
+        // outro departamento alcancava a tela de cadastro biometrico (nome e
+        // estado de consentimento) de colaborador que nao gerencia -- mesmo
+        // escopo por departamento ja aplicado em enrollFace()/deleteUserTemplates().
+        if (!$this->canManageBiometricEmployee($targetEmployee)) {
+            $this->setError('Você não tem permissão para gerenciar a biometria deste colaborador.');
+            return redirect()->to(site_url('biometric/manage'));
+        }
+
         // LGPD gate: check if employee has accepted current biometric consent term
         $termModel    = new \App\Models\ConsentTermModel();
         $activeTerm   = $termModel->getActiveTerm('biometric_face');

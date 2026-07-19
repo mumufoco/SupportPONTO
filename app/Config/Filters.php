@@ -206,6 +206,14 @@ class Filters extends BaseConfig
                 // (8 dígitos) sem qualquer bloqueio, mesmo já existindo o bucket
                 // '2fa_verify' dedicado em RateLimitPolicyService (5 tentativas/10min).
                 'auth/2fa/verify',
+                // RateLimitFilter::$endpointLimits ja mapeia estas duas rotas pro
+                // bucket 'password_reset', mas o filtro nunca era aplicado a elas
+                // aqui -- a unica protecao real vinha de um limitador em nivel de
+                // aplicacao (PasswordResetService), nao do filtro HTTP. Adicionado
+                // como defesa em profundidade, consistente com o mapeamento que
+                // ja existia (e nunca era alcancado).
+                'auth/forgot-password',
+                'auth/reset-password',
                 'timesheet/punch',
                 'timesheet/punch/*',
             ],

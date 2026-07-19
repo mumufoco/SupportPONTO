@@ -46,6 +46,7 @@ class TimePunchEndpointService
             new \App\Models\AuditModel(),
             new \App\Models\SettingModel(),
             $this->resultFactory,
+            new \App\Models\EmployeeModel(),
         );
 
         $this->integrityService = $integrityService ?? new TimePunchIntegrityService(
@@ -137,9 +138,9 @@ class TimePunchEndpointService
         return $this->qrService->generateForEmployee($employeeId);
     }
 
-    public function generateReceipt(int $punchId, int $actorEmployeeId, bool $canManage = false): array
+    public function generateReceipt(int $punchId, int $actorEmployeeId, string $actorRole = '', string $actorDepartment = ''): array
     {
-        return $this->receiptService->generateReceipt($punchId, $actorEmployeeId, $canManage);
+        return $this->receiptService->generateReceipt($punchId, $actorEmployeeId, $actorRole, $actorDepartment);
     }
 
     public function verifyHash(int $punchId, ?int $actorEmployeeId = null, string $actorRole = '', string $actorDepartment = ''): array
@@ -157,8 +158,8 @@ class TimePunchEndpointService
         return $this->integrityService->validatePunchByNsrPublic($nsr);
     }
 
-    public function resolveReceiptPath(string $year, string $month, string $filename, int $actorEmployeeId, bool $canManage = false): array
+    public function resolveReceiptPath(string $year, string $month, string $filename, int $actorEmployeeId, string $actorRole = '', string $actorDepartment = ''): array
     {
-        return $this->receiptService->resolveReceiptPath($year, $month, $filename, $actorEmployeeId, $canManage);
+        return $this->receiptService->resolveReceiptPath($year, $month, $filename, $actorEmployeeId, $actorRole, $actorDepartment);
     }
 }
