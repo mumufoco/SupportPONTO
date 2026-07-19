@@ -488,16 +488,61 @@ if (!function_exists('support_login_background_url')) {
     }
 }
 
-if (!function_exists('sp_consent_term_variables')) {
+if (!function_exists('sp_employee_consent_variables')) {
     /**
-     * Mapa de variaveis (nome da variavel => valor atual) disponiveis para uso
-     * no corpo dos termos de consentimento (settings/consent-terms), lidas de
-     * Admin/Informacoes da Empresa. Sintaxe de uso no corpo do termo: {nome},
-     * mesmo padrao usado pelos templates de e-mail (EmailTemplateCatalog).
+     * Variaveis basicas do colaborador para personalizar termos (ex.: "Eu,
+     * {colaborador_nome}, portador do CPF {colaborador_cpf}..."). Sem
+     * $employee (ex.: pre-visualizacao generica no editor do termo, sem um
+     * colaborador especifico em contexto), retorna as mesmas chaves com valor
+     * vazio -- assim os botoes de variavel aparecem sempre, e o texto some
+     * discretamente (nao vira {colaborador_nome} literal) quando nao ha
+     * colaborador para resolver.
      *
      * @return array<string,string>
      */
-    function sp_consent_term_variables(): array
+    function sp_employee_consent_variables(?object $employee): array
+    {
+        if ($employee === null) {
+            return [
+                'colaborador_nome'         => '',
+                'colaborador_cpf'          => '',
+                'colaborador_rg'           => '',
+                'colaborador_cargo'        => '',
+                'colaborador_departamento' => '',
+                'colaborador_email'        => '',
+                'colaborador_admissao'     => '',
+            ];
+        }
+
+        $cpf = preg_replace('/\D/', '', (string) ($employee->cpf ?? '')) ?? '';
+        $cpfFormatted = strlen($cpf) === 11
+            ? substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2)
+            : $cpf;
+
+        return [
+            'colaborador_nome'         => (string) ($employee->name ?? ''),
+            'colaborador_cpf'          => $cpfFormatted,
+            'colaborador_rg'           => (string) ($employee->rg ?? ''),
+            'colaborador_cargo'        => (string) ($employee->position ?? $employee->cargo ?? ''),
+            'colaborador_departamento' => (string) ($employee->department ?? ''),
+            'colaborador_email'        => (string) ($employee->email ?? ''),
+            'colaborador_admissao'     => ! empty($employee->admission_date) ? format_date_br((string) $employee->admission_date) : '',
+        ];
+    }
+}
+
+if (!function_exists('sp_consent_term_variables')) {
+    /**
+     * Mapa de variaveis (nome da variavel => valor atual) disponiveis para uso
+     * no corpo dos termos de consentimento (settings/consent-terms): dados da
+     * empresa/responsaveis (Admin/Informacoes da Empresa) + dados basicos do
+     * colaborador quando um $employee especifico e informado. Sintaxe de uso
+     * no corpo do termo: {nome}, mesmo padrao usado pelos templates de e-mail
+     * (EmailTemplateCatalog).
+     *
+     * @return array<string,string>
+     */
+    function sp_consent_term_variables(?object $employee = null): array
     {
         $get = static fn (string $key): string => (string) system_setting($key, '');
 
@@ -536,26 +581,27 @@ if (!function_exists('sp_consent_term_variables')) {
             'responsavel_tecnico_cargo'   => $get('tech_rep_position'),
             'responsavel_tecnico_crea'    => $get('tech_rep_crea'),
             'responsavel_tecnico_cpf'     => $get('tech_rep_cpf'),
-        ];
+        ] + sp_employee_consent_variables($employee);
     }
 }
 
 if (!function_exists('sp_apply_consent_variables')) {
     /**
      * Substitui as variaveis {nome} (ver sp_consent_term_variables()) pelo
-     * valor cadastrado em Admin/Informacoes da Empresa. Aplicado tanto na
-     * pre-visualizacao do termo quanto no snapshot gravado em
-     * user_consents.consent_text no momento do aceite -- o registro juridico
-     * permanente deve conter os dados reais, nunca o placeholder.
+     * valor cadastrado em Admin/Informacoes da Empresa e, quando informado,
+     * pelos dados do colaborador $employee. Aplicado tanto na pre-visualizacao
+     * do termo quanto no snapshot gravado em user_consents.consent_text no
+     * momento do aceite -- o registro juridico permanente deve conter os
+     * dados reais, nunca o placeholder.
      */
-    function sp_apply_consent_variables(?string $text, bool $escapeValues = false): string
+    function sp_apply_consent_variables(?string $text, bool $escapeValues = false, ?object $employee = null): string
     {
         $text = (string) ($text ?? '');
         if ($text === '' || strpos($text, '{') === false) {
             return $text;
         }
 
-        $vars = sp_consent_term_variables();
+        $vars = sp_consent_term_variables($employee);
 
         return (string) preg_replace_callback('/\{([a-zA-Z0-9_]+)\}/', static function (array $m) use ($vars, $escapeValues): string {
             if (! array_key_exists($m[1], $vars)) {
@@ -575,12 +621,13 @@ if (!function_exists('sp_render_consent_body')) {
      * saveTerm()) ja chegam aqui sanitizados por ConsentTermSanitizerService
      * no momento do save -- seguro pra ecoar direto. Termos legados em texto
      * puro (sem nenhuma marcacao) continuam escapados + nl2br(), como sempre
-     * foram. As variaveis {nome} (dados da empresa/responsaveis) sao
-     * resolvidas antes de renderizar -- com os valores escapados no ramo HTML
-     * (ecoado sem esc() global), e crus no ramo texto-puro (que passa pelo
-     * esc() do corpo inteiro logo abaixo).
+     * foram. As variaveis {nome} (dados da empresa/responsaveis e, quando
+     * $employee e informado, do colaborador) sao resolvidas antes de
+     * renderizar -- com os valores escapados no ramo HTML (ecoado sem esc()
+     * global), e crus no ramo texto-puro (que passa pelo esc() do corpo
+     * inteiro logo abaixo).
      */
-    function sp_render_consent_body(?string $body): string
+    function sp_render_consent_body(?string $body, ?object $employee = null): string
     {
         $raw = (string) ($body ?? '');
         if ($raw === '') {
@@ -590,10 +637,10 @@ if (!function_exists('sp_render_consent_body')) {
         $isHtml = trim(strip_tags($raw)) !== trim($raw);
 
         if ($isHtml) {
-            return sp_apply_consent_variables($raw, true);
+            return sp_apply_consent_variables($raw, true, $employee);
         }
 
-        return nl2br(esc(sp_apply_consent_variables($raw, false)));
+        return nl2br(esc(sp_apply_consent_variables($raw, false, $employee)));
     }
 }
 

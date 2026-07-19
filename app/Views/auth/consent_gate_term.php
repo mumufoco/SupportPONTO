@@ -53,7 +53,7 @@
              style="max-height:260px;overflow-y:auto;font-size:.82rem;
                     background:var(--sp-surface-alt,#f8f9fa);line-height:1.6;">
             <?php if ($term !== null): ?>
-                <?= sp_render_consent_body($term->body) ?>
+                <?= sp_render_consent_body($term->body, $employee ?? null) ?>
             <?php else: ?>
                 <p><?= esc($meta['description']) ?></p>
                 <p class="text-muted">

@@ -54,9 +54,13 @@
                         </div>
                     <?php endif; ?>
                     <div class="form-text mt-2">
-                        Clique em uma variável para inserir no cursor. Os valores vêm de
-                        <a href="<?= site_url('admin/settings/information') ?>" target="_blank">Configurações → Informações da Empresa</a>
-                        e são substituídos automaticamente ao exibir o termo e ao gravar o aceite do colaborador.
+                        Clique em uma variável para inserir no cursor. As variáveis <code>empresa_*</code> e
+                        <code>responsavel_*</code> vêm de
+                        <a href="<?= site_url('admin/settings/information') ?>" target="_blank">Configurações → Informações da Empresa</a>;
+                        as variáveis <code>colaborador_*</code> vêm do cadastro de cada colaborador e só são
+                        resolvidas quando o termo é exibido/assinado por ele especificamente — na pré-visualização
+                        acima, como não há um colaborador em contexto, todas as variáveis aparecem como texto
+                        literal (ex.: <code>{colaborador_nome}</code>).
                         Aceita HTML simples (parágrafos, listas, negrito, links, tabelas).
                     </div>
                 </div>
@@ -113,13 +117,21 @@
     <?php endif; ?>
 
     <!-- Preview modal -->
-    <div id="preview-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
-        <div style="background:#fff;border-radius:8px;width:90%;max-width:700px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
-            <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
-                <strong style="font-size:15px">Pré-visualização</strong>
-                <button type="button" id="close-preview" style="background:none;border:none;cursor:pointer;font-size:20px;color:#666">&times;</button>
+    <div id="preview-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);align-items:center;justify-content:center;">
+        <div style="background:#e9ecef;border-radius:8px;width:94%;max-width:900px;height:92vh;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:12px 20px;border-bottom:1px solid #dee2e6;background:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                <div>
+                    <strong style="font-size:15px">Pré-visualização — folha A4</strong>
+                    <span id="preview-page-count" class="badge bg-secondary ms-2"></span>
+                </div>
+                <button type="button" id="close-preview" style="background:none;border:none;cursor:pointer;font-size:22px;color:#666;line-height:1">&times;</button>
             </div>
-            <iframe id="preview-frame" style="flex:1;border:none;min-height:500px" title="Pré-visualização do termo"></iframe>
+            <div style="padding:6px 20px;background:#fff;border-bottom:1px solid #dee2e6;flex-shrink:0;">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>Simula folha A4 (210×297mm, margens de 25mm) como referência de como o termo tende a ficar paginado no SupportCHECK. As linhas tracejadas marcam onde uma nova página começaria.
+                </small>
+            </div>
+            <iframe id="preview-frame" style="flex:1;border:none;width:100%" title="Pré-visualização do termo em folha A4"></iframe>
         </div>
     </div>
 </div>
@@ -149,10 +161,85 @@
 
     var modal = document.getElementById('preview-modal');
     var frame = document.getElementById('preview-frame');
+    var pageCountBadge = document.getElementById('preview-page-count');
+
+    // Documento A4 (210x297mm, margens de 25mm) usado dentro do iframe. As
+    // linhas de quebra de página são calculadas via JS depois de renderizar,
+    // comparando a altura real do conteúdo com a altura útil de uma folha —
+    // não é paginação de impressão de verdade, só uma referência visual clara
+    // de "isso vai ocupar mais de uma página" (o objetivo pedido).
+    function buildA4Html(bodyHtml) {
+        return '<!doctype html><html><head><meta charset="utf-8">'
+            + '<style>'
+            + '  * { box-sizing: border-box; }'
+            + '  html, body { margin:0; padding:0; background:#e9ecef; }'
+            + '  body { padding: 24px 0 60px; font-family: Arial, Helvetica, sans-serif; }'
+            + '  #mm-probe { width: 1mm; height: 0; }'
+            + '  .a4-wrap { position: relative; width: 210mm; margin: 0 auto; }'
+            + '  .a4-sheet { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 25mm 20mm; '
+            + '    background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.3); position: relative; '
+            + '    font-size: 12pt; line-height: 1.6; color: #1a1a1a; }'
+            + '  .a4-sheet h1, .a4-sheet h2, .a4-sheet h3 { margin-top:0; }'
+            + '  .a4-sheet p { margin: 0 0 .8em; }'
+            + '  .a4-sheet table { width:100%; border-collapse:collapse; }'
+            + '  .page-break-line { position:absolute; left:0; right:0; border-top:2px dashed #dc3545; z-index:5; }'
+            + '  .page-break-label { position:absolute; right: 20mm; top:-11px; background:#dc3545; color:#fff; '
+            + '    font-size:9px; font-weight:700; letter-spacing:.03em; padding:2px 8px; border-radius:3px; z-index:6; }'
+            + '</style></head><body>'
+            + '<div id="mm-probe"></div>'
+            + '<div class="a4-wrap"><div class="a4-sheet" id="a4-sheet">' + bodyHtml + '</div></div>'
+            + '</body></html>';
+    }
+
+    function renderPreview() {
+        frame.srcdoc = buildA4Html(textarea.value);
+
+        frame.onload = function () {
+            try {
+                var doc = frame.contentDocument;
+                var sheet = doc.getElementById('a4-sheet');
+                var probe = doc.getElementById('mm-probe');
+                if (!sheet || !probe) { return; }
+
+                var mmToPx = probe.getBoundingClientRect().width || 3.7795;
+                var pagePaddingPx = 25 * mmToPx; // topo e rodapé (25mm cada)
+                var pageHeightPx = 297 * mmToPx;
+                var usablePerPagePx = pageHeightPx - (pagePaddingPx * 2);
+
+                var contentHeightPx = sheet.scrollHeight - (pagePaddingPx * 2);
+                var pageCount = Math.max(1, Math.ceil(contentHeightPx / usablePerPagePx));
+
+                pageCountBadge.textContent = pageCount === 1
+                    ? '1 página A4'
+                    : pageCount + ' páginas A4';
+                pageCountBadge.className = 'badge ms-2 ' + (pageCount > 1 ? 'bg-warning text-dark' : 'bg-success');
+
+                // Remove marcadores de uma renderização anterior antes de recalcular.
+                doc.querySelectorAll('.page-break-line').forEach(function (el) { el.remove(); });
+
+                for (var i = 1; i < pageCount; i++) {
+                    var marker = doc.createElement('div');
+                    marker.className = 'page-break-line';
+                    marker.style.top = (pagePaddingPx + (i * usablePerPagePx)) + 'px';
+
+                    var label = doc.createElement('span');
+                    label.className = 'page-break-label';
+                    label.textContent = 'Página ' + (i + 1);
+                    marker.appendChild(label);
+
+                    sheet.appendChild(marker);
+                }
+            } catch (err) {
+                // Pré-visualização segue funcional sem os marcadores de página
+                // caso o cálculo falhe por qualquer motivo (não deve impedir o uso).
+            }
+        };
+    }
 
     document.getElementById('btn-preview').addEventListener('click', function () {
         modal.style.display = 'flex';
-        frame.srcdoc = textarea.value;
+        pageCountBadge.textContent = '';
+        renderPreview();
     });
 
     document.getElementById('close-preview').addEventListener('click', function () {

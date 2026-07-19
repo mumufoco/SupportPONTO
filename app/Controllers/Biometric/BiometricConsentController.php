@@ -89,7 +89,7 @@ class BiometricConsentController extends BaseController
         $actorId      = (int)  ($this->currentUser->id   ?? 0);
         $actorName    = (string)($this->currentUser->name ?? '');
         $now          = date('Y-m-d H:i:s');
-        $resolvedBody = sp_apply_consent_variables($term->body);
+        $resolvedBody = sp_apply_consent_variables($term->body, false, $employee);
         $evidenceData = $employeeId . '|biometric_face|' . $term->version . '|' . $resolvedBody . '|' . $now;
 
         \Config\Database::connect()->table('user_consents')->insert([
@@ -449,7 +449,7 @@ class BiometricConsentController extends BaseController
         $actorId      = (int)  ($this->currentUser->id   ?? 0);
         $actorName    = (string)($this->currentUser->name ?? '');
         $now          = date('Y-m-d H:i:s');
-        $resolvedBody = sp_apply_consent_variables($term->body);
+        $resolvedBody = sp_apply_consent_variables($term->body, false, $employee);
         $evidence     = $employeeId . '|' . $type . '|' . $term->version . '|' . $resolvedBody . '|' . $now;
 
         \Config\Database::connect()->table('user_consents')->insert([

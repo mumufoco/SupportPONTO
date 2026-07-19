@@ -4,6 +4,7 @@ namespace App\Controllers\Auth;
 
 use App\Controllers\BaseController;
 use App\Models\ConsentTermModel;
+use App\Models\EmployeeModel;
 use App\Models\UserConsentModel;
 use App\Services\LGPD\ConsentGateCatalog;
 
@@ -71,6 +72,7 @@ class ConsentGateController extends BaseController
         $termModel = model(ConsentTermModel::class);
         $term      = $termModel->getActiveTerm($type);
         $meta      = self::REQUIRED_TYPES[$type];
+        $employee  = model(EmployeeModel::class)->find($userId);
 
         // Próximo termo pendente (para mostrar progresso)
         $pending = $this->getPendingTypes($userId, $consentModel);
@@ -82,6 +84,7 @@ class ConsentGateController extends BaseController
             'type'       => $type,
             'meta'       => $meta,
             'term'       => $term,
+            'employee'   => $employee,
             'done'       => $done,
             'total'      => $total,
             'position'   => $position !== false ? (int) $position : 0,
@@ -102,10 +105,11 @@ class ConsentGateController extends BaseController
         $consentModel = model(UserConsentModel::class);
         $termModel    = model(ConsentTermModel::class);
         $meta         = self::REQUIRED_TYPES[$type];
+        $employee     = model(EmployeeModel::class)->find($userId);
 
         // Busca o texto do termo ativo; usa descrição padrão como fallback.
         $term        = $termModel->getActiveTerm($type);
-        $consentText = sp_apply_consent_variables($term?->body ?? $meta['description']);
+        $consentText = sp_apply_consent_variables($term?->body ?? $meta['description'], false, $employee);
         $version     = $term?->version ?? '1.0';
         $legalBasis  = $term?->legal_basis ?? $meta['legal_basis'];
 
@@ -140,11 +144,12 @@ class ConsentGateController extends BaseController
         $userId       = (int) session('user_id');
         $consentModel = model(UserConsentModel::class);
         $termModel    = model(ConsentTermModel::class);
+        $employee     = model(EmployeeModel::class)->find($userId);
 
         foreach ($this->getPendingTypes($userId, $consentModel) as $type) {
             $meta        = self::REQUIRED_TYPES[$type];
             $term        = $termModel->getActiveTerm($type);
-            $consentText = sp_apply_consent_variables($term?->body ?? $meta['description']);
+            $consentText = sp_apply_consent_variables($term?->body ?? $meta['description'], false, $employee);
             $version     = $term?->version ?? '1.0';
             $legalBasis  = $term?->legal_basis ?? $meta['legal_basis'];
 
