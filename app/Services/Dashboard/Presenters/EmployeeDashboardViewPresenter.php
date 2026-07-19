@@ -21,11 +21,7 @@ class EmployeeDashboardViewPresenter extends AbstractDashboardViewPresenter
 
         $presentation = [
             'pageHeader' => $this->normalizePageHeader([
-                'actions' => [
-                    ['label' => lang('DashboardEmployee.actions.punch'), 'icon' => 'bi bi-clock-fill', 'url' => sp_timesheet_punch_url()],
-                    ['label' => lang('DashboardEmployee.actions.history'), 'icon' => 'bi bi-calendar3', 'url' => sp_timesheet_history_url()],
-                    ['label' => lang('DashboardEmployee.actions.justifications'), 'icon' => 'bi bi-file-earmark-text', 'url' => sp_justifications_index_url()],
-                ],
+                'actions' => [],
             ], lang('DashboardEmployee.title'), lang('DashboardEmployee.subtitle'), lang('DashboardEmployee.icon')),
             'hero' => [
                 'title' => lang('DashboardEmployee.hero.greeting', [$userName]),
@@ -109,3 +105,4 @@ class EmployeeDashboardViewPresenter extends AbstractDashboardViewPresenter
 
     }
 }
+
