@@ -56,10 +56,39 @@ class PunchService
         return $this->employeeModel->findByCpf($cpfDigits);
     }
 
+    /**
+     * Valida o dado lido pelo scanner do método "QR Code" do ponto.
+     *
+     * Existem DOIS formatos de QR Code no sistema, gerados por telas diferentes:
+     *  1. O QR dinâmico de autoatendimento (/qrcode/my-qrcode) — um JWT assinado,
+     *     de uso único, válido por 5 minutos (QRCodeService).
+     *  2. O QR "crachá" gerado pelo admin em employees/{id}/qrcode — apenas o
+     *     unique_code puro do funcionário, sem expiração, pensado para ser
+     *     impresso e reutilizado indefinidamente.
+     *
+     * Antes desta correção, só o formato 1 era aceito aqui: um crachá impresso
+     * pelo admin, ao ser escaneado no método "QR Code", sempre retornava "QR
+     * Code inválido" (JWT::decode falha em uma string que não é um JWT),
+     * apesar da própria tela do admin instruir a usá-lo para bater ponto pelo
+     * terminal. Se a validação do token falhar, tenta tratar o dado lido como
+     * um unique_code puro (mesma busca usada pelo método "Código único") —
+     * mesmo nível de segurança que esse método já tem hoje, sem token de
+     * uso único para marcar consumido (jti retorna null).
+     */
     public function validateQrToken(string $qrData): array
     {
         $qrService = new QRCodeService();
-        return $qrService->validateToken($qrData);
+        $result = $qrService->validateToken($qrData);
+        if ($result['valid'] ?? false) {
+            return $result;
+        }
+
+        $employee = $this->employeeModel->findByCode($qrData);
+        if ($employee && !empty($employee->active)) {
+            return ['valid' => true, 'employee' => $employee, 'jti' => null];
+        }
+
+        return $result;
     }
 
     /**
