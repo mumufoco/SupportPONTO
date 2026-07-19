@@ -66,7 +66,6 @@ class LGPDController extends BaseController
 
         $employee = $this->employeeModel->find($employeeId);
         $consents = $this->consentService->getEmployeeConsents($employeeId);
-        log_message('error', 'LGPD_DEBUG empId=' . $employeeId . ' active=' . count($consents["active"]) . ' all=' . count($consents["all"]) . ' pending=' . implode(',', $consents["pending"]));
 
         $consentTypes = $this->lgpdControllerActionService->consentTypes();
 
