@@ -244,6 +244,7 @@ $menuStructure = [
         ['label' => 'Banco de horas', 'icon' => 'activity', 'url' => 'timesheet/balance', 'match' => ['timesheet/balance']],
         ['label' => 'Minhas escalas', 'icon' => 'calendar', 'url' => 'my-schedules', 'match' => ['my-schedules']],
         ['label' => 'Justificativas', 'icon' => 'file-text', 'url' => 'justifications', 'match' => ['justifications']],
+        ['label' => 'Advertências', 'icon' => 'alert', 'url' => 'warnings/dashboard', 'match' => ['warnings/dashboard']],
         ['label' => 'Meu perfil', 'icon' => 'user', 'url' => 'profile', 'match' => ['profile'], 'exclude' => ['profile/security']],
         ['label' => 'Segurança da conta', 'icon' => 'lock', 'url' => 'profile/security', 'match' => ['profile/security']],
         ['label' => 'Privacidade (LGPD)', 'icon' => 'shield-check', 'url' => 'lgpd/consents', 'match' => ['lgpd']],
@@ -260,6 +261,14 @@ $canAccessUrl = static function (string $url, string $role, array $employee): bo
 
     if (str_starts_with($normalized, 'manager/pending-punches')) {
         return in_array($role, ['admin', 'gestor', 'rh'], true);
+    }
+
+    // warnings/dashboard (sem id) é o painel de advertências do PRÓPRIO colaborador
+    // (WarningController::dashboard() usa o employee_id da sessão quando nenhum
+    // id é passado) -- liberado pra qualquer role, distinto de warnings/* (CRUD
+    // administrativo), que continua restrito a gestor/admin/rh logo abaixo.
+    if ($normalized === 'warnings/dashboard') {
+        return true;
     }
 
     if (str_starts_with($normalized, 'dashboard/admin') || str_starts_with($normalized, 'settings') || str_starts_with($normalized, 'admin/settings')) {
@@ -433,4 +442,5 @@ $chevronSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" vi
         </button>
     </div>
 </aside>
+
 
