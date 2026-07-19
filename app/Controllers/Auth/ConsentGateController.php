@@ -5,49 +5,19 @@ namespace App\Controllers\Auth;
 use App\Controllers\BaseController;
 use App\Models\ConsentTermModel;
 use App\Models\UserConsentModel;
+use App\Services\LGPD\ConsentGateCatalog;
 
 /**
  * ConsentGateController
  *
  * Gerencia o fluxo de aceitação dos termos principais de consentimento LGPD
- * no primeiro acesso ao sistema.
- *
- * Exibe a lista de termos pendentes, apresenta cada termo individualmente
- * e registra a aceitação. Só libera o acesso ao dashboard após todos
- * os termos obrigatórios serem aceitos.
+ * (todo colaborador, qualquer papel). Expõe o fluxo completo (termo por
+ * termo, com leitura obrigatória) em /consent-gate, e o aceite em lote usado
+ * pelo lembrete flutuante do dashboard em accept-all().
  */
 class ConsentGateController extends BaseController
 {
-    private const REQUIRED_TYPES = [
-        'data_processing' => [
-            'label'       => 'Processamento de Dados Pessoais',
-            'icon'        => 'bi bi-person-lines-fill',
-            'description' => 'Autoriza o tratamento dos seus dados pessoais para fins de gestão de ponto, folha de pagamento e obrigações trabalhistas.',
-            'legal_basis' => 'LGPD Art. 7º, V – Execução de contrato',
-            'required'    => true,
-        ],
-        'data_sharing' => [
-            'label'       => 'Compartilhamento de Dados',
-            'icon'        => 'bi bi-share-fill',
-            'description' => 'Autoriza o compartilhamento de dados com prestadores de benefícios, parceiros de segurança do trabalho e órgãos regulatórios conforme exigido por lei.',
-            'legal_basis' => 'LGPD Art. 7º, V – Execução de contrato',
-            'required'    => true,
-        ],
-        'geolocation' => [
-            'label'       => 'Geolocalização',
-            'icon'        => 'bi bi-geo-alt-fill',
-            'description' => 'Autoriza o uso da sua localização geográfica para registro de ponto em campo, controle de limites virtuais e validação de presença.',
-            'legal_basis' => 'LGPD Art. 7º, I – Consentimento',
-            'required'    => true,
-        ],
-        'marketing' => [
-            'label'       => 'Comunicações de Marketing',
-            'icon'        => 'bi bi-megaphone-fill',
-            'description' => 'Autoriza o envio de comunicados sobre novidades, atualizações e informações institucionais da empresa por e-mail ou mensagem.',
-            'legal_basis' => 'LGPD Art. 7º, I – Consentimento',
-            'required'    => false,
-        ],
-    ];
+    private const REQUIRED_TYPES = ConsentGateCatalog::TYPES;
 
     /**
      * Lista todos os termos pendentes de aceitação.
@@ -159,6 +129,29 @@ class ConsentGateController extends BaseController
         }
 
         return redirect()->to(site_url('consent-gate/' . $pending[0]));
+    }
+
+    /**
+     * Aceita de uma vez todos os termos obrigatórios ainda pendentes -- usado
+     * pelo lembrete flutuante exibido no dashboard (botão único "Aceitar").
+     */
+    public function acceptAll(): \CodeIgniter\HTTP\RedirectResponse
+    {
+        $userId       = (int) session('user_id');
+        $consentModel = model(UserConsentModel::class);
+        $termModel    = model(ConsentTermModel::class);
+
+        foreach ($this->getPendingTypes($userId, $consentModel) as $type) {
+            $meta        = self::REQUIRED_TYPES[$type];
+            $term        = $termModel->getActiveTerm($type);
+            $consentText = sp_apply_consent_variables($term?->body ?? $meta['description']);
+            $version     = $term?->version ?? '1.0';
+            $legalBasis  = $term?->legal_basis ?? $meta['legal_basis'];
+
+            $consentModel->grant($userId, $type, $meta['description'], $consentText, $legalBasis, $version);
+        }
+
+        return redirect()->back()->with('success', 'Termos aceitos. Obrigado!');
     }
 
     /**

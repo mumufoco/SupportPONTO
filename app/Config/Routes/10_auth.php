@@ -8,6 +8,7 @@
 // Fluxo de aceitação dos termos LGPD no primeiro acesso (requer auth, não requer consent-gate)
 $routes->group('consent-gate', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'Auth\ConsentGateController::index', ['as' => 'consent-gate']);
+    $routes->post('accept-all', 'Auth\ConsentGateController::acceptAll', ['as' => 'consent-gate.accept-all']);
     $routes->get('(:segment)', 'Auth\ConsentGateController::show/$1', ['as' => 'consent-gate.show']);
     $routes->post('(:segment)/accept', 'Auth\ConsentGateController::accept/$1', ['as' => 'consent-gate.accept']);
 });

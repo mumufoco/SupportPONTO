@@ -3,6 +3,14 @@ helper(['session_context', 'navigation_context']);
 $pageTitle = trim((string) $this->renderSection('title')) ?: ($title ?? 'Dashboard');
 $employee = sp_session_user();
 $isAuthenticated = sp_session_is_authenticated();
+
+// Lembrete flutuante de consentimento LGPD pendente: só computado nas
+// páginas de dashboard (rota de pouso pós-login), para não disparar em
+// toda página autenticada do sistema.
+$__dashboardPaths = ['dashboard', 'dashboard/admin', 'dashboard/manager', 'dashboard/dpo', 'dashboard/employee', 'inicio', 'painel'];
+$__pendingGateConsents = ($isAuthenticated && in_array(trim(uri_string(), '/'), $__dashboardPaths, true))
+    ? sp_pending_gate_consents((int) ($employee['id'] ?? 0))
+    : [];
 ?>
 <!DOCTYPE html>
 <?php
@@ -139,6 +147,10 @@ $isAuthenticated = sp_session_is_authenticated();
                 <span class="d-none d-sm-inline fw-semibold">Dados Colaboradores</span>
             </a>
         </div>
+        <?php endif; ?>
+
+        <?php if (!empty($__pendingGateConsents)): ?>
+            <?= view('partials/consent_gate_modal', ['pending' => $__pendingGateConsents]) ?>
         <?php endif; ?>
     </main>
     </div>

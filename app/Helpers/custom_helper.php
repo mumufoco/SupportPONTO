@@ -596,3 +596,35 @@ if (!function_exists('sp_render_consent_body')) {
         return nl2br(esc(sp_apply_consent_variables($raw, false)));
     }
 }
+
+if (!function_exists('sp_pending_gate_consents')) {
+    /**
+     * Tipos de consentimento obrigatorios (ConsentGateCatalog::TYPES) que o
+     * colaborador ainda nao aceitou. Usado pelo lembrete flutuante exibido no
+     * dashboard (ver partials/consent_gate_modal) -- nao bloqueia navegacao,
+     * so avisa enquanto houver pendencia.
+     *
+     * @return array<string,array{label:string,icon:string,description:string}>
+     */
+    function sp_pending_gate_consents(int $employeeId): array
+    {
+        if ($employeeId <= 0) {
+            return [];
+        }
+
+        try {
+            $model = model(\App\Models\UserConsentModel::class);
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        $pending = [];
+        foreach (\App\Services\LGPD\ConsentGateCatalog::TYPES as $type => $meta) {
+            if (! $model->hasConsent($employeeId, $type)) {
+                $pending[$type] = $meta;
+            }
+        }
+
+        return $pending;
+    }
+}
