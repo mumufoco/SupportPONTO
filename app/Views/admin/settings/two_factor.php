@@ -5,12 +5,15 @@
 <?= $this->section('content') ?>
 <div class="container-fluid">
 
+    <?php
+        $myTwoFactorEnabled = $myEmployee !== null && (bool) ($myEmployee->two_factor_enabled ?? false);
+    ?>
     <?= view('components/page_header', [
         'title'    => 'Autenticação de Dois Fatores (2FA)',
         'subtitle' => 'Controle como o 2FA é exigido no login e acompanhe a adesão dos colaboradores.',
         'icon'     => 'bi bi-shield-lock-fill',
-        'actions'  => [
-            ['label' => 'Controles', 'icon' => 'bi bi-key-fill', 'url' => sp_route_url('admin.settings.controls')],
+        'actions'  => $myTwoFactorEnabled ? [] : [
+            ['label' => 'Configurar 2FA', 'icon' => 'bi bi-shield-plus', 'url' => site_url('auth/2fa/setup')],
         ],
     ]) ?>
 
@@ -65,7 +68,7 @@
             <span class="text-muted small">Gerencie a autenticação em duas etapas da sua própria conta.</span>
         </div>
         <div class="sp-card-body">
-            <?php if ($myEmployee !== null && (bool) ($myEmployee->two_factor_enabled ?? false)): ?>
+            <?php if ($myTwoFactorEnabled): ?>
                 <div class="alert alert-success d-flex gap-2 align-items-start py-2 mb-3">
                     <i class="bi bi-shield-check-fill mt-1 flex-shrink-0"></i>
                     <small>2FA habilitado para <strong><?= esc($myEmployee->email ?? '') ?></strong>. Códigos de backup restantes: <strong><?= (int) $myRemainingBackupCodes ?></strong>.</small>
@@ -93,13 +96,10 @@
                     </div>
                 </div>
             <?php else: ?>
-                <div class="alert alert-warning d-flex gap-2 align-items-start py-2 mb-3">
+                <div class="alert alert-warning d-flex gap-2 align-items-start py-2 mb-0">
                     <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
-                    <small>O 2FA não está habilitado na sua conta.</small>
+                    <small>O 2FA não está habilitado na sua conta. Use o botão <strong>Configurar 2FA</strong> no topo da página.</small>
                 </div>
-                <a href="<?= site_url('auth/2fa/setup') ?>" class="btn btn-primary">
-                    <i class="bi bi-shield-plus me-1"></i>Configurar 2FA
-                </a>
             <?php endif; ?>
         </div>
     </div>
