@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('title') ?>Backup<?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<div class="container-fluid">
+<div class="container-fluid sp-module-stack">
 
     <?= view('components/page_header', [
         'title'    => 'Backup',
@@ -16,26 +16,36 @@
         $status = $latestCheck->status ?? 'warning';
         $risks = $latestCheck->risks ?? [];
         $readinessOk = ($readiness['status'] ?? 'not_ready') === 'ready';
+        $readinessLabels = [
+            'runtime_policy'   => 'Política de runtime',
+            'driver'           => 'Driver do banco',
+            'backup_path'      => 'Diretório de backup',
+            'database_config'  => 'Configuração do banco',
+            'pg_dump'          => 'pg_dump',
+            'psql'             => 'psql',
+            'proc_open'        => 'proc_open',
+        ];
     ?>
 
     <!-- Status do backup -->
-    <div class="sp-card mb-3">
-        <div class="sp-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="sp-card-title">
-                <i class="bi bi-shield-check"></i> Status do Backup
-                <span class="badge <?= $status === 'ok' ? 'bg-success' : 'bg-warning text-dark' ?> ms-2">
+    <div class="sp-data-card mb-3">
+        <div class="sp-data-card__header">
+            <h2 class="sp-data-card__title">
+                <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-shield-check"></i></span>
+                Status do Backup
+                <span class="sp-badge <?= $status === 'ok' ? 'sp-badge-success' : 'sp-badge-warning' ?>">
                     <?= $status === 'ok' ? 'OK' : 'Atenção' ?>
                 </span>
-            </span>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="runBackupCheck()">
+            </h2>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="runBackupCheck(this)">
                 <i class="bi bi-arrow-repeat me-1"></i>Verificar agora
             </button>
         </div>
-        <div class="sp-card-body">
+        <div class="sp-data-card__body">
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
                     <div class="small text-muted">Último backup</div>
-                    <div class="fw-semibold"><?= esc($latestCheck->last_backup_at ?? 'Nenhum') ?></div>
+                    <div class="fw-semibold"><?= esc(format_datetime_br($latestCheck->last_backup_at ?? null) ?: 'Nenhum') ?></div>
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Tamanho</div>
@@ -43,11 +53,13 @@
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Destino</div>
-                    <div class="fw-semibold small"><?= esc($latestCheck->destination ?? '-') ?></div>
+                    <div class="fw-semibold small text-truncate" style="max-width:100%" title="<?= esc($latestCheck->destination ?? '') ?>">
+                        <?= esc($latestCheck->destination ?? '-') ?>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Última checagem</div>
-                    <div class="fw-semibold"><?= esc($latestCheck->checked_at ?? '-') ?></div>
+                    <div class="fw-semibold"><?= esc(format_datetime_br($latestCheck->checked_at ?? null, true) ?: '-') ?></div>
                 </div>
             </div>
 
@@ -71,21 +83,26 @@
             <?php if (!$readinessOk): ?>
                 <div class="mt-3 pt-3" style="border-top:1px solid var(--sp-border)">
                     <div class="small text-muted mb-2">Prontidão do ambiente:</div>
-                    <?php foreach ($readiness['checks'] as $label => $check): ?>
-                        <span class="badge <?= ($check['status'] ?? 'error') === 'ok' ? 'bg-success' : 'bg-danger' ?> me-1 mb-1"
-                              title="<?= esc($check['message'] ?? '') ?>"><?= esc($label) ?></span>
-                    <?php endforeach; ?>
+                    <div class="d-flex flex-wrap gap-2">
+                        <?php foreach ($readiness['checks'] as $key => $check): ?>
+                            <span class="sp-badge <?= ($check['status'] ?? 'error') === 'ok' ? 'sp-badge-success' : 'sp-badge-danger' ?>"
+                                  title="<?= esc($check['message'] ?? '') ?>"><?= esc($readinessLabels[$key] ?? $key) ?></span>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 
     <!-- Retenção -->
-    <div class="sp-card mb-3">
-        <div class="sp-card-header">
-            <span class="sp-card-title"><i class="bi bi-gear-fill"></i> Retenção</span>
+    <div class="sp-data-card mb-3">
+        <div class="sp-data-card__header">
+            <h2 class="sp-data-card__title">
+                <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-gear-fill"></i></span>
+                Retenção
+            </h2>
         </div>
-        <div class="sp-card-body">
+        <div class="sp-data-card__body">
             <form action="<?= sp_safe_url(sp_route_url('admin.settings.backup.retention')) ?>" method="POST" class="row g-3 align-items-end">
                 <?= csrf_field() ?>
                 <div class="col-md-3">
@@ -104,21 +121,26 @@
     </div>
 
     <!-- Backups existentes -->
-    <div class="sp-card mb-3">
-        <div class="sp-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="sp-card-title"><i class="bi bi-archive-fill"></i> Backups existentes</span>
+    <div class="sp-data-card mb-3">
+        <div class="sp-data-card__header">
+            <h2 class="sp-data-card__title">
+                <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-archive-fill"></i></span>
+                Backups existentes
+            </h2>
             <button type="button" class="btn btn-sm btn-primary" onclick="generateBackup()">
                 <i class="bi bi-plus-lg me-1"></i>Gerar backup agora
             </button>
         </div>
-        <div class="sp-card-body">
+        <div class="sp-data-card__body p-0">
             <?php if (empty($backups)): ?>
-                <div class="text-muted small text-center py-3">
-                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum backup encontrado.
+                <div class="sp-empty">
+                    <div class="sp-empty-icon"><i class="bi bi-inbox"></i></div>
+                    <p class="sp-empty-title">Nenhum backup encontrado</p>
+                    <p class="text-muted small mb-0">Clique em <strong>Gerar backup agora</strong> para criar o primeiro.</p>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle">
+                    <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Arquivo</th>
@@ -131,15 +153,21 @@
                         <tbody>
                             <?php foreach ($backups as $backup): ?>
                                 <tr>
-                                    <td class="small"><?= esc($backup['filename']) ?></td>
+                                    <td class="small text-break"><?= esc($backup['filename']) ?></td>
                                     <td><?= esc($backup['size_human']) ?></td>
-                                    <td><?= esc($backup['date']) ?></td>
-                                    <td><?= (int) $backup['age_days'] ?> dia(s)</td>
+                                    <td class="small"><?= esc(format_datetime_br($backup['date'] ?? null, true)) ?></td>
+                                    <td>
+                                        <span class="sp-badge <?= (int) $backup['age_days'] > 2 ? 'sp-badge-warning' : 'sp-badge-neutral' ?>">
+                                            <?= (int) $backup['age_days'] ?> dia<?= (int) $backup['age_days'] !== 1 ? 's' : '' ?>
+                                        </span>
+                                    </td>
                                     <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                onclick="downloadBackup('<?= esc(addslashes($backup['filename']), 'js') ?>')">
-                                            <i class="bi bi-download me-1"></i>Baixar
-                                        </button>
+                                        <div class="table-icon-actions">
+                                            <button type="button" class="icon-action" title="Baixar"
+                                                    onclick="downloadBackup('<?= esc(addslashes($backup['filename']), 'js') ?>')">
+                                                <i class="bi bi-download"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -151,11 +179,14 @@
     </div>
 
     <!-- Teste de restauração -->
-    <div class="sp-card mb-4">
-        <div class="sp-card-header">
-            <span class="sp-card-title"><i class="bi bi-clipboard-check-fill"></i> Teste de Restauração</span>
+    <div class="sp-data-card mb-4">
+        <div class="sp-data-card__header">
+            <h2 class="sp-data-card__title">
+                <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-clipboard-check-fill"></i></span>
+                Teste de Restauração
+            </h2>
         </div>
-        <div class="sp-card-body">
+        <div class="sp-data-card__body">
             <p class="text-muted small">
                 Ter um backup salvo não garante que ele restaura corretamente. Registre aqui sempre que um
                 backup for testado manualmente (ex.: restaurado em um ambiente separado de homologação).
@@ -163,7 +194,7 @@
             <?php if ($latestRestoreTest): ?>
                 <div class="alert alert-success py-2 mb-3 small">
                     <i class="bi bi-check-circle-fill me-1"></i>
-                    Último teste registrado em <strong><?= esc($latestRestoreTest->tested_at) ?></strong>
+                    Último teste registrado em <strong><?= esc(format_datetime_br($latestRestoreTest->tested_at ?? null, true)) ?></strong>
                     <?php if (!empty($latestRestoreTest->notes)): ?> — <?= esc($latestRestoreTest->notes) ?><?php endif; ?>
                 </div>
             <?php else: ?>

@@ -1,6 +1,5 @@
 <script <?= csp_script_nonce_attr() ?>>
-function runBackupCheck() {
-    const btn = event.target.closest('button');
+function runBackupCheck(btn) {
     btn.disabled = true;
     spFetch('<?= sp_route_url('admin.settings.backup.check') ?>', { method: 'POST' })
         .then(r => r.json())
