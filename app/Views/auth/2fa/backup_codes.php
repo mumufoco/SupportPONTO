@@ -13,7 +13,7 @@
           <?php endforeach; ?>
         </div>
         <div class="alert alert-warning">Armazene estes códigos em local seguro. Eles não serão exibidos novamente.</div>
-        <a href="<?= site_url('auth/2fa/manage') ?>" class="btn btn-primary">Continuar</a>
+        <a href="<?= sp_route_url('admin.settings.two-factor') ?>" class="btn btn-primary">Continuar</a>
       </div>
     </div>
   </div>

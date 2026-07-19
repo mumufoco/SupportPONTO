@@ -32,13 +32,13 @@ class TwoFactorAuthController extends BaseController
             return redirect()->to(route_to('login'))->with('error', 'Sessão expirada.');
         }
         if ((bool) ($employee->two_factor_enabled ?? false)) {
-            return redirect()->to(route_to('2fa.manage'))->with('info', '2FA já está habilitado.');
+            return redirect()->to(route_to('admin.settings.two-factor'))->with('info', '2FA já está habilitado.');
         }
         try {
             $setupPayload = $this->twoFactorManager->buildSetupPayload($employee);
         } catch (\RuntimeException $e) {
             log_message('error', '2FA setup unavailable: {message}', ['message' => $e->getMessage()]);
-            return redirect()->to(route_to('2fa.manage'))->with('error', 'Não foi possível preparar o QR Code do 2FA. Instale as dependências e tente novamente.');
+            return redirect()->to(route_to('admin.settings.two-factor'))->with('error', 'Não foi possível preparar o QR Code do 2FA. Instale as dependências e tente novamente.');
         }
         session()->set('2fa_setup_secret', $setupPayload['secret']);
         return view('auth/2fa/setup', $setupPayload + ['employee' => $employee]);
@@ -70,7 +70,7 @@ class TwoFactorAuthController extends BaseController
     {
         $backupCodes = session()->getFlashdata('backup_codes');
         if (! is_array($backupCodes) || $backupCodes === []) {
-            return redirect()->to(route_to('2fa.manage'))->with('error', 'Códigos de backup não disponíveis.');
+            return redirect()->to(route_to('admin.settings.two-factor'))->with('error', 'Códigos de backup não disponíveis.');
         }
         return view('auth/2fa/backup_codes', ['backup_codes' => $backupCodes]);
     }
@@ -109,16 +109,15 @@ class TwoFactorAuthController extends BaseController
         return redirect()->to($redirectTo)->with('success', 'Login realizado com sucesso!');
     }
 
+    /**
+     * Pagina auth/2fa/manage eliminada -- gerenciamento do 2FA (status,
+     * desabilitar, gerar novos codigos de backup) agora vive em
+     * admin/settings/two-factor. Rota mantida apenas como redirecionamento
+     * para nao quebrar links/favoritos antigos.
+     */
     public function manage()
     {
-        $employee = $this->requireAuthenticatedEmployee();
-        if ($employee === null) {
-            return redirect()->to(route_to('login'))->with('error', 'Sessão expirada.');
-        }
-        return view('auth/2fa/manage', [
-            'employee' => $employee,
-            'remaining_backup_codes' => $this->twoFactorManager->countRemainingBackupCodes($employee),
-        ]);
+        return redirect()->to(route_to('admin.settings.two-factor'));
     }
 
     public function disable()

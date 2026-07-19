@@ -72,7 +72,7 @@
                         <button type="submit" class="sp-btn sp-btn-primary">
                             <i class="bi bi-shield-check"></i> Ativar 2FA
                         </button>
-                        <a href="<?= site_url('auth/2fa/manage') ?>" class="sp-btn sp-btn-secondary">
+                        <a href="<?= sp_route_url('admin.settings.two-factor') ?>" class="sp-btn sp-btn-secondary">
                             Cancelar
                         </a>
                     </div>

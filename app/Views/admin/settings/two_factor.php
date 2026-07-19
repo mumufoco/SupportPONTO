@@ -11,7 +11,6 @@
         'icon'     => 'bi bi-shield-lock-fill',
         'actions'  => [
             ['label' => 'Controles', 'icon' => 'bi bi-key-fill', 'url' => sp_route_url('admin.settings.controls')],
-            ['label' => 'Meu 2FA', 'icon' => 'bi bi-person-fill-lock', 'url' => site_url('auth/2fa/manage')],
         ],
     ]) ?>
 
@@ -56,6 +55,52 @@
                 'indicator' => 'com 2FA ativado',
                 'indicatorType' => 'neutral',
             ]) ?>
+        </div>
+    </div>
+
+    <!-- Meu 2FA -->
+    <div class="sp-card mb-3">
+        <div class="sp-card-header">
+            <span class="sp-card-title"><i class="bi bi-person-fill-lock"></i> Meu 2FA</span>
+            <span class="text-muted small">Gerencie a autenticação em duas etapas da sua própria conta.</span>
+        </div>
+        <div class="sp-card-body">
+            <?php if ($myEmployee !== null && (bool) ($myEmployee->two_factor_enabled ?? false)): ?>
+                <div class="alert alert-success d-flex gap-2 align-items-start py-2 mb-3">
+                    <i class="bi bi-shield-check-fill mt-1 flex-shrink-0"></i>
+                    <small>2FA habilitado para <strong><?= esc($myEmployee->email ?? '') ?></strong>. Códigos de backup restantes: <strong><?= (int) $myRemainingBackupCodes ?></strong>.</small>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <form method="post" action="<?= site_url('auth/2fa/regenerate-backup-codes') ?>">
+                            <?= csrf_field() ?>
+                            <label class="form-label small fw-semibold">Gerar novos códigos de backup</label>
+                            <div class="input-group">
+                                <input type="password" name="password" class="form-control" placeholder="Confirme sua senha" required>
+                                <button type="submit" class="btn btn-outline-primary">Gerar</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="post" action="<?= site_url('auth/2fa/disable') ?>" onsubmit="return confirm('Deseja realmente desabilitar o 2FA da sua conta?');">
+                            <?= csrf_field() ?>
+                            <label class="form-label small fw-semibold">Desabilitar 2FA</label>
+                            <div class="input-group">
+                                <input type="password" name="password" class="form-control" placeholder="Confirme sua senha" required>
+                                <button type="submit" class="btn btn-outline-danger">Desabilitar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-warning d-flex gap-2 align-items-start py-2 mb-3">
+                    <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+                    <small>O 2FA não está habilitado na sua conta.</small>
+                </div>
+                <a href="<?= site_url('auth/2fa/setup') ?>" class="btn btn-primary">
+                    <i class="bi bi-shield-plus me-1"></i>Configurar 2FA
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 

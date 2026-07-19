@@ -53,6 +53,13 @@ class TwoFactorController extends BaseController
             $recoveryCodesLeft[$employee->id] = $this->twoFactorManagerService->countRemainingBackupCodes($employee);
         }
 
+        // "Meu 2FA" -- auth/2fa/manage foi eliminada; o proprio admin gerencia
+        // o seu 2FA (desabilitar, gerar novos codigos) direto nesta pagina.
+        $myEmployee = $this->employeeModel->find((int) (session()->get('user_id') ?? 0));
+        $myRemainingBackupCodes = $myEmployee !== null
+            ? $this->twoFactorManagerService->countRemainingBackupCodes($myEmployee)
+            : 0;
+
         return view('admin/settings/two_factor', [
             'title' => 'Autenticação de Dois Fatores (2FA)',
             'breadcrumbs' => [
@@ -65,6 +72,8 @@ class TwoFactorController extends BaseController
             'stats' => $stats,
             'usersWithTwoFactor' => $usersWithTwoFactor,
             'recoveryCodesLeft' => $recoveryCodesLeft,
+            'myEmployee' => $myEmployee,
+            'myRemainingBackupCodes' => $myRemainingBackupCodes,
         ]);
     }
 
