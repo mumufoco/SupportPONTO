@@ -9,181 +9,173 @@
         'subtitle' => 'Revise sessões ativas, dispositivos recentes, autenticação de dois fatores e confirme ações críticas com senha recente.',
         'icon'     => 'bi bi-shield-lock-fill',
         'actions'  => [
-            ['label' => 'Meu perfil',    'icon' => 'bi bi-person-circle', 'url' => sp_profile_url()],
-            ['label' => 'Alterar senha', 'icon' => 'bi bi-key-fill',      'url' => site_url(route_to('profile.changePassword'))],
+            ['label' => 'Alterar senha', 'icon' => 'bi bi-key-fill', 'url' => site_url(route_to('profile.changePassword'))],
         ],
     ]) ?>
 
-    <!-- Grid: 4/8 colunas -->
-    <div class="sp-security-grid"
-         style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start;">
+    <div class="sp-grid-2">
 
-        <div style="display:flex;flex-direction:column;gap:1.5rem;">
-
-            <!-- Autenticação de dois fatores -->
-            <div class="sp-card">
-                <div class="sp-card-header">
-                    <h5 class="sp-card-title">
-                        <i class="bi bi-shield-check"></i>Autenticação de dois fatores
-                    </h5>
-                    <span class="sp-badge <?= $two_factor_enabled ? 'sp-badge-success' : 'sp-badge-neutral' ?>">
-                        <?= $two_factor_enabled ? 'Ativo' : 'Inativo' ?>
-                    </span>
-                </div>
-                <div class="sp-card-body">
-                    <?php if ($two_factor_enabled): ?>
-                        <div class="sp-alert sp-alert-success" style="margin-bottom:1rem;">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>O 2FA está protegendo o login da sua conta.</span>
-                        </div>
-                        <p style="font-size:.875rem;color:var(--sp-text-secondary);margin-bottom:1rem;">
-                            Códigos de backup restantes: <strong><?= (int) $two_factor_backup_codes_remaining ?></strong>
-                        </p>
-
-                        <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-full" id="toggleRegenerateBtn" style="margin-bottom:.5rem;">
-                            <i class="bi bi-arrow-repeat"></i> Gerar novos códigos de backup
-                        </button>
-                        <form method="post" action="<?= site_url(route_to('2fa.regenerate-backup-codes')) ?>" id="regenerateForm" style="display:none;margin-bottom:1rem;">
-                            <?= csrf_field() ?>
-                            <div class="sp-form-group">
-                                <label class="sp-label" for="regenerate_password">Confirme sua senha</label>
-                                <input type="password" class="sp-input" id="regenerate_password"
-                                       name="password" autocomplete="current-password" required>
-                            </div>
-                            <button type="submit" class="sp-btn sp-btn-sm sp-btn-primary sp-btn-full">Confirmar geração</button>
-                        </form>
-
-                        <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-full" id="toggleDisableBtn"
-                                style="border-color:var(--sp-danger);color:var(--sp-danger);"
-                                onmouseover="this.style.background='var(--sp-danger-light)'"
-                                onmouseout="this.style.background=''">
-                            <i class="bi bi-shield-x"></i> Desativar 2FA
-                        </button>
-                        <form method="post" action="<?= site_url(route_to('2fa.disable')) ?>" id="disableForm" style="display:none;margin-top:.75rem;">
-                            <?= csrf_field() ?>
-                            <div class="sp-form-group">
-                                <label class="sp-label" for="disable_password">Confirme sua senha</label>
-                                <input type="password" class="sp-input" id="disable_password"
-                                       name="password" autocomplete="current-password" required>
-                            </div>
-                            <button type="submit" class="sp-btn sp-btn-sm sp-btn-danger sp-btn-full">Confirmar desativação</button>
-                        </form>
-                    <?php else: ?>
-                        <div class="sp-alert sp-alert-warning" style="margin-bottom:1rem;">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>O 2FA está desativado. Ative para proteger o login com um código adicional do seu celular.</span>
-                        </div>
-                        <a href="<?= site_url(route_to('2fa.setup')) ?>" class="sp-btn sp-btn-primary sp-btn-full">
-                            <i class="bi bi-shield-plus"></i> Ativar 2FA
-                        </a>
-                    <?php endif; ?>
-                </div>
+        <!-- Autenticação de dois fatores -->
+        <div class="sp-card">
+            <div class="sp-card-header">
+                <h5 class="sp-card-title">
+                    <i class="bi bi-shield-check"></i>Autenticação de dois fatores
+                </h5>
+                <span class="sp-badge <?= $two_factor_enabled ? 'sp-badge-success' : 'sp-badge-neutral' ?>">
+                    <?= $two_factor_enabled ? 'Ativo' : 'Inativo' ?>
+                </span>
             </div>
-
-            <!-- Confirmação reforçada -->
-            <div class="sp-card">
-                <div class="sp-card-header">
-                    <h5 class="sp-card-title">
-                        <i class="bi bi-unlock-fill"></i>Confirmação reforçada
-                    </h5>
-                </div>
-                <div class="sp-card-body">
-                    <p style="font-size:.875rem;color:var(--sp-text-secondary);margin-bottom:.75rem;">
-                        Ações críticas exigem confirmação recente da sua senha.
+            <div class="sp-card-body">
+                <?php if ($two_factor_enabled): ?>
+                    <div class="sp-alert sp-alert-success" style="margin-bottom:1rem;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>O 2FA está protegendo o login da sua conta.</span>
+                    </div>
+                    <p style="font-size:.875rem;color:var(--sp-text-secondary);margin-bottom:1rem;">
+                        Códigos de backup restantes: <strong><?= (int) $two_factor_backup_codes_remaining ?></strong>
                     </p>
 
-                    <div class="sp-alert <?= $step_up_active ? 'sp-alert-success' : 'sp-alert-warning' ?>"
-                         style="margin-bottom:1rem;">
-                        <i class="bi <?= $step_up_active ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill' ?>"></i>
-                        <span>
-                            <?= $step_up_active ? 'Confirmação recente ativa.' : 'Nenhuma confirmação recente ativa.' ?>
-                        </span>
-                    </div>
-
-                    <form id="stepUpForm">
+                    <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-full" id="toggleRegenerateBtn" style="margin-bottom:.5rem;">
+                        <i class="bi bi-arrow-repeat"></i> Gerar novos códigos de backup
+                    </button>
+                    <form method="post" action="<?= site_url(route_to('2fa.regenerate-backup-codes')) ?>" id="regenerateForm" style="display:none;margin-bottom:1rem;">
                         <?= csrf_field() ?>
                         <div class="sp-form-group">
-                            <label class="sp-label" for="current_password">Confirme sua senha</label>
-                            <input type="password" class="sp-input" id="current_password"
-                                   name="current_password" autocomplete="current-password" required>
-                            <span class="sp-field-hint">
-                                Validade: <?= esc((string) $step_up_ttl) ?> segundos.
-                            </span>
+                            <label class="sp-label" for="regenerate_password">Confirme sua senha</label>
+                            <input type="password" class="sp-input" id="regenerate_password"
+                                   name="password" autocomplete="current-password" required>
                         </div>
-                        <button type="submit" class="sp-btn sp-btn-primary sp-btn-full">
-                            <i class="bi bi-check2-circle"></i> Confirmar ações críticas
-                        </button>
+                        <button type="submit" class="sp-btn sp-btn-sm sp-btn-primary sp-btn-full">Confirmar geração</button>
                     </form>
-                </div>
+
+                    <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-full" id="toggleDisableBtn"
+                            style="border-color:var(--sp-danger);color:var(--sp-danger);"
+                            onmouseover="this.style.background='var(--sp-danger-light)'"
+                            onmouseout="this.style.background=''">
+                        <i class="bi bi-shield-x"></i> Desativar 2FA
+                    </button>
+                    <form method="post" action="<?= site_url(route_to('2fa.disable')) ?>" id="disableForm" style="display:none;margin-top:.75rem;">
+                        <?= csrf_field() ?>
+                        <div class="sp-form-group">
+                            <label class="sp-label" for="disable_password">Confirme sua senha</label>
+                            <input type="password" class="sp-input" id="disable_password"
+                                   name="password" autocomplete="current-password" required>
+                        </div>
+                        <button type="submit" class="sp-btn sp-btn-sm sp-btn-danger sp-btn-full">Confirmar desativação</button>
+                    </form>
+                <?php else: ?>
+                    <div class="sp-alert sp-alert-warning" style="margin-bottom:1rem;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>O 2FA está desativado. Ative para proteger o login com um código adicional do seu celular.</span>
+                    </div>
+                    <a href="<?= site_url(route_to('2fa.setup')) ?>" class="sp-btn sp-btn-primary sp-btn-full">
+                        <i class="bi bi-shield-plus"></i> Ativar 2FA
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
-        <!-- Sessões ativas -->
-        <div>
-            <div class="sp-card">
-                <div class="sp-card-header">
-                    <h5 class="sp-card-title">
-                        <i class="bi bi-phone-fill"></i>Sessões ativas
-                    </h5>
-                    <div class="sp-card-actions">
-                        <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-danger-outline"
-                                id="logoutOthersBtn"
-                                style="border-color:var(--sp-danger);color:var(--sp-danger);"
-                                onmouseover="this.style.background='var(--sp-danger-light)'"
-                                onmouseout="this.style.background=''">
-                            <i class="bi bi-box-arrow-right"></i> Encerrar outras sessões
-                        </button>
-                    </div>
+        <!-- Confirmação reforçada -->
+        <div class="sp-card">
+            <div class="sp-card-header">
+                <h5 class="sp-card-title">
+                    <i class="bi bi-unlock-fill"></i>Confirmação reforçada
+                </h5>
+            </div>
+            <div class="sp-card-body">
+                <p style="font-size:.875rem;color:var(--sp-text-secondary);margin-bottom:.75rem;">
+                    Ações críticas exigem confirmação recente da sua senha.
+                </p>
+
+                <div class="sp-alert <?= $step_up_active ? 'sp-alert-success' : 'sp-alert-warning' ?>"
+                     style="margin-bottom:1rem;">
+                    <i class="bi <?= $step_up_active ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill' ?>"></i>
+                    <span>
+                        <?= $step_up_active ? 'Confirmação recente ativa.' : 'Nenhuma confirmação recente ativa.' ?>
+                    </span>
                 </div>
-                <div class="sp-card-body" style="padding:0;">
-                    <div class="sp-table-container">
-                        <table class="sp-table">
-                            <thead>
-                                <tr>
-                                    <th>Dispositivo</th>
-                                    <th>IP</th>
-                                    <th>Início</th>
-                                    <th>Última atividade</th>
-                                    <th style="text-align:right;"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($sessions as $session): ?>
-                                    <tr>
-                                        <td>
-                                            <strong><?= esc($session['device_label'] ?? 'Dispositivo web') ?></strong>
-                                            <?php if (!empty($session['is_current'])): ?>
-                                                <span class="sp-badge sp-badge-success" style="margin-left:.35rem;">Atual</span>
-                                            <?php endif; ?>
-                                            <div style="font-size:.75rem;color:var(--sp-text-muted);word-break:break-all;margin-top:.125rem;">
-                                                <?= esc($session['user_agent'] ?? '-') ?>
-                                            </div>
-                                        </td>
-                                        <td><code style="font-size:.8rem;"><?= esc($session['ip'] ?? '-') ?></code></td>
-                                        <td><?= esc($session['started_at'] ?? '-') ?></td>
-                                        <td><?= esc($session['last_activity'] ?? '-') ?></td>
-                                        <td>
-                                            <div class="sp-table-actions" style="justify-content:flex-end;">
-                                                <?php if (empty($session['is_current'])): ?>
-                                                    <button type="button"
-                                                            class="sp-btn sp-btn-sm revoke-session-btn"
-                                                            data-session-key="<?= sp_attr($session['session_key']) ?>"
-                                                            style="border:1px solid var(--sp-danger);color:var(--sp-danger);"
-                                                            onmouseover="this.style.background='var(--sp-danger-light)'"
-                                                            onmouseout="this.style.background=''">
-                                                        Encerrar
-                                                    </button>
-                                                <?php else: ?>
-                                                    <span style="font-size:.8rem;color:var(--sp-text-muted);">Sessão atual</span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+
+                <form id="stepUpForm">
+                    <?= csrf_field() ?>
+                    <div class="sp-form-group">
+                        <label class="sp-label" for="current_password">Confirme sua senha</label>
+                        <input type="password" class="sp-input" id="current_password"
+                               name="current_password" autocomplete="current-password" required>
+                        <span class="sp-field-hint">
+                            Validade: <?= esc((string) $step_up_ttl) ?> segundos.
+                        </span>
                     </div>
-                </div>
+                    <button type="submit" class="sp-btn sp-btn-primary sp-btn-full">
+                        <i class="bi bi-check2-circle"></i> Confirmar ações críticas
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sessões ativas -->
+    <div class="sp-card">
+        <div class="sp-card-header">
+            <h5 class="sp-card-title">
+                <i class="bi bi-phone-fill"></i>Sessões ativas
+            </h5>
+            <div class="sp-card-actions">
+                <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-danger-outline"
+                        id="logoutOthersBtn"
+                        style="border-color:var(--sp-danger);color:var(--sp-danger);"
+                        onmouseover="this.style.background='var(--sp-danger-light)'"
+                        onmouseout="this.style.background=''">
+                    <i class="bi bi-box-arrow-right"></i> Encerrar outras sessões
+                </button>
+            </div>
+        </div>
+        <div class="sp-card-body" style="padding:0;">
+            <div class="sp-table-container">
+                <table class="sp-table">
+                    <thead>
+                        <tr>
+                            <th>Dispositivo</th>
+                            <th>IP</th>
+                            <th>Início</th>
+                            <th>Última atividade</th>
+                            <th style="text-align:right;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($sessions as $session): ?>
+                            <tr>
+                                <td>
+                                    <strong><?= esc($session['device_label'] ?? 'Dispositivo web') ?></strong>
+                                    <?php if (!empty($session['is_current'])): ?>
+                                        <span class="sp-badge sp-badge-success" style="margin-left:.35rem;">Atual</span>
+                                    <?php endif; ?>
+                                    <div style="font-size:.75rem;color:var(--sp-text-muted);word-break:break-all;margin-top:.125rem;">
+                                        <?= esc($session['user_agent'] ?? '-') ?>
+                                    </div>
+                                </td>
+                                <td><code style="font-size:.8rem;"><?= esc($session['ip'] ?? '-') ?></code></td>
+                                <td><?= esc($session['started_at'] ?? '-') ?></td>
+                                <td><?= esc($session['last_activity'] ?? '-') ?></td>
+                                <td>
+                                    <div class="sp-table-actions" style="justify-content:flex-end;">
+                                        <?php if (empty($session['is_current'])): ?>
+                                            <button type="button"
+                                                    class="sp-btn sp-btn-sm revoke-session-btn"
+                                                    data-session-key="<?= sp_attr($session['session_key']) ?>"
+                                                    style="border:1px solid var(--sp-danger);color:var(--sp-danger);"
+                                                    onmouseover="this.style.background='var(--sp-danger-light)'"
+                                                    onmouseout="this.style.background=''">
+                                                Encerrar
+                                            </button>
+                                        <?php else: ?>
+                                            <span style="font-size:.8rem;color:var(--sp-text-muted);">Sessão atual</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -192,14 +184,6 @@
 
 <?= $this->section('scripts') ?>
 <script <?= csp_script_nonce_attr() ?>>
-    // Responsivo: colapsa para 1 coluna em mobile
-    const secGrid = document.querySelector('.sp-security-grid');
-    function adjustGrid() {
-        if (secGrid) secGrid.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '320px 1fr';
-    }
-    adjustGrid();
-    window.addEventListener('resize', adjustGrid);
-
     // 2FA: revela o formulário de confirmação de senha ao clicar nas ações
     document.getElementById('toggleRegenerateBtn')?.addEventListener('click', function () {
         document.getElementById('regenerateForm')?.style.setProperty('display', 'block');
