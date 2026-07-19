@@ -120,14 +120,6 @@ class BiometricConsentController extends BaseController
         return redirect()->to(site_url('biometric/enroll-for/' . $employeeId));
     }
 
-    private const CONSENT_TYPE_LABELS = [
-        'biometric_face'        => 'Biometria Facial',
-        'biometric_fingerprint' => 'Biometria Digital',
-        'geolocation'           => 'Geolocalização',
-        'data_processing'       => 'Dados Pessoais',
-        'data_sharing'          => 'Compartilhamento',
-        'marketing'             => 'Marketing',
-    ];
 
     /** Lista todos os aceites (aba de auditoria LGPD) */
     public function listConsents(): ResponseInterface|string
@@ -198,7 +190,7 @@ class BiometricConsentController extends BaseController
             'total'        => $total,
             'employeeId'   => $employeeId,
             'employees'    => $employees,
-            'consentTypes' => self::CONSENT_TYPE_LABELS,
+            'consentTypes' => self::MANAGED_CONSENT_TYPES,
             'title'        => 'Termos e Aceites LGPD',
         ]);
     }
@@ -282,41 +274,57 @@ class BiometricConsentController extends BaseController
         return $pdf->Output('', 'S');
     }
 
-    /** Gestao de versoes do termo (admin/dpo) */
+    /** Tipos de termo geridos em settings/consent-terms (rotulo de exibicao). */
+    private const MANAGED_CONSENT_TYPES = [
+        'biometric_face'        => 'Biometria Facial',
+        'biometric_fingerprint' => 'Biometria Digital',
+        'geolocation'           => 'Geolocalização',
+        'data_processing'       => 'Dados Pessoais',
+        'marketing'             => 'Marketing',
+        'data_sharing'          => 'Compartilhamento',
+    ];
+
+    /** Lista de templates de termos (settings/consent-terms) */
     public function manageTerms(): ResponseInterface|string
     {
         $this->requireAuth();
         $this->requireAnyRole(['admin', 'dpo', 'auditor', 'rh']);
 
-        $consentTypes = [
-            'biometric_face'        => 'Biometria Facial',
-            'biometric_fingerprint' => 'Biometria Digital',
-            'geolocation'           => 'Geolocalizacao',
-            'data_processing'       => 'Dados Pessoais',
-            'marketing'             => 'Marketing',
-            'data_sharing'          => 'Compartilhamento',
-        ];
-
-        $activeType = $this->request->getGet('type') ?? 'biometric_face';
-        if (!array_key_exists($activeType, $consentTypes)) {
-            $activeType = 'biometric_face';
-        }
-
-        $allTerms = [];
-        foreach (array_keys($consentTypes) as $type) {
-            $allTerms[$type] = [
-                'active'   => $this->termModel->getActiveTerm($type),
-                'versions' => $this->termModel->getAllVersions($type),
+        $rows = [];
+        foreach (self::MANAGED_CONSENT_TYPES as $type => $label) {
+            $active = $this->termModel->getActiveTerm($type);
+            $rows[] = [
+                'type'   => $type,
+                'label'  => $label,
+                'active' => $active,
             ];
         }
 
         return view('biometric/consent_terms_manage', [
-            'consentTypes' => $consentTypes,
-            'activeType'   => $activeType,
-            'allTerms'     => $allTerms,
-            'activeTerm'   => $allTerms[$activeType]['active'],
-            'allVersions'  => $allTerms[$activeType]['versions'],
-            'title'        => 'Templates de Termos de Consentimento',
+            'rows'  => $rows,
+            'title' => 'Templates de Termos de Consentimento',
+        ]);
+    }
+
+    /** Editor de um template de termo (settings/consent-terms/{type}/edit) */
+    public function editTerm(string $type): ResponseInterface|string
+    {
+        $this->requireAuth();
+        $this->requireAnyRole(['admin', 'dpo', 'auditor', 'rh']);
+
+        if (! array_key_exists($type, self::MANAGED_CONSENT_TYPES)) {
+            return redirect()->to(site_url('settings/consent-terms'))->with('error', 'Tipo de termo inválido.');
+        }
+
+        $active = $this->termModel->getActiveTerm($type);
+
+        return view('biometric/consent_term_edit', [
+            'title'       => 'Termo: ' . self::MANAGED_CONSENT_TYPES[$type],
+            'type'        => $type,
+            'typeLabel'   => self::MANAGED_CONSENT_TYPES[$type],
+            'activeTerm'  => $active,
+            'allVersions' => $this->termModel->getAllVersions($type),
+            'variables'   => array_keys(sp_consent_term_variables()),
         ]);
     }
 
@@ -326,24 +334,25 @@ class BiometricConsentController extends BaseController
         $this->requireAuth();
         $this->requireAnyRole(['admin', 'dpo', 'auditor', 'rh']);
 
-        $type    = $this->request->getPost('term_type') ?? 'biometric_face';
-        $allowed = ['biometric_face','biometric_fingerprint','geolocation','data_processing','marketing','data_sharing'];
-        if (!in_array($type, $allowed, true)) { $type = 'biometric_face'; }
-
-        $title      = trim((string) $this->request->getPost('title'));
-        $bodyRaw    = (string) $this->request->getPost('body');
-        $legalBasis = $this->request->getPost('legal_basis');
-
-        // $bodyRaw pode vir do editor rico como HTML 'vazio' (ex.: '<p><br></p>'),
-        // que nao e string vazia mas tambem nao tem nenhum texto real -- por isso
-        // o check usa strip_tags(), nao so a string bruta.
-        if ($title === '' || trim(strip_tags($bodyRaw)) === '') {
-            $this->setError('Titulo e texto do termo sao obrigatorios.');
-            return redirect()->to(site_url('settings/consent-terms?type=' . $type));
+        $type = (string) ($this->request->getPost('term_type') ?? 'biometric_face');
+        if (! array_key_exists($type, self::MANAGED_CONSENT_TYPES)) {
+            $type = 'biometric_face';
         }
 
-        // Sanitiza o HTML do editor rico antes de gravar -- nunca confia em HTML
-        // vindo direto do navegador, mesmo de um admin autenticado.
+        $title      = security_sanitize_text((string) $this->request->getPost('title'), 255);
+        $bodyRaw    = (string) $this->request->getPost('body');
+        $legalBasis = security_sanitize_text((string) $this->request->getPost('legal_basis'), 500);
+
+        // $bodyRaw e sempre codigo-fonte HTML digitado direto no textarea (sem
+        // editor rico) -- pode conter tags "vazias" sem texto real, por isso o
+        // check usa strip_tags(), nao so a string bruta.
+        if ($title === '' || trim(strip_tags($bodyRaw)) === '') {
+            $this->setError('Título e texto do termo são obrigatórios.');
+            return redirect()->to(site_url('settings/consent-terms/' . $type . '/edit'))->withInput();
+        }
+
+        // Sanitiza o HTML digitado antes de gravar -- nunca confia em HTML vindo
+        // direto do navegador, mesmo de um admin autenticado.
         $body = (new \App\Services\Security\ConsentTermSanitizerService())->sanitize($bodyRaw);
 
         $nextVersion = $this->termModel->nextVersion($type);
@@ -360,8 +369,8 @@ class BiometricConsentController extends BaseController
         ]);
 
         log_message('info', "[LGPD] Novo termo biometrico publicado: versao={$nextVersion}");
-        $this->setSuccess("Novo termo v{$nextVersion} publicado. Colaboradores sem aceite nesta versao serao solicitados novamente.");
-        return redirect()->to(site_url('settings/consent-terms'));
+        $this->setSuccess("Novo termo v{$nextVersion} publicado. Colaboradores sem aceite nesta versão serão solicitados novamente.");
+        return redirect()->to(site_url('settings/consent-terms/' . $type . '/edit'));
     }
 
     /** Gate generico por tipo (fingerprint, geolocation, etc.) */
@@ -370,7 +379,7 @@ class BiometricConsentController extends BaseController
         $this->requireAuth();
         $this->requireAnyRole(['admin', 'rh', 'gestor']);
 
-        $allowed = ['biometric_face','biometric_fingerprint','geolocation','data_processing','marketing','data_sharing'];
+        $allowed = array_keys(self::MANAGED_CONSENT_TYPES);
         if (!in_array($type, $allowed, true)) {
             $this->setError('Tipo de consentimento invalido.');
             return redirect()->to(site_url('biometric/manage'));
@@ -412,7 +421,7 @@ class BiometricConsentController extends BaseController
         $this->requireAuth();
         $this->requireAnyRole(['admin', 'rh', 'gestor']);
 
-        $allowed = ['biometric_face','biometric_fingerprint','geolocation','data_processing','marketing','data_sharing'];
+        $allowed = array_keys(self::MANAGED_CONSENT_TYPES);
         if (!in_array($type, $allowed, true)) {
             return redirect()->to(site_url('biometric/manage'));
         }

@@ -490,10 +490,10 @@ if (!function_exists('support_login_background_url')) {
 
 if (!function_exists('sp_consent_term_variables')) {
     /**
-     * Mapa de variaveis {{...}} disponiveis para uso no corpo dos termos de
-     * consentimento (settings/consent-terms), lidas de Admin/Informacoes da
-     * Empresa. Usado tanto para substituir no texto exibido/gravado quanto
-     * para listar as opcoes disponiveis ao admin no editor do termo.
+     * Mapa de variaveis (nome da variavel => valor atual) disponiveis para uso
+     * no corpo dos termos de consentimento (settings/consent-terms), lidas de
+     * Admin/Informacoes da Empresa. Sintaxe de uso no corpo do termo: {nome},
+     * mesmo padrao usado pelos templates de e-mail (EmailTemplateCatalog).
      *
      * @return array<string,string>
      */
@@ -512,37 +512,37 @@ if (!function_exists('sp_consent_term_variables')) {
         }
 
         return [
-            '{{empresa_razao_social}}'         => $get('company_name'),
-            '{{empresa_nome_fantasia}}'        => $get('company_trade_name'),
-            '{{empresa_cnpj}}'                 => $get('company_cnpj'),
-            '{{empresa_ie}}'                   => $get('company_ie'),
-            '{{empresa_cei}}'                  => $get('company_cei'),
-            '{{empresa_inscricao_municipal}}'  => $get('company_municipal_registration'),
-            '{{empresa_endereco}}'             => $get('company_address'),
-            '{{empresa_cep}}'                  => $get('company_cep'),
-            '{{empresa_cidade}}'               => $get('company_city'),
-            '{{empresa_uf}}'                   => $get('company_state'),
-            '{{empresa_endereco_completo}}'    => $address,
-            '{{empresa_telefone}}'             => $get('company_phone'),
-            '{{empresa_whatsapp}}'             => $get('company_whatsapp'),
-            '{{empresa_email}}'                => $get('company_email'),
-            '{{empresa_site}}'                 => $get('company_website'),
-            '{{responsavel_legal_nome}}'       => $get('legal_rep_name'),
-            '{{responsavel_legal_cargo}}'      => $get('legal_rep_position'),
-            '{{responsavel_legal_telefone}}'   => $get('legal_rep_phone'),
-            '{{responsavel_legal_email}}'      => $get('legal_rep_email'),
-            '{{responsavel_legal_cpf}}'        => $get('legal_rep_cpf'),
-            '{{responsavel_tecnico_nome}}'     => $get('tech_rep_name'),
-            '{{responsavel_tecnico_cargo}}'    => $get('tech_rep_position'),
-            '{{responsavel_tecnico_crea}}'     => $get('tech_rep_crea'),
-            '{{responsavel_tecnico_cpf}}'      => $get('tech_rep_cpf'),
+            'empresa_razao_social'        => $get('company_name'),
+            'empresa_nome_fantasia'       => $get('company_trade_name'),
+            'empresa_cnpj'                => $get('company_cnpj'),
+            'empresa_ie'                  => $get('company_ie'),
+            'empresa_cei'                 => $get('company_cei'),
+            'empresa_inscricao_municipal' => $get('company_municipal_registration'),
+            'empresa_endereco'            => $get('company_address'),
+            'empresa_cep'                 => $get('company_cep'),
+            'empresa_cidade'              => $get('company_city'),
+            'empresa_uf'                  => $get('company_state'),
+            'empresa_endereco_completo'   => $address,
+            'empresa_telefone'            => $get('company_phone'),
+            'empresa_whatsapp'            => $get('company_whatsapp'),
+            'empresa_email'               => $get('company_email'),
+            'empresa_site'                => $get('company_website'),
+            'responsavel_legal_nome'      => $get('legal_rep_name'),
+            'responsavel_legal_cargo'     => $get('legal_rep_position'),
+            'responsavel_legal_telefone'  => $get('legal_rep_phone'),
+            'responsavel_legal_email'     => $get('legal_rep_email'),
+            'responsavel_legal_cpf'       => $get('legal_rep_cpf'),
+            'responsavel_tecnico_nome'    => $get('tech_rep_name'),
+            'responsavel_tecnico_cargo'   => $get('tech_rep_position'),
+            'responsavel_tecnico_crea'    => $get('tech_rep_crea'),
+            'responsavel_tecnico_cpf'     => $get('tech_rep_cpf'),
         ];
     }
 }
 
 if (!function_exists('sp_apply_consent_variables')) {
     /**
-     * Substitui as variaveis {{...}} (ver sp_consent_term_variables()) pelo
+     * Substitui as variaveis {nome} (ver sp_consent_term_variables()) pelo
      * valor cadastrado em Admin/Informacoes da Empresa. Aplicado tanto na
      * pre-visualizacao do termo quanto no snapshot gravado em
      * user_consents.consent_text no momento do aceite -- o registro juridico
@@ -551,16 +551,19 @@ if (!function_exists('sp_apply_consent_variables')) {
     function sp_apply_consent_variables(?string $text, bool $escapeValues = false): string
     {
         $text = (string) ($text ?? '');
-        if ($text === '' || strpos($text, '{{') === false) {
+        if ($text === '' || strpos($text, '{') === false) {
             return $text;
         }
 
         $vars = sp_consent_term_variables();
-        if ($escapeValues) {
-            $vars = array_map(static fn (string $v): string => esc($v), $vars);
-        }
 
-        return strtr($text, $vars);
+        return (string) preg_replace_callback('/\{([a-zA-Z0-9_]+)\}/', static function (array $m) use ($vars, $escapeValues): string {
+            if (! array_key_exists($m[1], $vars)) {
+                return $m[0];
+            }
+
+            return $escapeValues ? esc($vars[$m[1]]) : $vars[$m[1]];
+        }, $text);
     }
 }
 
@@ -568,14 +571,14 @@ if (!function_exists('sp_render_consent_body')) {
     /**
      * Renderiza o corpo de um termo de consentimento (LGPD) com seguranca.
      *
-     * Termos redigidos no editor rico (Admin\BiometricConsentController::
-     * saveTerm()) ja chegam aqui como HTML sanitizado por
-     * ConsentTermSanitizerService no momento do save -- seguro pra ecoar
-     * direto. Termos legados em texto puro (sem nenhuma marcacao) continuam
-     * escapados + nl2br(), como sempre foram. As variaveis {{...}} (dados da
-     * empresa/responsaveis) sao resolvidas antes de renderizar -- com os
-     * valores escapados no ramo HTML (ecoado sem esc() global), e crus no
-     * ramo texto-puro (que passa pelo esc() do corpo inteiro logo abaixo).
+     * Termos redigidos como codigo-fonte HTML (Biometric\BiometricConsentController::
+     * saveTerm()) ja chegam aqui sanitizados por ConsentTermSanitizerService
+     * no momento do save -- seguro pra ecoar direto. Termos legados em texto
+     * puro (sem nenhuma marcacao) continuam escapados + nl2br(), como sempre
+     * foram. As variaveis {nome} (dados da empresa/responsaveis) sao
+     * resolvidas antes de renderizar -- com os valores escapados no ramo HTML
+     * (ecoado sem esc() global), e crus no ramo texto-puro (que passa pelo
+     * esc() do corpo inteiro logo abaixo).
      */
     function sp_render_consent_body(?string $body): string
     {

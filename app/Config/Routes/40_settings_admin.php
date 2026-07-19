@@ -217,4 +217,5 @@ $routes->get('configuracoes/centro', 'Compatibility\LegacyRouteRedirectControlle
 
 // Templates de Termos de Consentimento Biométrico
 $routes->get('settings/consent-terms', 'Biometric\BiometricConsentController::manageTerms', ['as' => 'settings.consent-terms', 'filter' => ['auth', 'admin']]);
+$routes->get('settings/consent-terms/(:segment)/edit', 'Biometric\BiometricConsentController::editTerm/$1', ['as' => 'settings.consent-terms.edit', 'filter' => ['auth', 'admin']]);
 $routes->post('settings/consent-terms/save', 'Biometric\BiometricConsentController::saveTerm', ['as' => 'settings.consent-terms.save', 'filter' => ['auth', 'admin']]);
