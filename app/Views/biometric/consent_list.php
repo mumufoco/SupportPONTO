@@ -17,28 +17,21 @@
     <div class="sp-data-card mb-3">
         <div class="sp-data-card__body">
             <form method="GET" action="<?= site_url('biometric/consent-terms/list') ?>" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label" for="f-search">Buscar colaborador</label>
-                    <input type="text" name="search" id="f-search" class="form-control" placeholder="Nome do colaborador..." value="<?= esc($search ?? '') ?>">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="f-status">Status do colaborador</label>
-                    <select name="status" id="f-status" class="form-select">
-                        <option value="all"      <?= ($status ?? 'all') === 'all'      ? 'selected' : '' ?>>Todos</option>
-                        <option value="active"   <?= ($status ?? '') === 'active'   ? 'selected' : '' ?>>Ativos</option>
-                        <option value="inactive" <?= ($status ?? '') === 'inactive' ? 'selected' : '' ?>>Inativos / Desligados</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="f-type">Tipo de consentimento</label>
-                    <select name="type" id="f-type" class="form-select">
-                        <option value="all" <?= ($filterType ?? 'all') === 'all' ? 'selected' : '' ?>>Todos os tipos</option>
-                        <?php foreach ($consentTypes as $key => $label): ?>
-                        <option value="<?= esc($key) ?>" <?= ($filterType ?? 'all') === $key ? 'selected' : '' ?>><?= esc($label) ?></option>
+                <div class="col-md-8">
+                    <label class="form-label" for="f-employee">Colaborador</label>
+                    <select name="employee_id" id="f-employee" class="form-select">
+                        <option value="">Todos os colaboradores</option>
+                        <?php foreach (($employees ?? []) as $emp): ?>
+                        <?php
+                            $empStatus = !empty($emp->deleted_at) ? 'Excluído' : ($emp->active ? 'Ativo' : 'Inativo');
+                        ?>
+                        <option value="<?= (int) $emp->id ?>" <?= (int) ($employeeId ?? 0) === (int) $emp->id ? 'selected' : '' ?>>
+                            <?= esc($emp->name) ?> (<?= $empStatus ?>)
+                        </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end gap-2">
+                <div class="col-md-4 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Buscar</button>
                     <a href="<?= site_url('biometric/consent-terms/list') ?>" class="btn btn-outline-secondary">Limpar</a>
                 </div>
@@ -60,8 +53,8 @@
                 <div class="sp-empty">
                     <div class="sp-empty-icon"><i class="bi bi-inbox"></i></div>
                     <p class="sp-empty-title">Nenhum registro encontrado</p>
-                    <?php if (!empty($search)): ?>
-                        <p class="text-muted small mb-0">Nenhum resultado para "<?= esc($search) ?>".</p>
+                    <?php if (!empty($employeeId)): ?>
+                        <p class="text-muted small mb-0">Este colaborador ainda não possui registros de consentimento.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -141,9 +134,7 @@
             $pages       = (int) ceil($total / $perPage);
             $currentPage = (int) ($page ?? 1);
             $qs = http_build_query(array_filter([
-                'search' => $search ?? '',
-                'status' => $status ?? 'all',
-                'type'   => $filterType ?? 'all',
+                'employee_id' => $employeeId ?? '',
             ]));
         ?>
         <div class="sp-data-card__body border-top">

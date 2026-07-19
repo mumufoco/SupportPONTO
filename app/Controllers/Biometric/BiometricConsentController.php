@@ -137,9 +137,7 @@ class BiometricConsentController extends BaseController
         $page       = (int) ($this->request->getGet('page') ?? 1);
         $perPage    = 20;
         $offset     = ($page - 1) * $perPage;
-        $search     = trim((string) ($this->request->getGet('search') ?? ''));
-        $status     = $this->request->getGet('status') ?? 'all';
-        $filterType = $this->request->getGet('type') ?? 'all';
+        $employeeId = (int) ($this->request->getGet('employee_id') ?? 0);
 
         $db = \Config\Database::connect();
 
@@ -147,18 +145,9 @@ class BiometricConsentController extends BaseController
         $where  = '';
         $params = [];
 
-        if ($search !== '') {
-            $where   .= " AND e.name ILIKE ?";
-            $params[] = '%' . $search . '%';
-        }
-        if ($status === 'active') {
-            $where .= " AND e.active = TRUE";
-        } elseif ($status === 'inactive') {
-            $where .= " AND e.active = FALSE";
-        }
-        if ($filterType !== 'all' && array_key_exists($filterType, self::CONSENT_TYPE_LABELS)) {
-            $where   .= " AND uc.consent_type = ?";
-            $params[] = $filterType;
+        if ($employeeId > 0) {
+            $where   .= " AND uc.employee_id = ?";
+            $params[] = $employeeId;
         }
 
         $countSql = "SELECT COUNT(*) AS cnt
@@ -191,14 +180,23 @@ class BiometricConsentController extends BaseController
             $record->employee_cpf = \App\Models\EmployeeModel::decryptCpfValue($record->employee_cpf ?? null);
         }
 
+        // withDeleted(): registros de consentimento sao prova juridica permanente mesmo
+        // apos o colaborador ser excluido do sistema - a lista de busca precisa alcancar
+        // esses colaboradores tambem, nao so os ativos/soft-deleted-out.
+        $employees = $this->employeeModel
+            ->withDeleted()
+            ->select('id, name, active, deleted_at')
+            ->orderBy('active', 'DESC')
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
         return view('biometric/consent_list', [
             'records'      => $records,
             'page'         => $page,
             'perPage'      => $perPage,
             'total'        => $total,
-            'search'       => $search,
-            'status'       => $status,
-            'filterType'   => $filterType,
+            'employeeId'   => $employeeId,
+            'employees'    => $employees,
             'consentTypes' => self::CONSENT_TYPE_LABELS,
             'title'        => 'Termos e Aceites LGPD',
         ]);
