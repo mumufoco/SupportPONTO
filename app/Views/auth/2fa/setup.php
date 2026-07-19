@@ -9,7 +9,7 @@
         <p class="sp-page-subtitle">Configure o 2FA para aumentar a segurança da sua conta.</p>
     </div>
     <div class="sp-page-header-right">
-        <a href="<?= site_url('auth/2fa/manage') ?>" class="sp-btn sp-btn-secondary">
+        <a href="<?= sp_route_url('admin.settings.two-factor') ?>" class="sp-btn sp-btn-secondary">
             <i class="bi bi-arrow-left"></i> Voltar
         </a>
     </div>
