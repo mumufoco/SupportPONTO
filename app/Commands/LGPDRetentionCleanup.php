@@ -184,7 +184,7 @@ class LGPDRetentionCleanup extends BaseCommand
                 SELECT 1 FROM user_consents uc
                 WHERE uc.employee_id = e.id
                 AND uc.consent_type IN ('biometric_face', 'biometric_fingerprint')
-                AND uc.status = 'granted'
+                AND uc.granted = TRUE
                 AND uc.revoked_at IS NULL
             )
             AND (e.demission_date IS NULL OR e.demission_date <= ?)

@@ -41,6 +41,18 @@ class EmailDeliveryService
             $details = $this->email->printDebugger(['headers']);
             $this->email->clear();
 
+            // CI4\Email::send() as vezes retorna false via SMTP mesmo quando o
+            // servidor ja confirmou a entrega -- o transcript do handshake
+            // mostra o Postfix respondendo "250 ... Ok: queued as <id>" (sucesso
+            // real, mensagem enfileirada), mas o parser interno da lib nao
+            // reconhece essa resposta especifica e marca como falha. Sem esta
+            // checagem, e-mails efetivamente entregues ficavam registrados como
+            // falha (auditoria enganosa) e geravam ERROR constante nos logs a
+            // cada envio, mesmo com a entrega funcionando.
+            if (! $sent && preg_match('/\bqueued as\b/i', $details) === 1) {
+                $sent = true;
+            }
+
             return [
                 'sent' => $sent,
                 'details' => $details,
