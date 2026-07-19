@@ -1,83 +1,98 @@
 <?= $this->extend('layouts/main') ?>
+<?= $this->section('title') ?>Pendências de Ponto<?= $this->endSection() ?>
 <?= $this->section('content') ?>
 
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-7">
+<div class="container-fluid sp-module-stack">
 
-      <div class="alert alert-warning d-flex align-items-start gap-3 mb-4">
-        <i class="bi bi-calendar-x fs-4 mt-1"></i>
-        <div>
-          <strong>Marcação de ponto incompleta detectada</strong>
-          <p class="mb-0 mt-1 small">
-            O sistema identificou que uma ou mais marcações de dias anteriores ficaram incompletas.
-            Explique o ocorrido em cada pendência abaixo para que seu gestor possa revisar.
-          </p>
-        </div>
-      </div>
+    <?= view('components/page_header', [
+        'title'    => 'Pendências de Ponto',
+        'subtitle' => 'Marcações incompletas detectadas automaticamente pelo sistema, aguardando sua justificativa.',
+        'icon'     => 'bi bi-calendar-x',
+    ]) ?>
 
-      <?php if (empty($awaiting)): ?>
-        <div class="card shadow-sm">
-          <div class="card-body text-center text-muted py-5">
-            <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
-            Nenhuma pendência aguardando sua justificativa no momento.
-          </div>
-        </div>
-      <?php else: ?>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
 
-        <?php foreach ($awaiting as $item): ?>
-        <div class="card shadow-sm mb-4">
-          <div class="card-body">
-            <h5 class="card-title mb-1">
-              Marcação faltante: <?= esc($punchTypes[$item->intended_punch_type] ?? $item->intended_punch_type) ?>
-            </h5>
-            <p class="text-muted small mb-3">
-              Referente ao dia <?= esc(date('d/m/Y', strtotime((string) $item->intended_time))) ?>
-            </p>
-
-            <div class="card border-0 bg-light mb-3">
-              <div class="card-body py-2">
-                <small class="text-muted"><?= esc($item->justification_text) ?></small>
-              </div>
+            <div class="alert alert-warning d-flex align-items-start gap-3 mb-4">
+                <i class="bi bi-exclamation-triangle-fill fs-4 mt-1"></i>
+                <div>
+                    <strong>Marcação de ponto incompleta detectada</strong>
+                    <p class="mb-0 mt-1 small">
+                        O sistema identificou que uma ou mais marcações de dias anteriores ficaram incompletas.
+                        Explique o ocorrido em cada pendência abaixo para que seu gestor possa revisar.
+                    </p>
+                </div>
             </div>
 
-            <form method="post" action="<?= site_url('timesheet/punch/pendencias/' . (int) $item->id) ?>">
-              <?= csrf_field() ?>
+            <?php if (empty($awaiting)): ?>
+                <div class="sp-data-card">
+                    <div class="sp-empty">
+                        <div class="sp-empty-icon"><i class="bi bi-check-circle"></i></div>
+                        <p class="sp-empty-title">Nenhuma pendência no momento</p>
+                        <p class="text-muted small mb-0">Todas as suas marcações de ponto estão em dia.</p>
+                    </div>
+                </div>
+            <?php else: ?>
 
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Tipo de situação <span class="text-danger">*</span></label>
-                <select name="situation_type" class="form-select" required>
-                  <option value="missing_checkout" selected>Esqueci de registrar / virada de dia</option>
-                  <option value="equipment_failure">Falha no equipamento / câmera</option>
-                  <option value="system_slow">Sistema lento ou indisponível</option>
-                  <option value="camera_inaccessible">Câmera inacessível</option>
-                  <option value="biometric_failed">Biometria não funcionou</option>
-                  <option value="other">Outro (descrever abaixo)</option>
-                </select>
-              </div>
+                <?php foreach ($awaiting as $item): ?>
+                <div class="sp-data-card mb-3">
+                    <div class="sp-data-card__header">
+                        <h2 class="sp-data-card__title">
+                            <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(255,193,7,.15);color:#d97706;"><i class="bi bi-clock-history"></i></span>
+                            Marcação faltante
+                        </h2>
+                        <span class="sp-badge sp-badge-warning"><?= esc($punchTypes[$item->intended_punch_type] ?? $item->intended_punch_type) ?></span>
+                    </div>
+                    <div class="sp-data-card__body">
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-calendar3 me-1"></i>Referente ao dia <strong><?= esc(format_date_br((string) $item->intended_time)) ?></strong>
+                        </p>
 
-              <div class="mb-3">
-                <label class="form-label fw-semibold">
-                  Descreva o ocorrido <span class="text-danger">*</span>
-                  <small class="text-muted fw-normal">(mínimo 20 caracteres)</small>
-                </label>
-                <textarea name="justification" class="form-control" rows="4"
-                  placeholder="Explique por que essa marcação não foi concluída..."
-                  minlength="20" maxlength="1000" required></textarea>
-              </div>
+                        <div class="d-flex gap-2 align-items-start p-3 rounded-3 mb-3" style="background:var(--sp-bg-page);border:1px solid var(--sp-border);">
+                            <i class="bi bi-robot text-muted mt-1"></i>
+                            <div>
+                                <div class="small fw-semibold text-muted">Detectado automaticamente pelo sistema</div>
+                                <small class="text-muted"><?= esc($item->justification_text) ?></small>
+                            </div>
+                        </div>
 
-              <button type="submit" class="btn btn-primary">
-                <i class="bi bi-send me-1"></i> Enviar justificativa
-              </button>
-            </form>
-          </div>
+                        <form method="post" action="<?= site_url('timesheet/punch/pendencias/' . (int) $item->id) ?>">
+                            <?= csrf_field() ?>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Tipo de situação <span class="text-danger">*</span></label>
+                                <select name="situation_type" class="form-select" required>
+                                    <option value="missing_checkout" selected>Esqueci de registrar / virada de dia</option>
+                                    <option value="equipment_failure">Falha no equipamento / câmera</option>
+                                    <option value="system_slow">Sistema lento ou indisponível</option>
+                                    <option value="camera_inaccessible">Câmera inacessível</option>
+                                    <option value="biometric_failed">Biometria não funcionou</option>
+                                    <option value="other">Outro (descrever abaixo)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    Descreva o ocorrido <span class="text-danger">*</span>
+                                    <small class="text-muted fw-normal">(mínimo 20 caracteres)</small>
+                                </label>
+                                <textarea name="justification" class="form-control" rows="4"
+                                    placeholder="Explique por que essa marcação não foi concluída..."
+                                    minlength="20" maxlength="1000" required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i> Enviar justificativa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+
+            <?php endif; ?>
+
         </div>
-        <?php endforeach; ?>
-
-      <?php endif; ?>
-
     </div>
-  </div>
 </div>
 
 <?= $this->endSection() ?>
