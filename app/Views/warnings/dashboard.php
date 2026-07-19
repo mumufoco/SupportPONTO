@@ -8,9 +8,6 @@
         'title'    => 'Advertências — ' . esc($targetEmployee->name ?? ''),
         'subtitle' => 'Histórico completo de advertências, resumo por tipo e linha do tempo de ocorrências.',
         'icon'     => 'bi bi-exclamation-triangle-fill',
-        'actions'  => [
-            ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => sp_warning_index_url()],
-        ],
     ]) ?>
 
     <?php if ($atLimit): ?>
@@ -144,3 +141,4 @@
     </div>
 </div>
 <?= $this->endSection() ?>
+
