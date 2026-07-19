@@ -75,6 +75,8 @@ $routes->get('timesheet/punch-capabilities', $timePunchController . '::capabilit
 $routes->group('timesheet/punch', ['filter' => 'auth'], static function ($routes) {
     $routes->get('justify',  'Timesheet\PendingPunchController::index',  ['as' => 'timesheet.punch.justify']);
     $routes->post('justify', 'Timesheet\PendingPunchController::submit', ['as' => 'timesheet.punch.justify.submit']);
+    $routes->get('pendencias', 'Timesheet\PendingPunchController::myPending', ['as' => 'timesheet.punch.pending']);
+    $routes->post('pendencias/(:num)', 'Timesheet\PendingPunchController::respondToPending/$1', ['as' => 'timesheet.punch.pending.respond']);
 });
 
 $routes->group('manager/pending-punches', ['filter' => ['auth', 'manager']], static function ($routes) {
@@ -83,4 +85,5 @@ $routes->group('manager/pending-punches', ['filter' => ['auth', 'manager']], sta
     $routes->post('(:num)/reject',  'Timesheet\PendingPunchController::reject/$1',  ['as' => 'manager.pending.reject']);
     $routes->post('violations/(:num)/resolve', 'Timesheet\PendingPunchController::resolveViolation/$1', ['as' => 'manager.pending.violations.resolve']);
 });
+
 

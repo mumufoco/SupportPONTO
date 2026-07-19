@@ -288,7 +288,7 @@ class TimePunchModel extends Model
      */
     public function getNextPunchType(int $employeeId, ?string $date = null): PunchType
     {
-        $lastPunch = $this->getLastPunch($employeeId);
+        $lastPunch = $this->getLastPunch($employeeId, $date);
 
         if (!$lastPunch) {
             return PunchType::Entrada;

@@ -27,8 +27,8 @@ class PendingPunchModel extends Model
         'intended_punch_type'  => 'required|in_list[entrada,saida,intervalo_inicio,intervalo_fim]',
         'intended_time'        => 'required',
         'justification_text'   => 'required|min_length[20]|max_length[1000]',
-        'situation_type'       => 'required|in_list[equipment_failure,system_slow,camera_inaccessible,biometric_failed,other]',
-        'status'               => 'required|in_list[pending,approved,rejected,expired,cancelled]',
+        'situation_type'       => 'required|in_list[equipment_failure,system_slow,camera_inaccessible,biometric_failed,missing_checkout,other]',
+        'status'               => 'required|in_list[pending,approved,rejected,expired,cancelled,awaiting_employee]',
     ];
 
     /** Retorna pendências aguardando aprovação, opcionalmente por departamento */
@@ -54,9 +54,33 @@ class PendingPunchModel extends Model
     public function expireStale(int $hoursThreshold = 24): int
     {
         $cutoff = date('Y-m-d H:i:s', strtotime("-{$hoursThreshold} hours"));
-        $this->where('status', 'pending')->where('created_at <', $cutoff)
+        $this->whereIn('status', ['pending', 'awaiting_employee'])->where('created_at <', $cutoff)
             ->set(['status' => 'expired', 'updated_at' => date('Y-m-d H:i:s'), 'processed_at' => date('Y-m-d H:i:s')])->update();
         return $this->db->affectedRows();
+    }
+
+    /** Pendências geradas pelo sistema (virada de dia) aguardando o colaborador preencher a justificativa */
+    public function getAwaitingEmployee(int $employeeId): array
+    {
+        return $this->where('employee_id', $employeeId)
+            ->where('status', 'awaiting_employee')
+            ->orderBy('intended_time', 'DESC')
+            ->findAll();
+    }
+
+    /**
+     * Verifica se já existe uma pendência (aguardando colaborador ou já em análise
+     * do gestor) cobrindo este colaborador/tipo/dia — evita que o cron de virada de
+     * dia crie duplicatas em execuções seguintes enquanto a pendência não é resolvida.
+     */
+    public function hasOpenPendingForDay(int $employeeId, string $punchType, string $date): bool
+    {
+        return $this->where('employee_id', $employeeId)
+            ->where('intended_punch_type', $punchType)
+            ->whereIn('status', ['awaiting_employee', 'pending'])
+            ->where('intended_time >=', $date . ' 00:00:00')
+            ->where('intended_time <', $date . ' 23:59:59')
+            ->countAllResults() > 0;
     }
 
     /**
@@ -106,3 +130,4 @@ class PendingPunchModel extends Model
         return [];
     }
 }
+

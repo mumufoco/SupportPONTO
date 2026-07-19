@@ -3,6 +3,7 @@
 namespace App\Controllers\Timesheet;
 
 use App\Controllers\BaseController;
+use App\Models\PendingPunchModel;
 use App\Models\PunchRuleViolationModel;
 use App\Services\Timesheet\PendingPunchAttemptStore;
 use App\Services\Timesheet\PendingPunchService;
@@ -21,6 +22,7 @@ class PendingPunchController extends BaseController
     protected PunchMethodReadinessService $readinessService;
     protected PendingPunchAttemptStore    $attemptStore;
     protected PunchRuleViolationModel     $violationModel;
+    protected PendingPunchModel           $pendingPunchModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
@@ -29,6 +31,7 @@ class PendingPunchController extends BaseController
         $this->readinessService    = new PunchMethodReadinessService();
         $this->attemptStore        = new PendingPunchAttemptStore();
         $this->violationModel      = new PunchRuleViolationModel();
+        $this->pendingPunchModel   = new PendingPunchModel();
         helper(['datetime', 'format']);
     }
 
@@ -112,6 +115,62 @@ class PendingPunchController extends BaseController
         $this->attemptStore->clearForEmployee((int) $this->currentUser->id);
         $this->setSuccess($result['message']);
         return redirect()->to(route_to('dashboard.employee'));
+    }
+
+    /**
+     * Pendências que o próprio SISTEMA gerou (cron punches:close-incomplete-days) ao
+     * detectar, na virada do dia, um par de marcações incompleto do colaborador
+     * logado — aguardando que ele preencha a justificativa.
+     * GET /timesheet/punch/pendencias
+     */
+    public function myPending(): string
+    {
+        $this->requireAuth();
+
+        $awaiting = $this->pendingPunchModel->getAwaitingEmployee((int) $this->currentUser->id);
+
+        return view('timesheet/punch_pending_response', [
+            'awaiting'   => $awaiting,
+            'punchTypes' => [
+                'entrada'          => 'Entrada',
+                'saida'            => 'Saída',
+                'intervalo_inicio' => 'Início de intervalo',
+                'intervalo_fim'    => 'Fim de intervalo',
+            ],
+        ]);
+    }
+
+    /**
+     * Colaborador preenche a justificativa de uma pendência gerada pelo sistema.
+     * POST /timesheet/punch/pendencias/{id}
+     */
+    public function respondToPending(int $pendingId): ResponseInterface
+    {
+        $this->requireAuth();
+
+        $rules = [
+            'justification'  => 'required|min_length[20]|max_length[1000]',
+            'situation_type' => 'required|in_list[equipment_failure,system_slow,camera_inaccessible,biometric_failed,missing_checkout,other]',
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('error', 'Revise os campos da justificativa e tente novamente.')->with('errors', $this->validator->getErrors());
+        }
+
+        $result = $this->pendingPunchService->submitEmployeeResponseForSystemPending(
+            $pendingId,
+            (int) $this->currentUser->id,
+            (string) $this->request->getPost('justification'),
+            (string) $this->request->getPost('situation_type'),
+            $this->request
+        );
+
+        if (!$result['success']) {
+            return redirect()->back()->withInput()->with('error', $result['message'] ?? 'Erro ao enviar justificativa.');
+        }
+
+        $this->setSuccess($result['message']);
+        return redirect()->to(route_to('timesheet.punch.pending'));
     }
 
     /**
@@ -246,3 +305,4 @@ class PendingPunchController extends BaseController
             : $this->respondError($message, null, $status);
     }
 }
+

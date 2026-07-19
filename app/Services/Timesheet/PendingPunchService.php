@@ -177,6 +177,72 @@ class PendingPunchService
     }
 
     /**
+     * Colaborador preenche a justificativa de uma pendência que o próprio SISTEMA
+     * gerou (via cron punches:close-incomplete-days) ao detectar, na virada do dia,
+     * um par de marcações incompleto (ex.: início do intervalo sem o fim). A
+     * pendência já existe com status 'awaiting_employee' e um texto-placeholder;
+     * esta ação apenas substitui o texto pelo relato do colaborador e move o
+     * registro para 'pending', entrando na mesma fila que o gestor já usa para
+     * aprovar/rejeitar justificativas de falha técnica.
+     */
+    public function submitEmployeeResponseForSystemPending(
+        int              $pendingId,
+        int              $employeeId,
+        string           $justificationText,
+        string           $situationType,
+        RequestInterface $request
+    ): array {
+        $pending = $this->pendingModel->find($pendingId);
+
+        if (!$pending) {
+            return ['success' => false, 'message' => 'Pendência não encontrada.', 'status' => 404];
+        }
+
+        if ((int) $pending->employee_id !== $employeeId) {
+            return ['success' => false, 'message' => 'Acesso negado.', 'status' => 403];
+        }
+
+        if ($pending->status !== 'awaiting_employee') {
+            return ['success' => false, 'message' => "Esta pendência já está com status '{$pending->status}'.", 'status' => 409];
+        }
+
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+24 hours'));
+
+        $updated = $this->pendingModel->update($pendingId, [
+            'justification_text' => $justificationText,
+            'situation_type'      => $situationType,
+            'ip_address'          => $request->getIPAddress(),
+            'user_agent'          => (string) $request->getUserAgent(),
+            'status'              => 'pending',
+            'expires_at'          => $expiresAt,
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        if (!$updated) {
+            return ['success' => false, 'message' => 'Erro ao registrar justificativa. Tente novamente.', 'status' => 500];
+        }
+
+        $this->auditLogger->logEntityEvent(
+            $employeeId,
+            'PENDING_PUNCH_SUBMITTED',
+            'pending_punches',
+            $pendingId,
+            ['status' => 'awaiting_employee'],
+            ['status' => 'pending', 'situation' => $situationType],
+            'Justificativa enviada pelo colaborador para pendência gerada pelo sistema (virada de dia)',
+            'info'
+        );
+
+        return [
+            'success'    => true,
+            'pending_id' => $pendingId,
+            'message'    => 'Justificativa enviada. Aguarde aprovação do seu gestor (prazo: 24 horas).',
+            'expires_at' => $expiresAt,
+            'status'     => 202,
+        ];
+    }
+
+    /**
      * Gestor/RH aprova o registro pendente e efetiva o ponto.
      */
     public function approve(int $pendingId, object|array $reviewer, string $reviewNotes = ''): array
@@ -412,3 +478,4 @@ class PendingPunchService
         return $this->pendingModel->expireStale(24);
     }
 }
+
