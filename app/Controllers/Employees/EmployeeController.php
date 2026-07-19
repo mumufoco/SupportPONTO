@@ -242,7 +242,16 @@ class EmployeeController extends BaseController
     public function profile()
     {
         $this->requireAuth();
-        return view('employees/profile', $this->employeeCoordinatorService->ownProfileData($this->currentUser->id));
+
+        $employeeId = (int) $this->currentUser->id;
+
+        $showPayload = $this->employeeControllerActionService->showPayload($employeeId);
+        if (!($showPayload['success'] ?? false)) {
+            $this->setError($showPayload['message'] ?? 'Não foi possível carregar seu perfil.');
+            return redirect()->to(sp_dashboard_url());
+        }
+
+        return view('employees/profile', array_merge($showPayload['viewData'], ['currentUser' => $this->currentUser]));
     }
 
     public function updateProfile()
@@ -771,3 +780,4 @@ class EmployeeController extends BaseController
     }
 
 }
+

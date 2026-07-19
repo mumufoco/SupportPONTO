@@ -152,8 +152,14 @@ class Filters extends BaseConfig
         ],
         'manager' => [
             'before' => [
-                'employees',
-                'employees/*',
+                // 'employees'/'employees/*' removidos deste wildcard global: toda rota de
+                // employees/* que exige gestor/admin ja declara ['auth','manager'] (ou
+                // ['auth','admin']) diretamente no proprio grupo de rota em
+                // Routes/30_employees.php -- protecao redundante aqui. O problema e que o
+                // wildcard tambem capturava rotas de autoatendimento deliberadamente mais
+                // permissivas (filter => 'auth' apenas), como employees/change-request/* e
+                // employees/(:num)/photo, bloqueando com 403 um colaborador tentando
+                // solicitar alteracao cadastral ou trocar a propria foto de perfil.
                 'shifts',
                 'shifts/*',
                 'schedules',
@@ -241,3 +247,4 @@ class Filters extends BaseConfig
         ],
     ];
 }
+
