@@ -6,6 +6,7 @@ namespace App\Controllers\Security;
 
 use App\Controllers\BaseController;
 use App\Services\Auth\SessionSecurityService;
+use App\Services\Auth\TwoFactorManagerService;
 use Config\Services;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -14,22 +15,30 @@ use Psr\Log\LoggerInterface;
 class SessionController extends BaseController
 {
     protected SessionSecurityService $sessionSecurity;
+    protected TwoFactorManagerService $twoFactorManager;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
         $this->sessionSecurity = Services::sessionSecurityService();
+        $this->twoFactorManager = Services::twoFactorManagerService();
     }
 
     public function index()
     {
         $this->requireAuth();
 
+        $twoFactorEnabled = (bool) ($this->currentUser->two_factor_enabled ?? false);
+
         return view('profile/security', [
             'title' => 'Segurança da conta',
             'sessions' => $this->sessionSecurity->listSessionsForUser((int) $this->currentUser->id, (string) ($this->session->get('session_key') ?? '')),
             'step_up_ttl' => (int) env('security.stepUpTtl', 900),
             'step_up_active' => $this->sessionSecurity->hasFreshStepUp($this->session),
+            'two_factor_enabled' => $twoFactorEnabled,
+            'two_factor_backup_codes_remaining' => $twoFactorEnabled
+                ? $this->twoFactorManager->countRemainingBackupCodes($this->currentUser)
+                : 0,
         ]);
     }
 

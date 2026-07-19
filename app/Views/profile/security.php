@@ -6,7 +6,7 @@
 <div class="container-fluid sp-module-stack">
     <?= view('components/page_header', [
         'title'    => 'Segurança da conta',
-        'subtitle' => 'Revise sessões ativas, dispositivos recentes e confirme ações críticas com senha recente.',
+        'subtitle' => 'Revise sessões ativas, dispositivos recentes, autenticação de dois fatores e confirme ações críticas com senha recente.',
         'icon'     => 'bi bi-shield-lock-fill',
         'actions'  => [
             ['label' => 'Meu perfil',    'icon' => 'bi bi-person-circle', 'url' => sp_profile_url()],
@@ -18,8 +18,69 @@
     <div class="sp-security-grid"
          style="display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start;">
 
-        <!-- Confirmação reforçada -->
-        <div>
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+            <!-- Autenticação de dois fatores -->
+            <div class="sp-card">
+                <div class="sp-card-header">
+                    <h5 class="sp-card-title">
+                        <i class="bi bi-shield-check"></i>Autenticação de dois fatores
+                    </h5>
+                    <span class="sp-badge <?= $two_factor_enabled ? 'sp-badge-success' : 'sp-badge-neutral' ?>">
+                        <?= $two_factor_enabled ? 'Ativo' : 'Inativo' ?>
+                    </span>
+                </div>
+                <div class="sp-card-body">
+                    <?php if ($two_factor_enabled): ?>
+                        <div class="sp-alert sp-alert-success" style="margin-bottom:1rem;">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>O 2FA está protegendo o login da sua conta.</span>
+                        </div>
+                        <p style="font-size:.875rem;color:var(--sp-text-secondary);margin-bottom:1rem;">
+                            Códigos de backup restantes: <strong><?= (int) $two_factor_backup_codes_remaining ?></strong>
+                        </p>
+
+                        <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-full" id="toggleRegenerateBtn" style="margin-bottom:.5rem;">
+                            <i class="bi bi-arrow-repeat"></i> Gerar novos códigos de backup
+                        </button>
+                        <form method="post" action="<?= site_url(route_to('2fa.regenerate-backup-codes')) ?>" id="regenerateForm" style="display:none;margin-bottom:1rem;">
+                            <?= csrf_field() ?>
+                            <div class="sp-form-group">
+                                <label class="sp-label" for="regenerate_password">Confirme sua senha</label>
+                                <input type="password" class="sp-input" id="regenerate_password"
+                                       name="password" autocomplete="current-password" required>
+                            </div>
+                            <button type="submit" class="sp-btn sp-btn-sm sp-btn-primary sp-btn-full">Confirmar geração</button>
+                        </form>
+
+                        <button type="button" class="sp-btn sp-btn-sm sp-btn-outline sp-btn-full" id="toggleDisableBtn"
+                                style="border-color:var(--sp-danger);color:var(--sp-danger);"
+                                onmouseover="this.style.background='var(--sp-danger-light)'"
+                                onmouseout="this.style.background=''">
+                            <i class="bi bi-shield-x"></i> Desativar 2FA
+                        </button>
+                        <form method="post" action="<?= site_url(route_to('2fa.disable')) ?>" id="disableForm" style="display:none;margin-top:.75rem;">
+                            <?= csrf_field() ?>
+                            <div class="sp-form-group">
+                                <label class="sp-label" for="disable_password">Confirme sua senha</label>
+                                <input type="password" class="sp-input" id="disable_password"
+                                       name="password" autocomplete="current-password" required>
+                            </div>
+                            <button type="submit" class="sp-btn sp-btn-sm sp-btn-danger sp-btn-full">Confirmar desativação</button>
+                        </form>
+                    <?php else: ?>
+                        <div class="sp-alert sp-alert-warning" style="margin-bottom:1rem;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>O 2FA está desativado. Ative para proteger o login com um código adicional do seu celular.</span>
+                        </div>
+                        <a href="<?= site_url(route_to('2fa.setup')) ?>" class="sp-btn sp-btn-primary sp-btn-full">
+                            <i class="bi bi-shield-plus"></i> Ativar 2FA
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Confirmação reforçada -->
             <div class="sp-card">
                 <div class="sp-card-header">
                     <h5 class="sp-card-title">
@@ -138,6 +199,16 @@
     }
     adjustGrid();
     window.addEventListener('resize', adjustGrid);
+
+    // 2FA: revela o formulário de confirmação de senha ao clicar nas ações
+    document.getElementById('toggleRegenerateBtn')?.addEventListener('click', function () {
+        document.getElementById('regenerateForm')?.style.setProperty('display', 'block');
+        this.style.display = 'none';
+    });
+    document.getElementById('toggleDisableBtn')?.addEventListener('click', function () {
+        document.getElementById('disableForm')?.style.setProperty('display', 'block');
+        this.style.display = 'none';
+    });
 
     // Confirmação de senha (step-up)
     document.getElementById('stepUpForm')?.addEventListener('submit', function (e) {
