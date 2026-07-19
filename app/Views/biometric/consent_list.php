@@ -1,16 +1,12 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('title') ?>Termos e Aceites Biométricos<?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<?php $canManageTerms = $canManageTerms ?? false; ?>
 
 <div class="container-fluid sp-module-stack">
     <?= view('components/page_header', [
         'title'    => 'Termos e Aceites Biométricos',
         'subtitle' => 'Histórico permanente de consentimentos LGPD. Registros protegidos contra exclusão — válidos como prova jurídica.',
         'icon'     => 'bi bi-file-earmark-check-fill',
-        'actions'  => $canManageTerms
-            ? [['label' => 'Templates de termos', 'icon' => 'bi bi-pencil-square', 'url' => route_to('biometric.consent.terms.manage')]]
-            : [],
     ]) ?>
 
     <div class="alert alert-info d-flex gap-2 align-items-start py-2 mb-3">
