@@ -3,27 +3,47 @@
 <?= $this->section('title') ?>Feriados e Dias Não Trabalhados<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<div class="container-fluid py-4">
+<?php
+    $existingHolidayKeys = $existingHolidayKeys ?? [];
+    $typeBadges = [
+        'national'    => 'sp-badge-primary',
+        'state'       => 'sp-badge-info',
+        'municipal'   => 'sp-badge-neutral',
+        'company'     => 'sp-badge-success',
+        'non_working' => 'sp-badge-warning',
+    ];
+?>
+<div class="container-fluid sp-module-stack">
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-        <div>
-            <h1 class="h4 mb-1"><i class="bi bi-calendar-x me-2 text-warning"></i>Feriados e Dias Não Trabalhados</h1>
-            <p class="text-muted mb-0">Gerencie feriados e dias em que o registro de ponto é bloqueado.</p>
-        </div>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddHoliday">
-            <i class="bi bi-plus-lg me-2"></i>Novo Feriado / Dia
-        </button>
-    </div>
+    <?= view('components/page_header', [
+        'title'    => 'Feriados e Dias Não Trabalhados',
+        'subtitle' => 'Gerencie feriados e dias em que o registro de ponto é bloqueado.',
+        'icon'     => 'bi bi-calendar-x',
+        'actions'  => [
+            [
+                'label' => 'Feriados Nacionais', 'icon' => 'bi bi-flag-fill', 'url' => '#',
+                'attrs' => 'data-bs-toggle="modal" data-bs-target="#modalNationalHolidays"',
+            ],
+            [
+                'label' => 'Feriados Locais (GO/Goiânia)', 'icon' => 'bi bi-geo-alt-fill', 'url' => '#',
+                'attrs' => 'data-bs-toggle="modal" data-bs-target="#modalLocalHolidays"',
+            ],
+            [
+                'label' => 'Personalizado', 'icon' => 'bi bi-plus-lg', 'url' => '#',
+                'attrs' => 'data-bs-toggle="modal" data-bs-target="#modalAddHoliday"',
+            ],
+        ],
+    ]) ?>
 
     <!-- Filtros -->
-    <div class="card mb-4">
-        <div class="card-body py-3">
+    <div class="sp-data-card mb-3">
+        <div class="sp-data-card__body">
             <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Buscar</label>
                     <input type="search" name="search" value="<?= esc($filters['search'] ?? '') ?>" class="form-control" placeholder="Nome do feriado...">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label class="form-label">Tipo</label>
                     <select name="type" class="form-select">
                         <option value="">Todos os tipos</option>
@@ -32,24 +52,8 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="active" <?= ($filters['status'] ?? '') === 'active' ? 'selected' : '' ?>>Ativos</option>
-                        <option value="inactive" <?= ($filters['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Inativos</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Por página</label>
-                    <select name="per_page" class="form-select">
-                        <?php foreach ([10, 25, 50, 100] as $opt): ?>
-                            <option value="<?= $opt ?>" <?= (int)($filters['per_page'] ?? 25) === $opt ? 'selected' : '' ?>><?= $opt ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-outline-primary w-100">Filtrar</button>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Buscar</button>
                     <a href="<?= sp_route_url('settings.holidays') ?>" class="btn btn-outline-secondary">Limpar</a>
                 </div>
             </form>
@@ -57,17 +61,25 @@
     </div>
 
     <!-- Tabela -->
-    <div class="card">
-        <div class="card-body p-0">
+    <div class="sp-data-card">
+        <div class="sp-data-card__header">
+            <h2 class="sp-data-card__title">
+                <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(13,110,253,.12);color:#0d6efd;"><i class="bi bi-calendar3"></i></span>
+                Feriados cadastrados
+            </h2>
+            <span class="sp-badge sp-badge-neutral"><?= (int) ($meta['total'] ?? 0) ?> registro<?= (int) ($meta['total'] ?? 0) !== 1 ? 's' : '' ?></span>
+        </div>
+        <div class="sp-data-card__body p-0">
             <?php if (empty($holidays)): ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-calendar-check fs-1 d-block mb-3"></i>
-                    <p class="mb-0">Nenhum feriado cadastrado. Clique em <strong>Novo Feriado / Dia</strong> para começar.</p>
+                <div class="sp-empty">
+                    <div class="sp-empty-icon"><i class="bi bi-calendar-check"></i></div>
+                    <p class="sp-empty-title">Nenhum feriado cadastrado</p>
+                    <p class="text-muted small mb-0">Use um dos botões acima para adicionar feriados nacionais, locais ou personalizados.</p>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>Data</th>
                                 <th>Nome</th>
@@ -94,11 +106,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php
-                                    $typeColors = ['national' => 'primary', 'state' => 'info', 'municipal' => 'secondary', 'company' => 'success', 'non_working' => 'warning'];
-                                    $typeColor = $typeColors[$h->type ?? ''] ?? 'secondary';
-                                    ?>
-                                    <span class="badge bg-<?= esc($typeColor) ?>">
+                                    <span class="sp-badge <?= $typeBadges[$h->type ?? ''] ?? 'sp-badge-neutral' ?>">
                                         <?= esc(\App\Models\HolidayModel::typeLabel($h->type ?? '')) ?>
                                     </span>
                                 </td>
@@ -107,33 +115,33 @@
                                 </td>
                                 <td class="text-center">
                                     <?php if (!empty($h->blocks_punch)): ?>
-                                        <span class="badge bg-danger"><i class="bi bi-lock-fill me-1"></i>Bloqueado</span>
+                                        <span class="sp-badge sp-badge-danger"><i class="bi bi-lock-fill me-1"></i>Bloqueado</span>
                                     <?php else: ?>
-                                        <span class="badge bg-light text-secondary border"><i class="bi bi-unlock me-1"></i>Livre</span>
+                                        <span class="sp-badge sp-badge-neutral"><i class="bi bi-unlock me-1"></i>Livre</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
                                     <?php if (!empty($h->active)): ?>
-                                        <span class="badge bg-success">Ativo</span>
+                                        <span class="sp-badge sp-badge-success">Ativo</span>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary">Inativo</span>
+                                        <span class="sp-badge sp-badge-neutral">Inativo</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <div class="d-flex gap-1 justify-content-end">
-                                        <a href="<?= sp_route_url('settings.holidays.edit', (int) $h->id) ?>" class="btn btn-sm btn-outline-primary" title="Editar">
+                                    <div class="table-icon-actions">
+                                        <a href="<?= sp_route_url('settings.holidays.edit', (int) $h->id) ?>" class="icon-action icon-action-edit" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form method="POST" action="<?= sp_route_url('settings.holidays.toggle', (int) $h->id) ?>" class="d-inline">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-sm <?= !empty($h->active) ? 'btn-outline-warning' : 'btn-outline-success' ?>" title="<?= !empty($h->active) ? 'Desativar' : 'Ativar' ?>">
+                                            <button type="submit" class="icon-action <?= !empty($h->active) ? 'icon-action-warning' : 'icon-action-success' ?>" title="<?= !empty($h->active) ? 'Desativar' : 'Ativar' ?>">
                                                 <i class="bi <?= !empty($h->active) ? 'bi-pause-circle' : 'bi-play-circle' ?>"></i>
                                             </button>
                                         </form>
                                         <form method="POST" action="<?= sp_route_url('settings.holidays.delete', (int) $h->id) ?>" class="d-inline"
                                               onsubmit="return confirm('Excluir feriado \'<?= esc(addslashes($h->name)) ?>\'?')">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                            <button type="submit" class="icon-action icon-action-danger" title="Excluir">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
@@ -156,7 +164,107 @@
     </div>
 </div>
 
-<!-- Modal: Adicionar Feriado -->
+<!-- Modal: Feriados Nacionais -->
+<div class="modal fade" id="modalNationalHolidays" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <form method="POST" action="<?= sp_route_url('settings.holidays.bulk-store') ?>" id="formNationalHolidays">
+                <?= csrf_field() ?>
+                <input type="hidden" name="group" value="national">
+                <input type="hidden" name="year" id="nationalHolidaysYear" value="<?= (int) $currentYear ?>">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-flag-fill me-2"></i>Feriados Nacionais</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ano de referência</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="year_toggle" id="yearToggleCurrent" value="<?= (int) $currentYear ?>" checked>
+                            <label class="btn btn-outline-primary" for="yearToggleCurrent"><?= (int) $currentYear ?></label>
+                            <input type="radio" class="btn-check" name="year_toggle" id="yearToggleNext" value="<?= (int) $nextYear ?>">
+                            <label class="btn btn-outline-primary" for="yearToggleNext"><?= (int) $nextYear ?></label>
+                        </div>
+                        <div class="form-text">Carnaval, Sexta-feira Santa e Corpus Christi mudam de data todo ano — escolha o ano correto antes de confirmar.</div>
+                    </div>
+
+                    <?php foreach ([$currentYear, $nextYear] as $yr): ?>
+                    <div class="national-year-block" data-year="<?= (int) $yr ?>" style="<?= $yr === $currentYear ? '' : 'display:none;' ?>">
+                        <div class="list-group">
+                            <?php foreach (($nationalCatalog[$yr] ?? []) as $key => $item): ?>
+                                <?php $exists = isset($existingHolidayKeys[$item['date'] . '|' . $item['name']]); ?>
+                                <label class="list-group-item d-flex align-items-start gap-2 <?= $exists ? 'text-muted' : '' ?>">
+                                    <input type="checkbox" class="form-check-input mt-1" name="keys[]" value="<?= esc($key) ?>"
+                                           <?= $exists ? 'disabled' : 'checked' ?>>
+                                    <span class="flex-grow-1">
+                                        <span class="fw-semibold"><?= esc($item['name']) ?></span>
+                                        <span class="text-muted small ms-1"><?= esc(date('d/m/Y', strtotime($item['date']))) ?></span>
+                                        <?php if ($exists): ?>
+                                            <span class="sp-badge sp-badge-neutral ms-1">Já cadastrado</span>
+                                        <?php else: ?>
+                                            <span class="sp-badge <?= $typeBadges[$item['type']] ?? 'sp-badge-neutral' ?> ms-1"><?= esc(\App\Models\HolidayModel::typeLabel($item['type'])) ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Adicionar selecionados</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Feriados Locais (Goiás/Goiânia) -->
+<div class="modal fade" id="modalLocalHolidays" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="<?= sp_route_url('settings.holidays.bulk-store') ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="group" value="local_go">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-geo-alt-fill me-2"></i>Feriados Locais — Goiás e Goiânia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info d-flex gap-2 align-items-start py-2 mb-3">
+                        <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+                        <small>Datas fixas todo ano. Confira antes de confirmar caso sua unidade fique em outro município.</small>
+                    </div>
+                    <div class="list-group">
+                        <?php foreach (($localCatalog ?? []) as $key => $item): ?>
+                            <?php $exists = isset($existingHolidayKeys[$item['date'] . '|' . $item['name']]); ?>
+                            <label class="list-group-item d-flex align-items-start gap-2 <?= $exists ? 'text-muted' : '' ?>">
+                                <input type="checkbox" class="form-check-input mt-1" name="keys[]" value="<?= esc($key) ?>"
+                                       <?= $exists ? 'disabled' : 'checked' ?>>
+                                <span class="flex-grow-1">
+                                    <span class="fw-semibold"><?= esc($item['name']) ?></span>
+                                    <span class="text-muted small ms-1"><?= esc(date('d/m', strtotime($item['date']))) ?></span>
+                                    <?php if ($exists): ?>
+                                        <span class="sp-badge sp-badge-neutral ms-1">Já cadastrado</span>
+                                    <?php else: ?>
+                                        <span class="sp-badge <?= $typeBadges[$item['type']] ?? 'sp-badge-neutral' ?> ms-1"><?= esc(\App\Models\HolidayModel::typeLabel($item['type'])) ?></span>
+                                    <?php endif; ?>
+                                </span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Adicionar selecionados</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Adicionar Feriado Personalizado -->
 <div class="modal fade" id="modalAddHoliday" tabindex="-1" aria-labelledby="modalAddHolidayLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -164,14 +272,14 @@
                 <?= csrf_field() ?>
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalAddHolidayLabel">
-                        <i class="bi bi-calendar-plus me-2"></i>Novo Feriado / Dia Não Trabalhado
+                        <i class="bi bi-calendar-plus me-2"></i>Feriado Personalizado
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="h_name" class="form-label">Nome <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="h_name" class="form-control" placeholder="Ex: Corpus Christi" required maxlength="255" value="<?= esc(old('name')) ?>">
+                        <input type="text" name="name" id="h_name" class="form-control" placeholder="Ex: Aniversário da empresa" required maxlength="255" value="<?= esc(old('name')) ?>">
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -224,4 +332,20 @@
     </div>
 </div>
 
+<script <?= csp_script_nonce_attr() ?>>
+(function () {
+    var yearInputs = document.querySelectorAll('input[name="year_toggle"]');
+    var yearField = document.getElementById('nationalHolidaysYear');
+    var blocks = document.querySelectorAll('.national-year-block');
+
+    yearInputs.forEach(function (input) {
+        input.addEventListener('change', function () {
+            yearField.value = input.value;
+            blocks.forEach(function (block) {
+                block.style.display = block.dataset.year === input.value ? '' : 'none';
+            });
+        });
+    });
+})();
+</script>
 <?= $this->endSection() ?>

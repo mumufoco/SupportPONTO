@@ -70,6 +70,7 @@ $routes->group('settings', ['filter' => ['auth', 'admin']], static function ($ro
     $routes->get('holidays', 'Settings\WorkforceSettingsController::holidays', ['as' => 'settings.holidays']);
     $routes->get('holidays/json', 'Settings\WorkforceSettingsController::holidaysJson', ['as' => 'settings.holidays.json']);
     $routes->post('holidays/store', 'Settings\WorkforceSettingsController::storeHoliday', ['as' => 'settings.holidays.store']);
+    $routes->post('holidays/bulk-store', 'Settings\WorkforceSettingsController::storeBulkHolidays', ['as' => 'settings.holidays.bulk-store']);
     $routes->get('holidays/(:num)/edit', 'Settings\WorkforceSettingsController::editHoliday/$1', ['as' => 'settings.holidays.edit']);
     $routes->post('holidays/(:num)/update', 'Settings\WorkforceSettingsController::updateHoliday/$1', ['as' => 'settings.holidays.update']);
     $routes->post('holidays/(:num)/toggle', 'Settings\WorkforceSettingsController::toggleHoliday/$1', ['as' => 'settings.holidays.toggle']);
