@@ -9,7 +9,6 @@
             <h2 class="mb-1"><i class="fas fa-calendar-alt me-2"></i>Minhas escalas</h2>
             <p class="text-muted mb-0">Consulte seus turnos planejados no período e acompanhe horários previstos.</p>
         </div>
-        <a href="<?= sp_dashboard_url() ?>" class="btn btn-secondary"><i class="fas fa-home me-2"></i>Dashboard</a>
     </div>
 
     <div class="card shadow-sm mb-4">

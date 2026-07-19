@@ -21,11 +21,6 @@
           <div class="card-body text-center text-muted py-5">
             <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
             Nenhuma pendência aguardando sua justificativa no momento.
-            <div class="mt-3">
-              <a href="<?= sp_timesheet_punch_url() ?>" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Voltar para Bater ponto
-              </a>
-            </div>
           </div>
         </div>
       <?php else: ?>
