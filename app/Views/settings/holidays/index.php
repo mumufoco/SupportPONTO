@@ -2,6 +2,14 @@
 
 <?= $this->section('title') ?>Feriados e Dias Não Trabalhados<?= $this->endSection() ?>
 
+<?= $this->section('styles') ?>
+<style>
+/* Botões de ação um pouco maiores que o padrão .icon-action (2.35rem/1.2rem),
+   seguindo o pedido de deixá-los como os de settings/departments, porém maiores. */
+.sp-icon-actions-lg .icon-action { width: 2.6rem; height: 2.6rem; font-size: 1.35rem; }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 <?php
     $existingHolidayKeys = $existingHolidayKeys ?? [];
@@ -128,21 +136,21 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <div class="table-icon-actions">
+                                    <div class="table-icon-actions sp-icon-actions-lg">
                                         <a href="<?= sp_route_url('settings.holidays.edit', (int) $h->id) ?>" class="icon-action icon-action-edit" title="Editar">
-                                            <i class="bi bi-pencil"></i>
+                                            <i class="bi bi-pencil-fill"></i>
                                         </a>
                                         <form method="POST" action="<?= sp_route_url('settings.holidays.toggle', (int) $h->id) ?>" class="d-inline">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="icon-action <?= !empty($h->active) ? 'icon-action-warning' : 'icon-action-success' ?>" title="<?= !empty($h->active) ? 'Desativar' : 'Ativar' ?>">
-                                                <i class="bi <?= !empty($h->active) ? 'bi-pause-circle' : 'bi-play-circle' ?>"></i>
+                                                <i class="bi <?= !empty($h->active) ? 'bi-toggle-on' : 'bi-toggle-off' ?>"></i>
                                             </button>
                                         </form>
                                         <form method="POST" action="<?= sp_route_url('settings.holidays.delete', (int) $h->id) ?>" class="d-inline"
                                               onsubmit="return confirm('Excluir feriado \'<?= esc(addslashes($h->name)) ?>\'?')">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="icon-action icon-action-danger" title="Excluir">
-                                                <i class="bi bi-trash"></i>
+                                                <i class="bi bi-trash-fill"></i>
                                             </button>
                                         </form>
                                     </div>
