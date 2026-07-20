@@ -140,7 +140,8 @@ class TimesheetManagementService
             return [];
         }
 
-        $query = $this->employeeModel->where('active', true);
+        // Administradores do sistema não são colaboradores gerenciáveis via timesheet.
+        $query = $this->employeeModel->where('active', true)->where('role !=', 'admin');
         if ($this->hasDepartmentScope($actor)) {
             $query->where('department', $actor['department']);
         }

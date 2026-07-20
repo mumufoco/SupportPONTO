@@ -501,9 +501,17 @@ class EmployeeModel extends Model
         return $this->buildUniquenessQuery('cpf_hash', $hash, $excludeId)->countAllResults() === 0;
     }
 
+    /**
+     * Retorna colaboradores ativos. Administradores do sistema não são
+     * colaboradores (não batem ponto, não entram em escala, não devem ser
+     * sincronizados com integrações externas como o SupportCheck) — mesmo
+     * critério já usado em EmployeeManagementService::listEmployees() e
+     * DashboardAdminService::getMetrics(), agora centralizado aqui para que
+     * todo chamador de getActive()/getActiveEmployees() herde a exclusão.
+     */
     public function getActive(): array
     {
-        return $this->where('active', true)->findAll();
+        return $this->where('active', true)->where('role !=', 'admin')->findAll();
     }
 
     public function getActiveEmployees(): array

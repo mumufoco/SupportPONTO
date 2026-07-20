@@ -178,7 +178,8 @@ class WorkforceSettingsController extends BaseSettingsController
         $this->requireAdminAccess();
 
         $employeeModel = $this->employeeModel();
-        $employees = $employeeModel->where('active', true)->orderBy('name', 'ASC')->findAll();
+        // Administradores do sistema não são colaboradores e não têm férias a controlar.
+        $employees = $employeeModel->where('active', true)->where('role !=', 'admin')->orderBy('name', 'ASC')->findAll();
 
         return view('settings/vacations/index', [
             'employees' => $employees,

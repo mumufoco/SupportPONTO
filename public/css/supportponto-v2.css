@@ -38,9 +38,10 @@
   --sp-sidebar-text-dim: #6b7681;
   --sp-sidebar-title:    #5f6b75;
 
-  /* Verde acessível p/ acentos sobre a sidebar escura */
-  --sp-sidebar-accent:   #3fc079;
-  --sp-sidebar-accent-bg: rgba(63,192,121,.14);
+  /* Acento da sidebar segue a cor primária personalizável (Admin >
+     Personalização), em vez de um verde fixo desligado da configuração. */
+  --sp-sidebar-accent:   var(--sp-primary, #3fc079);
+  --sp-sidebar-accent-bg: color-mix(in srgb, var(--sp-primary, #3fc079) 14%, transparent);
 }
 
 /* ============================================================

@@ -123,9 +123,10 @@ class SupportCheckSyncService
      */
     public function syncAllEmployees(): array
     {
-        $employees = $this->employeeModel
-            ->where('active', true)
-            ->findAll();
+        // getActive() já exclui administradores do sistema (não são
+        // colaboradores) -- sem isso, o admin inicial era enviado ao
+        // SupportCHECK como se fosse um funcionário real.
+        $employees = $this->employeeModel->getActive();
 
         $synced = 0;
         $failed = 0;

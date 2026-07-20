@@ -165,7 +165,8 @@ class ReportViewService
 
     protected function getEmployeeScope(array $actor, ?string $department, ?string $employeeId): array
     {
-        $query = $this->employeeModel->where('active', true);
+        // Administradores do sistema não são colaboradores e não entram em relatórios.
+        $query = $this->employeeModel->where('active', true)->where('role !=', 'admin');
 
         if (($actor['role'] ?? '') === 'gestor') {
             $query->where('department', $actor['department']);

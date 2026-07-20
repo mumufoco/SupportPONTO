@@ -112,7 +112,8 @@ class EmployeeApiService
             return ['success' => false, 'status' => 403, 'message' => 'Acesso negado.'];
         }
 
-        $query = $this->employeeModel->where('active', true);
+        // Administradores do sistema não são colaboradores e não aparecem em "minha equipe".
+        $query = $this->employeeModel->where('active', true)->where('role !=', 'admin');
         if ($this->hasDepartmentScope((string) $employee->role)) {
             $query->where('department', $employee->department);
         }

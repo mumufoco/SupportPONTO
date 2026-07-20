@@ -42,7 +42,9 @@ class SupportCheckAttendanceReportService
      */
     public function sendMonthForAll(int $year, int $month): array
     {
-        $employees = $this->employeeModel->where('active', true)->findAll();
+        // getActive() exclui administradores do sistema -- não são
+        // colaboradores e não têm relatório de ponto a enviar.
+        $employees = $this->employeeModel->getActive();
 
         $sent   = 0;
         $failed = 0;

@@ -39,7 +39,7 @@ class ScheduleQueryService
             'endDate' => $endDate,
             'schedules' => $schedules,
             'shifts' => $this->shiftModel->where('active', true)->findAll(),
-            'employees' => $this->employeeModel->where('active', true)->findAll(),
+            'employees' => $this->employeeModel->getActive(),
             'calendarData' => $this->groupByDate($schedules),
         ];
     }
@@ -48,7 +48,7 @@ class ScheduleQueryService
     {
         return [
             'shifts' => $this->shiftModel->where('active', true)->findAll(),
-            'employees' => $this->employeeModel->where('active', true)->findAll(),
+            'employees' => $this->employeeModel->getActive(),
         ];
     }
 
@@ -62,7 +62,7 @@ class ScheduleQueryService
         return [
             'schedule' => $schedule,
             'shifts' => $this->shiftModel->where('active', true)->findAll(),
-            'employees' => $this->employeeModel->where('active', true)->findAll(),
+            'employees' => $this->employeeModel->getActive(),
         ];
     }
 
