@@ -239,9 +239,18 @@ class WebAuthService
                     'warning'
                 );
 
+                // Bloqueio e sempre temporario (expira sozinho em reset_at, sem
+                // nenhuma acao manual necessaria) -- a mensagem deixa isso
+                // explicito com o tempo real de espera, em vez de um "aguarde
+                // alguns minutos" vago que podia levar o colaborador a achar
+                // que errou a senha e continuar tentando (o que so adia o
+                // proprio desbloqueio).
+                $minutesLeft = max(1, (int) ceil((($limitInfo['reset_at'] ?? time()) - time()) / 60));
+                $minutesLabel = $minutesLeft === 1 ? '1 minuto' : "{$minutesLeft} minutos";
+
                 return [
                     'success' => false,
-                    'message' => 'Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.',
+                    'message' => "Muitas tentativas de login com este e-mail ou deste endereço. Por segurança, o acesso fica temporariamente bloqueado — tente novamente em {$minutesLabel}. Suas credenciais não precisam ser alteradas.",
                     'with_input' => true,
                 ];
             }

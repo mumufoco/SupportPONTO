@@ -88,7 +88,13 @@ class LoginController extends BaseController
 
         $result = $this->webAuthService->authenticate($email, $password, $remember, $this->session, $this->request);
         if (! ($result['success'] ?? false)) {
-            $this->setError(self::GENERIC_LOGIN_ERROR);
+            // WebAuthService ja distingue "credenciais invalidas" de "bloqueado
+            // por rate limit" com mensagens proprias e seguras (nenhuma delas
+            // revela se o e-mail existe) -- antes disso o controller ignorava
+            // $result['message'] e sempre mostrava o erro generico de senha,
+            // fazendo um colaborador bloqueado por rate limit achar que tinha
+            // digitado a senha errada.
+            $this->setError((string) ($result['message'] ?? self::GENERIC_LOGIN_ERROR));
             return redirect()->back()->withInput();
         }
 
