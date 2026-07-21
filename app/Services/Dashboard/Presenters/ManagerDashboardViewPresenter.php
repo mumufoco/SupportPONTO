@@ -149,6 +149,7 @@ class ManagerDashboardViewPresenter extends AbstractDashboardViewPresenter
         $status = $this->text($this->value($row, 'status'), 'active');
 
         return [
+            'employeeId' => (int) $this->value($row, 'employee_id'),
             'employeeName' => $employeeName,
             'employeeInitial' => mb_strtoupper(mb_substr($employeeName, 0, 2)),
             'actionLabel' => $this->text($this->value($row, 'action'), lang('DashboardManager.activity.fallbackAction')),

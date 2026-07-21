@@ -14,6 +14,20 @@ use ValueError;
 class CustomRules
 {
     /**
+     * Obrigatório somente se outro campo do mesmo payload for "verdadeiro"
+     * (ex.: cnh_numero só é exigido quando possui_cnh estiver marcado). CI4
+     * nativo não tem um "required_if[campo,valor]" pronto -- $params aqui é
+     * o NOME do campo-gatilho, não um valor a comparar.
+     */
+    public function required_if_true(string $value, ?string $params = null, array $data = []): bool
+    {
+        $trigger = $data[$params ?? ''] ?? false;
+        $isTriggered = in_array($trigger, [true, 1, '1', 'true', 'sim', 'on'], true);
+
+        return ! $isTriggered || trim($value) !== '';
+    }
+
+    /**
      * Valida tipo de ponto usando o contrato canônico do sistema.
      *
      * Mantém compatibilidade transitória com aliases legados ainda aceitos

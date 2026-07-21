@@ -59,8 +59,13 @@
                             ?>
                             <tr id="emp-row-<?= $empId ?>" class="<?= $isActive ? '' : 'table-secondary opacity-75' ?>">
                                 <td>
-                                    <strong><?= esc($emp->name ?? '') ?></strong><br>
-                                    <small class="text-muted"><?= esc(ucfirst($emp->role ?? 'funcionario')) ?></small>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <?= view('components/employee_avatar', ['employeeId' => $empId, 'initials' => $emp->name ?? '?', 'size' => 32]) ?>
+                                        <div>
+                                            <strong><?= esc($emp->name ?? '') ?></strong><br>
+                                            <small class="text-muted"><?= esc(ucfirst($emp->role ?? 'funcionario')) ?></small>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td><?= esc($emp->email ?? '-') ?></td>
                                 <td><?= esc($emp->department ?? '-') ?></td>

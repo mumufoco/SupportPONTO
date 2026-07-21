@@ -32,6 +32,7 @@
         <?= $this->include('employees/partials/_personal_data') ?>
         <?= $this->include('employees/partials/_professional_data') ?>
         <?= $this->include('employees/partials/_operational_settings') ?>
+        <?= $this->include('employees/partials/_documentation_data') ?>
         <?php $submitLabel = 'Salvar alterações'; ?>
         <?= $this->include('employees/partials/_form_actions') ?>
     </form>

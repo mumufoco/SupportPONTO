@@ -82,7 +82,12 @@
                     <?php endif; ?>
                     <?php foreach (($attendanceData ?? []) as $item): ?>
                         <tr>
-                            <td><?= esc((string) ($item['employee']->name ?? '')) ?></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?= view('components/employee_avatar', ['employeeId' => (int) ($item['employee']->id ?? 0), 'initials' => $item['employee']->name ?? '?', 'size' => 28]) ?>
+                                    <?= esc((string) ($item['employee']->name ?? '')) ?>
+                                </div>
+                            </td>
                             <td><?= esc((string) ($item['employee']->department ?? '')) ?></td>
                             <td><?= esc((string) ($item['days_worked'] ?? 0)) ?></td>
                             <td><?= esc(format_hours((float) ($item['hours_worked'] ?? 0))) ?></td>

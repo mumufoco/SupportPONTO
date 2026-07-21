@@ -128,8 +128,8 @@ class EmployeeController extends BaseController
         // o fluxo principal — ver EmployeeAfdEventRecorderService.
         $this->employeeAfdEventRecorder->recordInclusion($data, $this->currentUser);
 
-        $this->setSuccess('Empregado criado com sucesso!');
-        return redirect()->to(route_to('employees.show', $employeeId));
+        $this->setSuccess('Empregado criado com sucesso! Agora envie a foto e os documentos do colaborador.');
+        return redirect()->to(route_to('employees.documents.step', $employeeId));
     }
 
     public function edit(int $id)

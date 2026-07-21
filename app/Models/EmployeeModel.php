@@ -43,6 +43,11 @@ class EmployeeModel extends Model
         'dependentes', 'banco', 'agencia', 'conta', 'pix_key_type', 'pix_key', 'demission_date', 'estado_civil', 'sexo', 'cor_raca',
         // QUA-05 FIX: 'is_active' removido — 'active' é o campo canônico.
         'grau_instrucao', 'tipo_contrato', 'deficiencia',
+
+        // Aba "Documentação Geral" do cadastro (Título de Eleitor, CNH, RG UF, Certificado Militar)
+        'titulo_eleitor_numero', 'titulo_eleitor_zona', 'titulo_eleitor_secao', 'titulo_eleitor_uf', 'titulo_eleitor_municipio',
+        'possui_cnh', 'cnh_numero', 'cnh_categoria', 'cnh_data_emissao', 'cnh_validade', 'cnh_orgao_emissor', 'cnh_uf',
+        'rg_uf', 'certificado_militar',
     ];
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
@@ -91,6 +96,12 @@ class EmployeeModel extends Model
         'require_geolocation' => 'permit_empty|in_list[true,false,0,1]',
         'extra_hours_balance' => 'permit_empty|decimal',
         'owed_hours_balance' => 'permit_empty|decimal',
+        'titulo_eleitor_uf' => 'permit_empty|exact_length[2]',
+        'possui_cnh' => 'permit_empty|in_list[true,false,0,1]',
+        'cnh_data_emissao' => 'permit_empty|valid_date[Y-m-d]',
+        'cnh_validade' => 'permit_empty|valid_date[Y-m-d]',
+        'cnh_uf' => 'permit_empty|exact_length[2]',
+        'rg_uf' => 'permit_empty|exact_length[2]',
     ];
 
     protected $validationMessages = [
@@ -311,7 +322,7 @@ class EmployeeModel extends Model
         $fields = [
             'active', 'has_face_biometric', 'has_fingerprint_biometric',
             'two_factor_enabled', 'allow_remote_punch', 'require_geolocation',
-            'must_change_password',
+            'must_change_password', 'possui_cnh',
         ];
 
         $data['data'] = $this->applyBoolCastOnFind($data['data'], $fields);

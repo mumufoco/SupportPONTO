@@ -2,7 +2,6 @@
 $employee = $employee ?? null;
 $value = static fn(string $field, $default = '') => old($field, $employee->{$field} ?? $default);
 $isEditing = isset($employee) && !empty($employee->id ?? null);
-$states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 ?>
 <style>
 #pwdStrengthBar { height:5px; border-radius:3px; transition:width .3s,background .3s; background:#dc3545 }
@@ -22,7 +21,7 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
 
 <div class="row g-3">
 
-    <!-- Código único + PIS -->
+    <!-- Código único + status -->
     <div class="col-6 col-md-3">
         <label for="employee_code" class="form-label">
             Código único
@@ -40,47 +39,12 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
         <div class="form-text">Gerado automaticamente.</div>
     </div>
 
-    <div class="col-6 col-md-3">
-        <label for="pis_pasep" class="form-label">PIS/PASEP *</label>
-        <input type="text" id="pis_pasep" name="pis_pasep" class="form-control"
-               value="<?= esc(old('pis_pasep', old('pis', $employee->pis_pasep ?? $employee->pis ?? ''))) ?>"
-               required inputmode="numeric">
-        <input type="hidden" id="pis" name="pis"
-               value="<?= esc(old('pis', old('pis_pasep', $employee->pis ?? $employee->pis_pasep ?? ''))) ?>">
-    </div>
-
-    <div class="col-6 col-md-2">
-        <label for="ctps_numero" class="form-label">CTPS número *</label>
-        <input type="text" id="ctps_numero" name="ctps_numero" class="form-control"
-               value="<?= esc($value('ctps_numero')) ?>" required maxlength="15">
-    </div>
-    <div class="col-4 col-md-2">
-        <label for="ctps_serie" class="form-label">Série *</label>
-        <input type="text" id="ctps_serie" name="ctps_serie" class="form-control"
-               value="<?= esc($value('ctps_serie')) ?>" required maxlength="10">
-    </div>
-    <div class="col-4 col-md-1">
-        <label for="ctps_uf" class="form-label">UF *</label>
-        <select id="ctps_uf" name="ctps_uf" class="form-select" required>
-            <option value="">—</option>
-            <?php foreach ($states as $st): ?>
-                <option value="<?= esc($st) ?>" <?= (string)$value('ctps_uf')===$st?'selected':'' ?>><?= esc($st) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="col-4 col-md-1 d-flex align-items-end">
+    <div class="col-6 col-md-3 d-flex align-items-end">
         <div class="form-check pb-2">
             <input class="form-check-input" type="checkbox" id="active" name="active" value="1"
                    <?= old('active', $employee->active ?? 1) ? 'checked' : '' ?>>
             <label class="form-check-label fw-semibold small" for="active">Ativo</label>
         </div>
-    </div>
-
-    <!-- Data emissão CTPS -->
-    <div class="col-6 col-md-3">
-        <label for="ctps_data_emissao" class="form-label">Emissão CTPS *</label>
-        <input type="date" id="ctps_data_emissao" name="ctps_data_emissao" class="form-control"
-               value="<?= esc($value('ctps_data_emissao')) ?>" required>
     </div>
 
     <!-- Banco -->

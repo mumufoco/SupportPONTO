@@ -134,7 +134,7 @@ function mgTrend(string $t): string {
                             $ini = mb_substr($row['employeeInitial'] ?? '?', 0, 2);
                         ?>
                             <li class="db-activity__item" role="listitem">
-                                <div class="db-avatar" aria-hidden="true"><?= esc($ini) ?></div>
+                                <?= view('components/employee_avatar', ['employeeId' => (int) ($row['employeeId'] ?? 0), 'initials' => $ini, 'size' => 36]) ?>
                                 <div class="db-activity__body">
                                     <div class="db-activity__name"><?= esc($row['employeeName'] ?? '') ?></div>
                                     <div class="db-activity__meta">

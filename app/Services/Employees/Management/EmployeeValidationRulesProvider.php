@@ -4,9 +4,32 @@ namespace App\Services\Employees\Management;
 
 class EmployeeValidationRulesProvider
 {
-    public function createRules(): array
+    private const UF_LIST = 'AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MT,MS,MG,PA,PB,PR,PE,PI,RJ,RN,RS,RO,RR,SC,SP,SE,TO';
+
+    /** Regras da Aba "Documentação Geral" -- iguais em create e update. */
+    private function documentationRules(): array
     {
         return [
+            'titulo_eleitor_numero' => 'permit_empty|max_length[12]',
+            'titulo_eleitor_zona' => 'permit_empty|max_length[5]',
+            'titulo_eleitor_secao' => 'permit_empty|max_length[5]',
+            'titulo_eleitor_uf' => 'permit_empty|exact_length[2]|in_list[' . self::UF_LIST . ']',
+            'titulo_eleitor_municipio' => 'permit_empty|max_length[100]',
+            'possui_cnh' => 'permit_empty|in_list[true,false,0,1,sim,nao]',
+            'cnh_numero' => 'permit_empty|required_if_true[possui_cnh]|max_length[20]',
+            'cnh_categoria' => 'permit_empty|required_if_true[possui_cnh]|in_list[A,B,C,D,E,AB,AC,AD,AE]',
+            'cnh_data_emissao' => 'permit_empty|required_if_true[possui_cnh]|valid_date[Y-m-d]',
+            'cnh_validade' => 'permit_empty|required_if_true[possui_cnh]|valid_date[Y-m-d]',
+            'cnh_orgao_emissor' => 'permit_empty|required_if_true[possui_cnh]|max_length[20]',
+            'cnh_uf' => 'permit_empty|required_if_true[possui_cnh]|exact_length[2]|in_list[' . self::UF_LIST . ']',
+            'rg_uf' => 'permit_empty|exact_length[2]|in_list[' . self::UF_LIST . ']',
+            'certificado_militar' => 'permit_empty|max_length[30]',
+        ];
+    }
+
+    public function createRules(): array
+    {
+        return $this->documentationRules() + [
             'name' => 'required|min_length[3]|max_length[255]',
             'birth_date' => 'required|valid_date[Y-m-d]',
             'cpf' => 'required|exact_length[11]|regex_match[/^\d{11}$/]|cpf_is_unique',
@@ -53,7 +76,7 @@ class EmployeeValidationRulesProvider
 
     public function updateRules(int $id): array
     {
-        return [
+        return $this->documentationRules() + [
             'name' => 'required|min_length[3]|max_length[255]',
             'birth_date' => 'required|valid_date[Y-m-d]',
             'cpf' => "required|exact_length[11]|regex_match[/^\\d{11}$/]|cpf_is_unique[{$id}]",

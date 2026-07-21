@@ -479,6 +479,7 @@ class AdminDashboardViewPresenter extends AbstractDashboardViewPresenter
         $employeeName = $this->normalizedText($this->value($row, 'employee_name'));
 
         return [
+            'employeeId' => (int) $this->value($row, 'employee_id'),
             'employeeName' => $employeeName,
             'employeeInitial' => $employeeName === lang('DashboardAdmin.common.missingText') ? lang('DashboardAdmin.common.missingInitial') : mb_strtoupper(mb_substr($employeeName, 0, 1)),
             'createdAtLabel' => $this->formatDate((string) $this->value($row, 'created_at', '')),

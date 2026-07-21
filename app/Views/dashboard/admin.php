@@ -354,7 +354,7 @@ foreach ($primaryStats as $_st):
                                     <tr>
                                         <td>
                                             <div class="table-cell-avatar">
-                                                <div class="table-avatar" aria-hidden="true"><?= esc($j['employeeInitial'] ?? $missingInitial) ?></div>
+                                                <?= view('components/employee_avatar', ['employeeId' => (int) ($j['employeeId'] ?? 0), 'initials' => $j['employeeInitial'] ?? $missingInitial, 'size' => 32]) ?>
                                                 <span><?= esc($j['employeeName'] ?? $missingText) ?></span>
                                             </div>
                                         </td>
@@ -471,7 +471,7 @@ foreach ($primaryStats as $_st):
                                     <tr title="<?= esc($_pp['justification_text'] ?? '') ?>">
                                         <td>
                                             <div class="table-cell-avatar">
-                                                <div class="table-avatar" aria-hidden="true"><?= esc($_ppInit) ?></div>
+                                                <?= view('components/employee_avatar', ['employeeId' => (int) ($_pp['employee_id'] ?? 0), 'initials' => $_ppInit, 'size' => 32]) ?>
                                                 <span><?= esc($_pp['employee_name'] ?? '-') ?></span>
                                             </div>
                                         </td>

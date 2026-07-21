@@ -83,6 +83,14 @@ $routes->post('employees/(:num)/photo', 'Employees\EmployeeController::uploadPho
 // departamento), não mais por arquivo estático em URL pública previsível.
 $routes->get('employees/(:num)/photo', 'Employees\EmployeeController::photo/$1', ['as' => 'employees.photo.view', 'filter' => 'auth']);
 
+// Aba "Upload de Documentos" do cadastro (RG/CPF/CNH/certificados/outros) --
+// mesmo estilo standalone das rotas de foto acima, o controller faz a própria
+// checagem self-or-manager internamente.
+$routes->get('employees/(:num)/documents-step', 'Employees\EmployeeDocumentController::wizardStep/$1', ['as' => 'employees.documents.step', 'filter' => 'auth']);
+$routes->post('employees/(:num)/documents', 'Employees\EmployeeDocumentController::store/$1', ['as' => 'employees.documents.store', 'filter' => 'auth']);
+$routes->get('employees/(:num)/documents/(:num)/download', 'Employees\EmployeeDocumentController::download/$1/$2', ['as' => 'employees.documents.download', 'filter' => 'auth']);
+$routes->post('employees/(:num)/documents/(:num)/delete', 'Employees\EmployeeDocumentController::delete/$1/$2', ['as' => 'employees.documents.delete', 'filter' => 'auth']);
+
 // Employee change requests
 $routes->get('employees/change-request/create/(:num)',  'Employees\EmployeeChangeRequestController::create/$1',  ['as' => 'employees.change-request.create',  'filter' => 'auth']);
 $routes->post('employees/change-request/store',         'Employees\EmployeeChangeRequestController::store',      ['as' => 'employees.change-request.store',   'filter' => 'auth']);
