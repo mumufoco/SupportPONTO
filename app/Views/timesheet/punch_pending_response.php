@@ -10,19 +10,22 @@
         'icon'     => 'bi bi-calendar-x',
     ]) ?>
 
-    <div class="row justify-content-center">
+    <?php if (!empty($awaiting)): ?>
+    <div class="row justify-content-center mb-4">
         <div class="col-lg-8">
-
-            <div class="alert alert-warning d-flex align-items-start gap-3 mb-4">
-                <i class="bi bi-exclamation-triangle-fill fs-4 mt-1"></i>
-                <div>
-                    <strong>Marcação de ponto incompleta detectada</strong>
-                    <p class="mb-0 mt-1 small">
-                        O sistema identificou que uma ou mais marcações de dias anteriores ficaram incompletas.
-                        Explique o ocorrido em cada pendência abaixo para que seu gestor possa revisar.
-                    </p>
+            <div class="stat-card">
+                <div class="stat-card-icon warning"><i class="bi bi-hourglass-split"></i></div>
+                <div class="stat-card-content">
+                    <div class="stat-card-label">Aguardando sua justificativa</div>
+                    <div class="stat-card-value"><?= (int) count($awaiting) ?></div>
                 </div>
             </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
 
             <?php if (empty($awaiting)): ?>
                 <div class="sp-data-card">
@@ -34,11 +37,22 @@
                 </div>
             <?php else: ?>
 
+                <div class="alert alert-warning d-flex align-items-start gap-3 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 mt-1"></i>
+                    <div>
+                        <strong>Marcação de ponto incompleta detectada</strong>
+                        <p class="mb-0 mt-1 small">
+                            O sistema identificou que uma ou mais marcações de dias anteriores ficaram incompletas.
+                            Explique o ocorrido em cada pendência abaixo para que seu gestor possa revisar.
+                        </p>
+                    </div>
+                </div>
+
                 <?php foreach ($awaiting as $item): ?>
                 <div class="sp-data-card mb-3">
                     <div class="sp-data-card__header">
                         <h2 class="sp-data-card__title">
-                            <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(255,193,7,.15);color:#d97706;"><i class="bi bi-clock-history"></i></span>
+                            <span class="stat-card-icon warning" style="width:2.1rem;height:2.1rem;font-size:1rem;"><i class="bi bi-clock-history"></i></span>
                             Marcação faltante
                         </h2>
                         <span class="sp-badge sp-badge-warning"><?= esc($punchTypes[$item->intended_punch_type] ?? $item->intended_punch_type) ?></span>
