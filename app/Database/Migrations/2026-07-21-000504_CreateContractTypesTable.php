@@ -55,9 +55,12 @@ class CreateContractTypesTable extends Migration
         // employees.tipo_contrato (que continua sendo um varchar por nome, não FK) --
         // preserva a seleção correta ao editar colaboradores já cadastrados. O admin
         // pode renomear/ajustar a exibição depois pela própria tela de gestão.
+        // insertBatch() exige que todas as linhas tenham exatamente as mesmas
+        // colunas (o INSERT gerado usa as chaves da primeira linha) -- por isso
+        // 'description' aparece em todas, mesmo null na primeira.
         $now = date('Y-m-d H:i:s');
         $this->db->table('contract_types')->insertBatch([
-            ['name' => 'CLT', 'active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'CLT', 'description' => null, 'active' => true, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'temporario', 'description' => 'Temporário', 'active' => true, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'estagio', 'description' => 'Estágio', 'active' => true, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'terceirizado', 'description' => 'Terceirizado', 'active' => true, 'created_at' => $now, 'updated_at' => $now],
