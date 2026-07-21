@@ -28,6 +28,7 @@ use App\Services\Auth\TwoFactorManagerService;
 use App\Services\Biometric\FingerprintSettingsService;
 use App\Services\Biometric\FaceRecognitionService;
 use App\Services\Settings\Catalog\CatalogSettingsActionService;
+use App\Services\Settings\Catalog\CboOccupationCatalogService;
 use App\Services\Settings\Catalog\ContractTypeCatalogService;
 use App\Services\Settings\Catalog\DepartmentCatalogService;
 use App\Services\Settings\Catalog\PositionCatalogService;
@@ -599,6 +600,15 @@ class Services extends BaseService
         }
 
         return new PositionCatalogService();
+    }
+
+    public static function cboOccupationCatalogService(bool $getShared = true): CboOccupationCatalogService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('cboOccupationCatalogService');
+        }
+
+        return new CboOccupationCatalogService();
     }
 
     public static function roleCatalogService(bool $getShared = true): RoleCatalogService

@@ -12,7 +12,7 @@ class PositionModel extends Model
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $protectFields = true;
-    protected $allowedFields = ['name', 'description', 'department_id', 'active'];
+    protected $allowedFields = ['name', 'description', 'department_id', 'cbo_occupation_id', 'active'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -31,6 +31,7 @@ class PositionModel extends Model
         'name' => 'required|min_length[2]|max_length[255]',
         'description' => 'permit_empty|max_length[1000]',
         'department_id' => 'required|integer|is_not_unique[departments.id]',
+        'cbo_occupation_id' => 'permit_empty|integer|is_not_unique[cbo_occupations.id]',
         'active' => 'permit_empty|in_list[0,1,true,false]',
     ];
 
@@ -41,6 +42,9 @@ class PositionModel extends Model
         'department_id' => [
             'required' => 'O departamento é obrigatório.',
             'is_not_unique' => 'Departamento inválido.',
+        ],
+        'cbo_occupation_id' => [
+            'is_not_unique' => 'Código CBO inválido.',
         ],
     ];
 

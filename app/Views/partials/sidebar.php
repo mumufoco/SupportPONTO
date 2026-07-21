@@ -55,6 +55,7 @@ $menuStructure = [
                 'settings/positions',
                 'settings/roles',
                 'settings/contract-types',
+                'settings/cbo-occupations',
             ],
             'submenu' => [
                 ['label' => 'Listagem',       'icon' => 'list',         'url' => 'employees', 'exclude' => ['employees/pending']],
@@ -64,6 +65,7 @@ $menuStructure = [
                 ['label' => 'Cargos',          'icon' => 'briefcase',    'url' => route_to('settings.positions')],
                 ['label' => 'Perfil de Acesso', 'icon' => 'users',       'url' => route_to('settings.roles')],
                 ['label' => 'Tipo de Contrato', 'icon' => 'file-text',   'url' => route_to('settings.contract-types')],
+                ['label' => 'CBO',             'icon' => 'bookmark',    'url' => route_to('settings.cbo-occupations')],
             ],
         ],
         [

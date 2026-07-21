@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         ['class' => 'WorkShiftSeeder', 'label' => 'Work Shifts', 'critical' => false],
         ['class' => 'GeofenceSeeder', 'label' => 'Geofences', 'critical' => false],
         ['class' => 'ContractTypeSeeder', 'label' => 'Contract Types', 'critical' => false],
+        ['class' => 'CboOccupationSeeder', 'label' => 'CBO Occupations', 'critical' => false],
     ];
 
     public function run()

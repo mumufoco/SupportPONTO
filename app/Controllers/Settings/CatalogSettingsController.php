@@ -3,6 +3,7 @@
 namespace App\Controllers\Settings;
 
 use App\Services\Settings\Catalog\CatalogSettingsActionService;
+use App\Services\Settings\Catalog\CboOccupationCatalogService;
 use App\Services\Settings\Catalog\ContractTypeCatalogService;
 use App\Services\Settings\Catalog\DepartmentCatalogService;
 use App\Services\Settings\Catalog\PositionCatalogService;
@@ -18,6 +19,7 @@ class CatalogSettingsController extends BaseSettingsController
         private readonly ?PositionCatalogService $positions = null,
         private readonly ?RoleCatalogService $roles = null,
         private readonly ?ContractTypeCatalogService $contractTypes = null,
+        private readonly ?CboOccupationCatalogService $cboOccupations = null,
         private readonly ?CatalogSettingsActionService $actionService = null,
     ) {
         parent::__construct();
@@ -47,6 +49,11 @@ class CatalogSettingsController extends BaseSettingsController
     private function contractTypesService(): ContractTypeCatalogService
     {
         return $this->contractTypes ?? Services::contractTypeCatalogService(false);
+    }
+
+    private function cboOccupationsService(): CboOccupationCatalogService
+    {
+        return $this->cboOccupations ?? Services::cboOccupationCatalogService(false);
     }
 
     private function actionService(): CatalogSettingsActionService
@@ -218,7 +225,10 @@ class CatalogSettingsController extends BaseSettingsController
     {
         $this->requireAdminAccess();
 
-        return view('settings/positions/create', ['departments' => $this->departmentsService()->active()]);
+        return view('settings/positions/create', [
+            'departments' => $this->departmentsService()->active(),
+            'cboOccupations' => $this->cboOccupationsService()->active(),
+        ]);
     }
 
     public function storePosition()
@@ -257,6 +267,7 @@ class CatalogSettingsController extends BaseSettingsController
         return view('settings/positions/edit', [
             'position' => $position,
             'departments' => $this->departmentsService()->active(),
+            'cboOccupations' => $this->cboOccupationsService()->active(),
         ]);
     }
 
@@ -462,6 +473,19 @@ class CatalogSettingsController extends BaseSettingsController
         $result = $this->contractTypesService()->delete((int) $id);
 
         return $this->response->setJSON($result);
+    }
+
+    public function cboOccupations()
+    {
+        $this->requireAdminAccess();
+
+        $listing = $this->cboOccupationsService()->listing($this->request->getGet());
+
+        return view('settings/cbo_occupations/index', [
+            'cboOccupations' => $listing['items'],
+            'filters' => $listing['filters'],
+            'meta' => $listing['meta'],
+        ]);
     }
 
     private function storeSimpleCatalog(array $rules, callable $storeAction, string $redirectPath, string $successMessage)

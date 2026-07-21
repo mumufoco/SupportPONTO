@@ -80,8 +80,9 @@ class PositionCatalogService
         }
 
         $items = $this->model
-            ->select('positions.*, departments.name as department_name')
+            ->select('positions.*, departments.name as department_name, cbo_occupations.code as cbo_code, cbo_occupations.title as cbo_title')
             ->join('departments', 'departments.id = positions.department_id', 'left')
+            ->join('cbo_occupations', 'cbo_occupations.id = positions.cbo_occupation_id', 'left')
             ->orderBy('departments.name', 'ASC')
             ->orderBy('positions.name', 'ASC')
             ->findAll();
@@ -106,6 +107,7 @@ class PositionCatalogService
             'name' => 'required|min_length[2]|max_length[255]',
             'description' => 'permit_empty|max_length[1000]',
             'department_id' => 'required|integer|is_not_unique[departments.id]',
+            'cbo_occupation_id' => 'permit_empty|integer|is_not_unique[cbo_occupations.id]',
         ];
     }
 
@@ -115,6 +117,7 @@ class PositionCatalogService
             'name' => $input['name'] ?? null,
             'description' => $input['description'] ?? null,
             'department_id' => (int) ($input['department_id'] ?? 0),
+            'cbo_occupation_id' => $this->normalizeCboId($input['cbo_occupation_id'] ?? null),
             'active' => 'true',
         ]);
         if ($saved !== false) {
@@ -133,6 +136,7 @@ class PositionCatalogService
             'name' => $input['name'] ?? null,
             'description' => $input['description'] ?? null,
             'department_id' => (int) ($input['department_id'] ?? 0),
+            'cbo_occupation_id' => $this->normalizeCboId($input['cbo_occupation_id'] ?? null),
         ]);
         if ($updated) {
             $this->bustCache();
@@ -142,6 +146,12 @@ class PositionCatalogService
             'success' => $updated,
             'errors' => $this->model->errors(),
         ];
+    }
+
+    private function normalizeCboId(mixed $value): ?int
+    {
+        $value = trim((string) ($value ?? ''));
+        return $value === '' ? null : (int) $value;
     }
 
     public function toggle(int $id): ?bool

@@ -71,6 +71,7 @@
                         <tr>
                             <th>Nome</th>
                             <th>Departamento</th>
+                            <th>CBO</th>
                             <th class="text-center">Status</th>
                             <th class="text-end">Ações</th>
                         </tr>
@@ -78,7 +79,7 @@
                     <tbody>
                         <?php if (empty($positions ?? [])): ?>
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
+                                <td colspan="5" class="text-center text-muted py-4">
                                     <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                     Nenhum cargo cadastrado.
                                 </td>
@@ -91,6 +92,13 @@
                                 <tr id="row-pos-<?= $posId ?>">
                                     <td><strong><?= esc($pos['name'] ?? '') ?></strong></td>
                                     <td class="text-muted"><?= esc($pos['department_name'] ?? '-') ?></td>
+                                    <td class="text-muted">
+                                        <?php if (!empty($pos['cbo_code'])): ?>
+                                            <code><?= esc($pos['cbo_code']) ?></code> <?= esc($pos['cbo_title'] ?? '') ?>
+                                        <?php else: ?>
+                                            -
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center">
                                         <span class="sp-badge sp-status-badge <?= $isActive ? 'sp-badge-success' : 'sp-badge-danger' ?>">
                                             <i class="bi <?= $isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill' ?>"></i>

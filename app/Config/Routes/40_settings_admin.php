@@ -67,6 +67,10 @@ $routes->group('settings', ['filter' => ['auth', 'admin']], static function ($ro
     $routes->post('contract-types/(:num)/toggle', 'Settings\CatalogSettingsController::toggleContractType/$1', ['as' => 'settings.contract-types.toggle']);
     $routes->post('contract-types/(:num)/delete', 'Settings\CatalogSettingsController::deleteContractType/$1', ['as' => 'settings.contract-types.delete']);
 
+    // CBO (Classificação Brasileira de Ocupações) -- tabela de referência oficial,
+    // somente consulta (não é gerida pelo admin, só carregada via seeder).
+    $routes->get('cbo-occupations', 'Settings\CatalogSettingsController::cboOccupations', ['as' => 'settings.cbo-occupations']);
+
     // Operações de jornada/feriados/cercas
     $routes->get('vacations', 'Settings\WorkforceSettingsController::vacations', ['as' => 'settings.vacations']);
     $routes->get('work-shifts', 'Settings\WorkforceSettingsController::workShifts', ['as' => 'settings.work-shifts']);
