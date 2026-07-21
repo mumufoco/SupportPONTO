@@ -3,6 +3,7 @@
 namespace App\Controllers\Settings;
 
 use App\Services\Settings\Catalog\CatalogSettingsActionService;
+use App\Services\Settings\Catalog\ContractTypeCatalogService;
 use App\Services\Settings\Catalog\DepartmentCatalogService;
 use App\Services\Settings\Catalog\PositionCatalogService;
 use App\Services\Settings\Catalog\RoleCatalogService;
@@ -16,6 +17,7 @@ class CatalogSettingsController extends BaseSettingsController
         private readonly ?DepartmentCatalogService $departments = null,
         private readonly ?PositionCatalogService $positions = null,
         private readonly ?RoleCatalogService $roles = null,
+        private readonly ?ContractTypeCatalogService $contractTypes = null,
         private readonly ?CatalogSettingsActionService $actionService = null,
     ) {
         parent::__construct();
@@ -40,6 +42,11 @@ class CatalogSettingsController extends BaseSettingsController
     private function rolesService(): RoleCatalogService
     {
         return $this->roles ?? Services::roleCatalogService(false);
+    }
+
+    private function contractTypesService(): ContractTypeCatalogService
+    {
+        return $this->contractTypes ?? Services::contractTypeCatalogService(false);
     }
 
     private function actionService(): CatalogSettingsActionService
@@ -382,6 +389,79 @@ class CatalogSettingsController extends BaseSettingsController
     public function toggleRole($id)
     {
         return $this->toggleCatalog($this->rolesService()->toggle((int) $id), 'Nível de acesso não encontrado');
+    }
+
+    public function contractTypes()
+    {
+        $this->requireAdminAccess();
+
+        $listing = $this->contractTypesService()->listing($this->request->getGet());
+
+        return view('settings/contract_types/index', [
+            'contractTypes' => $listing['items'],
+            'filters' => $listing['filters'],
+            'meta' => $listing['meta'],
+        ]);
+    }
+
+    public function createContractType()
+    {
+        $this->requireAdminAccess();
+        return view('settings/contract_types/create');
+    }
+
+    public function storeContractType()
+    {
+        return $this->storeSimpleCatalog(
+            $this->contractTypesService()->createRules(),
+            fn () => $this->contractTypesService()->create(security_sanitize($this->request->getPost() ?? [])),
+            '/settings/contract-types',
+            'Tipo de contrato criado com sucesso!'
+        );
+    }
+
+    public function editContractType($id)
+    {
+        return $this->editSimpleCatalog(
+            $this->contractTypesService()->find((int) $id),
+            '/settings/contract-types',
+            'Tipo de contrato não encontrado.',
+            'settings/contract_types/edit',
+            'contractType'
+        );
+    }
+
+    public function updateContractType($id)
+    {
+        $contractType = $this->contractTypesService()->find((int) $id);
+        if (!$contractType) {
+            return $this->redirectCatalogNotFound('/settings/contract-types', 'Tipo de contrato não encontrado.');
+        }
+
+        return $this->updateSimpleCatalog(
+            $this->contractTypesService()->updateRules((int) $id),
+            fn () => $this->contractTypesService()->update((int) $id, security_sanitize($this->request->getPost() ?? [])),
+            '/settings/contract-types',
+            'Tipo de contrato atualizado com sucesso!'
+        );
+    }
+
+    public function toggleContractType($id)
+    {
+        return $this->toggleCatalog($this->contractTypesService()->toggle((int) $id), 'Tipo de contrato não encontrado');
+    }
+
+    public function deleteContractType($id)
+    {
+        $this->requireAdminAccess();
+
+        if (!$this->request->is('post')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Método inválido.']);
+        }
+
+        $result = $this->contractTypesService()->delete((int) $id);
+
+        return $this->response->setJSON($result);
     }
 
     private function storeSimpleCatalog(array $rules, callable $storeAction, string $redirectPath, string $successMessage)

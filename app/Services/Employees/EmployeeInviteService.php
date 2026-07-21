@@ -23,6 +23,7 @@ class EmployeeInviteService
             'department' => trim($data['department'] ?? ''),
             'position'   => trim($data['position'] ?? ''),
             'role'       => $data['role'] ?? 'funcionario',
+            'tipo_contrato' => trim((string) ($data['tipo_contrato'] ?? '')) ?: null,
             'message'    => trim($data['message'] ?? ''),
             'expires_at' => $expiresAt,
             'created_by' => $createdBy,

@@ -302,13 +302,44 @@
                       <?php endif; ?>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label fw-semibold" for="inv_role">Nível de acesso</label>
-                      <select id="inv_role" name="role" class="form-select">
-                        <option value="funcionario" selected>Funcionário</option>
-                        <option value="gestor">Gestor</option>
-                        <option value="rh">RH</option>
-                        <option value="dpo">DPO / LGPD</option>
-                      </select>
+                      <label class="form-label fw-semibold" for="inv_role">Perfil de acesso</label>
+                      <?php if (!empty($formOptions['roles'] ?? [])): ?>
+                        <select id="inv_role" name="role" class="form-select">
+                          <?php foreach (($formOptions['roles'] ?? []) as $_invRole):
+                                $_rName = is_object($_invRole) ? ($_invRole->name ?? '') : ($_invRole['name'] ?? '');
+                                $_rDesc = is_object($_invRole) ? ($_invRole->description ?? '') : ($_invRole['description'] ?? '');
+                                if (empty($_rName) || strtolower($_rName) === 'admin') continue; ?>
+                            <option value="<?= esc($_rName) ?>" <?= strtolower($_rName) === 'funcionario' ? 'selected' : '' ?>>
+                                <?= esc(ucfirst($_rName)) ?><?= $_rDesc ? ' — ' . esc($_rDesc) : '' ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                      <?php else: ?>
+                        <select id="inv_role" name="role" class="form-select">
+                          <option value="funcionario" selected>Funcionário</option>
+                          <option value="gestor">Gestor</option>
+                          <option value="rh">RH</option>
+                          <option value="dpo">DPO / LGPD</option>
+                        </select>
+                      <?php endif; ?>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold" for="inv_tipo_contrato">Tipo de contrato</label>
+                      <?php if (!empty($formOptions['contractTypes'] ?? [])): ?>
+                        <select id="inv_tipo_contrato" name="tipo_contrato" class="form-select">
+                          <option value="">— Selecione —</option>
+                          <?php foreach (($formOptions['contractTypes'] ?? []) as $_ct):
+                                $_ctName  = $_ct['name'] ?? '';
+                                $_ctLabel = $_ct['description'] ?? $_ctName;
+                                if (empty($_ctName)) continue; ?>
+                            <option value="<?= esc($_ctName) ?>"><?= esc($_ctLabel) ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      <?php else: ?>
+                        <input type="text" id="inv_tipo_contrato" name="tipo_contrato" class="form-control"
+                               placeholder="Ex: CLT" autocomplete="off">
+                      <?php endif; ?>
+                      <div class="form-text">Definido agora; o colaborador não poderá alterar ao preencher o cadastro.</div>
                     </div>
                   </div>
                   </div>

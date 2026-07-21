@@ -28,6 +28,7 @@ use App\Services\Auth\TwoFactorManagerService;
 use App\Services\Biometric\FingerprintSettingsService;
 use App\Services\Biometric\FaceRecognitionService;
 use App\Services\Settings\Catalog\CatalogSettingsActionService;
+use App\Services\Settings\Catalog\ContractTypeCatalogService;
 use App\Services\Settings\Catalog\DepartmentCatalogService;
 use App\Services\Settings\Catalog\PositionCatalogService;
 use App\Services\Settings\Catalog\RoleCatalogService;
@@ -570,6 +571,15 @@ class Services extends BaseService
         }
 
         return new DepartmentCatalogService();
+    }
+
+    public static function contractTypeCatalogService(bool $getShared = true): ContractTypeCatalogService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('contractTypeCatalogService');
+        }
+
+        return new ContractTypeCatalogService();
     }
 
     public static function positionCatalogService(bool $getShared = true): PositionCatalogService

@@ -63,10 +63,13 @@ class EmployeeInviteController extends BaseController
         $invite = $validation['invite'];
         $post   = security_sanitize($this->request->getPost() ?? []);
 
-        // Force values from invite (cannot be overridden)
-        $post['email']  = $invite->email;
-        $post['role']   = $invite->role ?? 'funcionario';
-        $post['active'] = false;
+        // Force values from invite (cannot be overridden) -- perfil de acesso e
+        // tipo de contrato são definidos pelo admin ao convidar, não pelo
+        // colaborador (o formulário de autocadastro nem exibe esses campos).
+        $post['email']         = $invite->email;
+        $post['role']          = $invite->role ?? 'funcionario';
+        $post['tipo_contrato'] = $invite->tipo_contrato ?? null;
+        $post['active']        = false;
 
         // Use coordinator to create the employee
         $coordinator = Services::employeeCoordinatorService();

@@ -53,6 +53,8 @@ $menuStructure = [
                 'settings/work-units',
                 'settings/departments',
                 'settings/positions',
+                'settings/roles',
+                'settings/contract-types',
             ],
             'submenu' => [
                 ['label' => 'Listagem',       'icon' => 'list',         'url' => 'employees', 'exclude' => ['employees/pending']],
@@ -60,6 +62,8 @@ $menuStructure = [
                 ['label' => 'Unidades',        'icon' => 'building',     'url' => route_to('settings.work-units')],
                 ['label' => 'Departamentos',   'icon' => 'layers',       'url' => route_to('settings.departments')],
                 ['label' => 'Cargos',          'icon' => 'briefcase',    'url' => route_to('settings.positions')],
+                ['label' => 'Perfil de Acesso', 'icon' => 'users',       'url' => route_to('settings.roles')],
+                ['label' => 'Tipo de Contrato', 'icon' => 'file-text',   'url' => route_to('settings.contract-types')],
             ],
         ],
         [

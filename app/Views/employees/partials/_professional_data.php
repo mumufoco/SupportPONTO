@@ -116,11 +116,21 @@ if (!empty($formOptions['workShifts'])) {
 
     <div class="col-6 col-md-3">
         <label for="tipo_contrato" class="form-label">Tipo de contrato *</label>
-        <select id="tipo_contrato" name="tipo_contrato" class="form-select" required>
-            <?php foreach (['' => 'Selecione...', 'CLT' => 'CLT', 'temporario' => 'Temporário', 'estagio' => 'Estágio', 'terceirizado' => 'Terceirizado'] as $k => $l): ?>
-                <option value="<?= esc($k) ?>" <?= (string)$value('tipo_contrato')===(string)$k?'selected':'' ?>><?= esc($l) ?></option>
-            <?php endforeach; ?>
-        </select>
+        <?php if (!empty($formOptions['contractTypes'])): ?>
+            <select id="tipo_contrato" name="tipo_contrato" class="form-select" required>
+                <option value="">Selecione...</option>
+                <?php foreach ($formOptions['contractTypes'] as $_ct): ?>
+                    <?php $_ctName = $_ct['name'] ?? ''; $_ctLabel = $_ct['description'] ?? $_ctName; ?>
+                    <option value="<?= esc($_ctName) ?>" <?= (string)$value('tipo_contrato')===(string)$_ctName?'selected':'' ?>><?= esc($_ctLabel) ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php else: ?>
+            <select id="tipo_contrato" name="tipo_contrato" class="form-select" required>
+                <?php foreach (['' => 'Selecione...', 'CLT' => 'CLT', 'temporario' => 'Temporário', 'estagio' => 'Estágio', 'terceirizado' => 'Terceirizado'] as $k => $l): ?>
+                    <option value="<?= esc($k) ?>" <?= (string)$value('tipo_contrato')===(string)$k?'selected':'' ?>><?= esc($l) ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php endif; ?>
     </div>
 
     <div class="col-6 col-md-3">

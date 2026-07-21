@@ -59,6 +59,14 @@ $routes->group('settings', ['filter' => ['auth', 'admin']], static function ($ro
     $routes->post('roles/(:num)/toggle', 'Settings\CatalogSettingsController::toggleRole/$1', ['as' => 'settings.roles.toggle']);
     $routes->post('roles/(:num)/delete', 'Settings\CatalogSettingsController::deleteRole/$1', ['as' => 'settings.roles.delete']);
 
+    $routes->get('contract-types', 'Settings\CatalogSettingsController::contractTypes', ['as' => 'settings.contract-types']);
+    $routes->get('contract-types/create', 'Settings\CatalogSettingsController::createContractType', ['as' => 'settings.contract-types.create']);
+    $routes->post('contract-types/store', 'Settings\CatalogSettingsController::storeContractType', ['as' => 'settings.contract-types.store']);
+    $routes->get('contract-types/(:num)/edit', 'Settings\CatalogSettingsController::editContractType/$1', ['as' => 'settings.contract-types.edit']);
+    $routes->post('contract-types/(:num)/update', 'Settings\CatalogSettingsController::updateContractType/$1', ['as' => 'settings.contract-types.update']);
+    $routes->post('contract-types/(:num)/toggle', 'Settings\CatalogSettingsController::toggleContractType/$1', ['as' => 'settings.contract-types.toggle']);
+    $routes->post('contract-types/(:num)/delete', 'Settings\CatalogSettingsController::deleteContractType/$1', ['as' => 'settings.contract-types.delete']);
+
     // Operações de jornada/feriados/cercas
     $routes->get('vacations', 'Settings\WorkforceSettingsController::vacations', ['as' => 'settings.vacations']);
     $routes->get('work-shifts', 'Settings\WorkforceSettingsController::workShifts', ['as' => 'settings.work-shifts']);
