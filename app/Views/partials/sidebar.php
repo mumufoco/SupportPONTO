@@ -113,8 +113,8 @@ $menuStructure = [
             'label' => 'Configurações',
             'icon' => 'settings',
             'url' => route_to('admin.settings.information'),
-            'match'   => ['settings', 'admin/settings', 'configuracoes', 'admin/health', 'admin/metrics', 'settings/roles', 'settings/consent-terms'],
-            'exclude' => ['settings/work-units', 'settings/departments', 'settings/positions'],
+            'match'   => ['settings', 'admin/settings', 'configuracoes', 'admin/health', 'admin/metrics', 'settings/consent-terms'],
+            'exclude' => ['settings/work-units', 'settings/departments', 'settings/positions', 'settings/roles', 'settings/contract-types'],
             'submenu' => [
                 ['label' => 'Informações',        'icon' => 'info',         'url' => route_to('admin.settings.information')],
                 ['label' => 'Personalização',     'icon' => 'customize',    'url' => route_to('admin.settings.personalization')],
@@ -126,7 +126,6 @@ $menuStructure = [
                 ['label' => 'PWA',                'icon' => 'device',       'url' => route_to('admin.settings.pwa')],
                 ['label' => 'Controles',          'icon' => 'lock',         'url' => route_to('admin.settings.controls')],
                 ['label' => '2FA',                'icon' => 'shield-check', 'url' => route_to('admin.settings.two-factor')],
-                ['label' => 'Níveis de acesso',   'icon' => 'users',        'url' => route_to('settings.roles')],
                 ['label' => 'Saúde do sistema',   'icon' => 'activity',     'url' => route_to('admin.health')],
             ],
         ],
