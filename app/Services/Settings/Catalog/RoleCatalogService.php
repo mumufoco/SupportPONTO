@@ -79,6 +79,12 @@ class RoleCatalogService
     private function bustCache(): void
     {
         $this->cache->delete(self::CACHE_KEY);
+
+        // config_options e' o cache usado pelo cadastro/convite de colaborador
+        // (SettingModel::loadSelectOptions(), TTL de 1h) -- sem isso, criar/editar/
+        // desativar/excluir um perfil de acesso aqui não refletia no formulário de
+        // colaboradores por até 1 hora (perfis excluídos continuavam aparecendo).
+        $this->cache->delete('config_options');
     }
 
     public function find(int $id): ?object

@@ -99,8 +99,8 @@ if (!empty($formOptions['workShifts'])) {
         <?php if (!empty($formOptions['roles'])): ?>
             <select id="role_id" name="role_id" class="form-select" required>
                 <?php foreach ($formOptions['roles'] as $_role): ?>
-                    <?php $_rid=(int)($_role->id??$_role['id']??0); $_rname=$_role->name??$_role['name']??''; $_rdesc=$_role->description??$_role['description']??''; ?>
-                    <option value="<?= esc($_rid) ?>" <?= $_roleId===$_rid?'selected':'' ?>><?= esc(ucfirst($_rname)) ?><?= $_rdesc?' — '.esc($_rdesc):'' ?></option>
+                    <?php $_rid=(int)($_role->id??$_role['id']??0); $_rname=$_role->name??$_role['name']??''; ?>
+                    <option value="<?= esc($_rid) ?>" <?= $_roleId===$_rid?'selected':'' ?>><?= esc(ucfirst($_rname)) ?></option>
                 <?php endforeach; ?>
             </select>
         <?php else: ?>
@@ -120,8 +120,8 @@ if (!empty($formOptions['workShifts'])) {
             <select id="tipo_contrato" name="tipo_contrato" class="form-select" required>
                 <option value="">Selecione...</option>
                 <?php foreach ($formOptions['contractTypes'] as $_ct): ?>
-                    <?php $_ctName = $_ct['name'] ?? ''; $_ctLabel = $_ct['description'] ?? $_ctName; ?>
-                    <option value="<?= esc($_ctName) ?>" <?= (string)$value('tipo_contrato')===(string)$_ctName?'selected':'' ?>><?= esc($_ctLabel) ?></option>
+                    <?php $_ctName = $_ct['name'] ?? ''; ?>
+                    <option value="<?= esc($_ctName) ?>" <?= (string)$value('tipo_contrato')===(string)$_ctName?'selected':'' ?>><?= esc($_ctName) ?></option>
                 <?php endforeach; ?>
             </select>
         <?php else: ?>

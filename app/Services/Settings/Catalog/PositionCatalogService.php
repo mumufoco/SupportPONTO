@@ -93,6 +93,12 @@ class PositionCatalogService
     private function bustCache(): void
     {
         $this->cache->delete(self::CACHE_KEY);
+
+        // config_options e' o cache usado pelo cadastro/convite de colaborador
+        // (SettingModel::loadSelectOptions(), TTL de 1h) -- sem isso, criar/editar/
+        // desativar/excluir um cargo aqui não refletia no formulário de
+        // colaboradores por até 1 hora (cargos excluídos continuavam aparecendo).
+        $this->cache->delete('config_options');
     }
 
     public function find(int $id): ?array

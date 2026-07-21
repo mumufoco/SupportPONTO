@@ -307,10 +307,9 @@
                         <select id="inv_role" name="role" class="form-select">
                           <?php foreach (($formOptions['roles'] ?? []) as $_invRole):
                                 $_rName = is_object($_invRole) ? ($_invRole->name ?? '') : ($_invRole['name'] ?? '');
-                                $_rDesc = is_object($_invRole) ? ($_invRole->description ?? '') : ($_invRole['description'] ?? '');
                                 if (empty($_rName) || strtolower($_rName) === 'admin') continue; ?>
                             <option value="<?= esc($_rName) ?>" <?= strtolower($_rName) === 'funcionario' ? 'selected' : '' ?>>
-                                <?= esc(ucfirst($_rName)) ?><?= $_rDesc ? ' — ' . esc($_rDesc) : '' ?>
+                                <?= esc(ucfirst($_rName)) ?>
                             </option>
                           <?php endforeach; ?>
                         </select>
@@ -330,9 +329,8 @@
                           <option value="">— Selecione —</option>
                           <?php foreach (($formOptions['contractTypes'] ?? []) as $_ct):
                                 $_ctName  = $_ct['name'] ?? '';
-                                $_ctLabel = $_ct['description'] ?? $_ctName;
                                 if (empty($_ctName)) continue; ?>
-                            <option value="<?= esc($_ctName) ?>"><?= esc($_ctLabel) ?></option>
+                            <option value="<?= esc($_ctName) ?>"><?= esc($_ctName) ?></option>
                           <?php endforeach; ?>
                         </select>
                       <?php else: ?>

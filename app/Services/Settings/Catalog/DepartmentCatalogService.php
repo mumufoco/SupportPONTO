@@ -102,6 +102,12 @@ class DepartmentCatalogService
         $cache = $this->cache;
         $cache->delete(self::CACHE_KEY_ALL);
         $cache->delete(self::CACHE_KEY_ACTIVE);
+
+        // config_options e' o cache usado pelo cadastro/convite de colaborador
+        // (SettingModel::loadSelectOptions(), TTL de 1h) -- sem isso, criar/editar/
+        // desativar/excluir um departamento aqui não refletia no formulário de
+        // colaboradores por até 1 hora (departamentos excluídos continuavam aparecendo).
+        $cache->delete('config_options');
     }
 
     public function find(int $id): ?object
