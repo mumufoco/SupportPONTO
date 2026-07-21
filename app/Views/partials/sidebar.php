@@ -33,7 +33,7 @@ $menuStructure = [
             'url' => 'timesheet/punch',
             'match' => ['timesheet', 'punch', 'justifications', 'manager/pending-punches'],
             'submenu' => [
-                ['label' => 'Bater ponto',        'icon' => 'clock',        'url' => 'timesheet/punch'],
+                ['label' => 'Bater ponto',        'icon' => 'clock',        'url' => 'timesheet/punch', 'exclude' => ['timesheet/punch/pendencias']],
                 ['label' => 'Minhas pendências',  'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias'],
                 ['label' => 'Espelho de Ponto',    'icon' => 'bar-chart',   'url' => 'timesheet', 'exclude' => ['timesheet/punch', 'timesheet/punch/pendencias', 'timesheet/history', 'timesheet/balance', 'justifications', 'manager/pending-punches']],
                 ['label' => 'Histórico de ponto', 'icon' => 'list',         'url' => 'timesheet/history'],
@@ -99,7 +99,7 @@ $menuStructure = [
             'label' => 'Auditoria e LGPD',
             'icon' => 'lock',
             'url' => 'audit',
-            'match' => ['audit', 'compliance', 'lgpd', 'settings/consent-terms', 'biometric/consent-terms', 'admin/facial-fraud-alerts'],
+            'match' => ['audit', 'compliance', 'lgpd', 'biometric/consent-terms', 'admin/facial-fraud-alerts'],
             'submenu' => [
                 ['label' => 'Auditoria', 'icon' => 'search', 'url' => 'audit', 'exclude' => ['audit/compliance']],
                 ['label' => 'LGPD', 'icon' => 'shield-check', 'url' => 'lgpd/consents'],
@@ -151,7 +151,7 @@ $menuStructure = [
             'url' => 'timesheet/punch',
             'match' => ['timesheet'],
             'submenu' => [
-                ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch'],
+                ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch', 'exclude' => ['timesheet/punch/pendencias']],
                 ['label' => 'Minhas pendências', 'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias'],
                 ['label' => 'Espelho', 'icon' => 'list', 'url' => 'timesheet/history'],
                 ['label' => 'Banco de horas', 'icon' => 'activity', 'url' => 'timesheet/balance'],
@@ -179,7 +179,7 @@ $menuStructure = [
             'label' => 'Colaboradores',
             'icon' => 'users',
             'url' => 'employees',
-            'match' => ['employees', 'manager/pending-punches'],
+            'match' => ['employees', 'justifications', 'manager/pending-punches', 'warnings'],
             'submenu' => [
                 ['label' => 'Colaboradores', 'icon' => 'users', 'url' => 'employees'],
                 ['label' => 'Justificativas', 'icon' => 'file-text', 'url' => 'justifications'],
@@ -193,7 +193,7 @@ $menuStructure = [
             'url' => 'timesheet/punch',
             'match' => ['timesheet'],
             'submenu' => [
-                ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch'],
+                ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch', 'exclude' => ['timesheet/punch/pendencias']],
                 ['label' => 'Minhas pendências', 'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias'],
                 ['label' => 'Espelho', 'icon' => 'list', 'url' => 'timesheet/history'],
                 ['label' => 'Banco de horas', 'icon' => 'activity', 'url' => 'timesheet/balance'],
@@ -209,7 +209,7 @@ $menuStructure = [
             'label' => 'Auditoria e LGPD',
             'icon' => 'lock',
             'url' => 'audit',
-            'match' => ['audit', 'compliance', 'lgpd', 'settings/consent-terms', 'biometric/consent-terms', 'admin/facial-fraud-alerts'],
+            'match' => ['audit', 'compliance', 'lgpd', 'biometric/consent-terms', 'admin/facial-fraud-alerts'],
             'submenu' => [
                 ['label' => 'Auditoria', 'icon' => 'search', 'url' => 'audit', 'exclude' => ['audit/compliance']],
                 ['label' => 'LGPD', 'icon' => 'shield-check', 'url' => 'lgpd/consents'],
@@ -221,7 +221,6 @@ $menuStructure = [
     ],
     'auditor' => [
         ['type' => 'section', 'label' => 'Auditoria'],
-        ['label' => 'Trilha de auditoria', 'icon' => 'search', 'url' => 'compliance/audit-advanced', 'match' => ['compliance/audit-advanced']],
         [
             'label' => 'Compliance',
             'icon' => 'clipboard-check',
@@ -240,7 +239,7 @@ $menuStructure = [
     'funcionario' => [
         ['type' => 'section', 'label' => 'Meu espaço'],
         ['label' => 'Dashboard', 'icon' => 'dashboard', 'url' => 'dashboard/employee', 'match' => ['dashboard', 'dashboard/employee']],
-        ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch', 'match' => ['timesheet/punch']],
+        ['label' => 'Bater ponto', 'icon' => 'clock', 'url' => 'timesheet/punch', 'match' => ['timesheet/punch'], 'exclude' => ['timesheet/punch/pendencias']],
         ['label' => 'Pendências', 'icon' => 'alert-circle', 'url' => 'timesheet/punch/pendencias', 'match' => ['timesheet/punch/pendencias']],
         ['label' => 'Espelho de Ponto', 'icon' => 'bar-chart', 'url' => 'timesheet', 'match' => ['timesheet'], 'exclude' => ['timesheet/punch', 'timesheet/punch/pendencias', 'timesheet/history', 'timesheet/balance', 'timesheet/employee']],
         ['label' => 'Histórico de ponto', 'icon' => 'list', 'url' => 'timesheet/history', 'match' => ['timesheet/history', 'timesheet/employee']],
@@ -411,11 +410,14 @@ $chevronSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" vi
                                         <div class="app-nav-submenu-sep"><?= esc($subItem['label'] ?? '') ?></div>
                                     <?php else: ?>
                                         <?php
-                                        $_subUrl = trim((string) ($subItem['url'] ?? ''), '/');
-                                        $subActive = $_subUrl !== '' && (
-                                            $currentUri === $_subUrl ||
-                                            str_starts_with($currentUri, $_subUrl . '/')
-                                        );
+                                        // Antes disso, o subitem so comparava a propria url (sem checar
+                                        // 'exclude'), entao um item mais generico (ex.: "Bater ponto",
+                                        // timesheet/punch) ficava marcado como ativo junto com um item
+                                        // mais especifico cuja url comeca com o mesmo prefixo (ex.:
+                                        // "Minhas pendencias", timesheet/punch/pendencias) -- varios
+                                        // subitens acendiam ao mesmo tempo. Reusa $isActive(), que ja
+                                        // respeita 'exclude' corretamente para os itens de topo.
+                                        $subActive = $isActive($subItem, $currentUri);
                                         ?>
                                         <a class="app-nav-sublink <?= $subActive ? 'is-active' : '' ?>" href="<?= site_url($subItem['url'] ?: '') ?>"
                                            <?= $subActive ? 'aria-current="page"' : '' ?>>
