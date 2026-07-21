@@ -103,7 +103,12 @@ class AdminUserSeeder extends Seeder
             'expected_hours_daily'  => 8.00,
             'work_schedule_start'   => '08:00:00',
             'work_schedule_end'     => '18:00:00',
-            'active'                => true,
+            // string, nao bool nativo: a regra de validacao 'in_list[true,false,0,1]'
+            // do EmployeeModel compara em modo estrito -- bool(true) nunca bate com
+            // as strings da lista (confirmado em producao: "active field must be one
+            // of..."). Mesma convencao ja usada em toda a aplicacao (ex.:
+            // DepartmentCatalogService::create()).
+            'active'                => 'true',
             'extra_hours_balance'   => 0.00,
             'owed_hours_balance'    => 0.00,
             'created_at'            => date('Y-m-d H:i:s'),
