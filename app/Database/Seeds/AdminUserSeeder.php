@@ -114,7 +114,20 @@ class AdminUserSeeder extends Seeder
         // 'permit_empty' justamente para aceitar inserts parciais de seeders/instalador
         // (ver comentário em EmployeeModel::$validationRules). Os dados deste seeder
         // (email, cpf, role, hash de senha, etc.) já passam pela validação padrão.
-        $employeeModel->insert($data);
+        //
+        // O retorno de insert() precisa ser checado -- antes disso o codigo seguia
+        // direto pra "admin criado com sucesso" mesmo se o insert tivesse falhado
+        // silenciosamente (DBDebug fica desligado em producao, entao uma falha real
+        // de banco nao aparece no console, so nos logs).
+        $adminId = $employeeModel->insert($data);
+        if ($adminId === false) {
+            $errors = $employeeModel->errors();
+            echo "❌ Falha ao criar o admin inicial:\n";
+            foreach ($errors as $field => $message) {
+                echo "   - {$field}: {$message}\n";
+            }
+            return;
+        }
 
         $this->removeLegacyBootstrapCredentials();
 
@@ -138,7 +151,13 @@ class AdminUserSeeder extends Seeder
         }
 
         // Create initial consent for admin (data processing)
-        $adminId = $db->insertID();
+        //
+        // $adminId ja vem de insert() acima -- nao usar $db->insertID() aqui:
+        // essa chamada direta na conexao bruta cai no fallback "SELECT LASTVAL()"
+        // do driver Postgres do CI4, que falha com "lastval is not yet defined
+        // in this session" nesse contexto (confirmado em producao). insert() do
+        // Model ja retorna o id de forma confiavel (mesmo caminho usado em toda
+        // a aplicacao pra pegar o id de um registro recem-criado).
 
         $consentData = [
             'employee_id'   => $adminId,
