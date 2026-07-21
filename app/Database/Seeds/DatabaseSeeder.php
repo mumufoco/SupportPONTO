@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         ['class' => 'BiometricSettingsSeeder', 'label' => 'Biometric Settings', 'critical' => true],
         ['class' => 'WorkShiftSeeder', 'label' => 'Work Shifts', 'critical' => false],
         ['class' => 'GeofenceSeeder', 'label' => 'Geofences', 'critical' => false],
+        ['class' => 'ContractTypeSeeder', 'label' => 'Contract Types', 'critical' => false],
     ];
 
     public function run()
