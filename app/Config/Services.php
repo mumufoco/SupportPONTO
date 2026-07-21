@@ -42,6 +42,7 @@ use App\Services\Database\QueryPlanAnalyzerService;
 use App\Services\Employees\EmployeeManagementService;
 use App\Services\Security\EncryptionService;
 use App\Services\Security\RateLimitService;
+use App\Services\Security\TurnstileService;
 use App\Services\Security\TwoFactorAuthService;
 use App\Models\JustificationModel;
 use App\Models\WarningModel;
@@ -223,6 +224,15 @@ class Services extends BaseService
         }
 
         return new RateLimitService();
+    }
+
+    public static function turnstileService(bool $getShared = true): TurnstileService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('turnstileService');
+        }
+
+        return new TurnstileService();
     }
 
     public static function rememberMeService(bool $getShared = true): RememberMeService

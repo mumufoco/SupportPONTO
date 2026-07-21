@@ -9,6 +9,7 @@ use App\Services\Auth\PasswordLifecycleService;
 use App\Services\Auth\RegisterPolicyService;
 use App\Services\Auth\WebAuthService;
 use App\Services\Security\RateLimitService;
+use App\Services\Security\TurnstileService;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -23,6 +24,7 @@ class LoginController extends BaseController
     protected WebAuthService $webAuthService;
     protected PasswordLifecycleService $passwordLifecycleService;
     protected RegisterPolicyService $registerPolicyService;
+    protected TurnstileService $turnstileService;
 
     protected const GENERIC_LOGIN_ERROR = 'Não foi possível entrar. Revise seu e-mail e senha e tente novamente.';
 
@@ -36,6 +38,7 @@ class LoginController extends BaseController
         $this->webAuthService = Services::webAuthService();
         $this->passwordLifecycleService = Services::passwordLifecycleService();
         $this->registerPolicyService = new RegisterPolicyService();
+        $this->turnstileService = Services::turnstileService();
     }
 
     public function index()
@@ -70,6 +73,12 @@ class LoginController extends BaseController
             return redirect()->back()
                 ->withInput()
                 ->with('errors', $this->validator->getErrors());
+        }
+
+        $turnstileToken = (string) $this->request->getPost('cf-turnstile-response');
+        if (! $this->turnstileService->verify($turnstileToken, $this->getClientIp())) {
+            $this->setError('Falha na verificação de segurança. Tente novamente.');
+            return redirect()->back()->withInput();
         }
 
         $email = mb_strtolower(trim((string) $this->request->getPost('email')));

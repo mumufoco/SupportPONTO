@@ -203,6 +203,8 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
                 </div>
             </div>
 
+            <?= view('components/turnstile_widget') ?>
+
             <div class="d-grid mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
                     <i class="bi bi-send-check me-2"></i>Enviar cadastro para aprovação

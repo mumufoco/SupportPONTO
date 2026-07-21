@@ -7,16 +7,19 @@ use App\Services\Employees\EmployeeCoordinatorService;
 use App\Models\SettingModel;
 use App\Models\RoleModel;
 use App\Services\Employees\Management\EmployeeFormSupportService;
+use App\Services\Security\TurnstileService;
 use Config\Services;
 
 class EmployeeInviteController extends BaseController
 {
     protected EmployeeInviteService $inviteService;
+    protected TurnstileService $turnstileService;
 
     public function initController(\CodeIgniter\HTTP\RequestInterface $req, \CodeIgniter\HTTP\ResponseInterface $res, \Psr\Log\LoggerInterface $log)
     {
         parent::initController($req, $res, $log);
         $this->inviteService = new EmployeeInviteService();
+        $this->turnstileService = Services::turnstileService();
     }
 
     /** POST /employees/invite — create invite (manager only) */
@@ -61,7 +64,19 @@ class EmployeeInviteController extends BaseController
         }
 
         $invite = $validation['invite'];
-        $post   = security_sanitize($this->request->getPost() ?? []);
+
+        $turnstileToken = (string) $this->request->getPost('cf-turnstile-response');
+        if (! $this->turnstileService->verify($turnstileToken, $this->getClientIp())) {
+            $formSupport = new EmployeeFormSupportService(new SettingModel(), new RoleModel());
+            return view('employees/invite_register', [
+                'invite'      => $invite,
+                'token'       => $token,
+                'formOptions' => $formSupport->loadFormData(),
+                'error'       => 'Falha na verificação de segurança. Tente novamente.',
+            ]);
+        }
+
+        $post = security_sanitize($this->request->getPost() ?? []);
 
         // Force values from invite (cannot be overridden) -- perfil de acesso e
         // tipo de contrato são definidos pelo admin ao convidar, não pelo

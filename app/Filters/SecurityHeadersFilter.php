@@ -9,6 +9,7 @@ use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\ContentSecurityPolicy;
+use Config\Turnstile as TurnstileConfig;
 
 /**
  * Security Headers Filter
@@ -174,6 +175,14 @@ class SecurityHeadersFilter implements FilterInterface
             'https://unpkg.com',
         ];
 
+        // Turnstile so precisa de allowance de CSP quando de fato configurado
+        // (site key + secret key no .env) -- evita afrouxar script-src/frame-src
+        // sem necessidade enquanto o recurso nao esta em uso.
+        $turnstileEnabled = config(TurnstileConfig::class)->isConfigured();
+        if ($turnstileEnabled) {
+            $scriptSrc[] = 'https://challenges.cloudflare.com';
+        }
+
         $styleSrc = [
             "'self'",
             'https://cdn.jsdelivr.net',
@@ -209,6 +218,7 @@ class SecurityHeadersFilter implements FilterInterface
                 "'self'",
                 'https://*.ingest.sentry.io',
             ],
+            $turnstileEnabled ? ['https://challenges.cloudflare.com'] : [],
             $this->buildRequestScopedConnectSources($request),
             $config->buildConfiguredConnectSources()
         ))));
@@ -217,7 +227,7 @@ class SecurityHeadersFilter implements FilterInterface
             "default-src 'self'",
             "base-uri 'self'",
             "object-src 'none'",
-            "frame-src 'none'",
+            $turnstileEnabled ? "frame-src https://challenges.cloudflare.com" : "frame-src 'none'",
             "frame-ancestors 'none'",
             "manifest-src 'self'",
             'img-src ' . implode(' ', $imgSrc),

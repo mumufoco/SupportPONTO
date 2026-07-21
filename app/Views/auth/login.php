@@ -53,6 +53,8 @@
                 <a href="<?= route_to('forgot-password') ?>" class="sp-link">Esqueci minha senha</a>
             </div>
 
+            <?= view('components/turnstile_widget') ?>
+
             <button type="submit" class="sp-btn sp-btn-primary sp-btn-full" style="margin-top:.5rem;">
                 <i class="ph ph-sign-in" aria-hidden="true"></i> Entrar
             </button>
