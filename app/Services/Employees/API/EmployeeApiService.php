@@ -126,6 +126,25 @@ class EmployeeApiService
         ];
     }
 
+    /**
+     * Lista completa de colaboradores ativos para integrações de sistema
+     * (ex.: SupportSEV) -- autenticadas por token estático, sem um "ator"
+     * logado, então sem escopo por departamento (equivalente ao que RH já
+     * via em teamData(), que não é department-scoped).
+     */
+    public function teamDataForIntegration(): array
+    {
+        // getActive() já retorna array (não builder) -- não dá pra encadear
+        // orderBy() nele, então ordena aqui.
+        $members = $this->employeeModel->getActive();
+        usort($members, static fn ($a, $b): int => strcasecmp((string) ($a->name ?? ''), (string) ($b->name ?? '')));
+
+        return [
+            'success' => true,
+            'data' => array_map(fn($member) => $this->summaryData($member), $members),
+        ];
+    }
+
     public function employeeByCode(object $requester, ?string $code): array
     {
         if (!$this->canManageEmployees((string) $requester->role)) {

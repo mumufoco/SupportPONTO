@@ -96,6 +96,12 @@ $routes->group('api/v1', ['filter' => 'cors'], static function ($routes) use ($a
         $routes->get('by-code/(:segment)', 'API\EmployeeController::byCode/$1', ['as' => 'api.v1.employee.by-code', 'filter' => [...$apiAuthFilters, 'api-role:admin,rh,gestor']]);
     });
 
+    // Integração SupportSEV: token estático (SupportSevApiFilter), não OAuth2 --
+    // sistema externo, sem "ator" logado. Ver docblock de SupportSevController.
+    $routes->group('supportsev', ['filter' => ['cors', 'ratelimit', 'api-json', 'supportsev-api']], static function ($routes) {
+        $routes->get('team', 'API\SupportSevController::team', ['as' => 'api.v1.supportsev.team']);
+    });
+
     $routes->group('time-punch', ['filter' => $apiAuthFilters], static function ($routes) {
         $routes->post('/', 'API\TimePunchController::create', ['as' => 'api.v1.time-punch.create']);
         $routes->get('today', 'API\TimePunchController::today', ['as' => 'api.v1.time-punch.today']);

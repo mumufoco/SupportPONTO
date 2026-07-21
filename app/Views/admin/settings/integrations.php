@@ -154,14 +154,21 @@
                 <div class="row g-3 align-items-end mb-4 pb-4 border-bottom">
                     <div class="col-12">
                         <div class="d-flex align-items-center gap-2 mb-1">
-                            <i class="bi bi-lightning-charge-fill text-muted"></i>
+                            <i class="bi bi-lightning-charge-fill text-success"></i>
                             <strong>SupportSEV</strong>
-                            <span class="badge bg-secondary-subtle text-secondary-emphasis">reservado</span>
+                            <span class="badge bg-success-subtle text-success-emphasis">ativo</span>
                         </div>
-                        <div class="form-text mb-2">Resistividade (SEV). Sem uso funcional no PONTO hoje — campos guardados para uma futura integração.</div>
+                        <div class="form-text mb-2">
+                            Resistividade (SEV). O SupportSEV busca os colaboradores chamando
+                            <code>GET /api/v1/supportsev/team</code> com este token no cabeçalho
+                            <code>Authorization: Bearer</code>. Migrado de um login OAuth2 por usuário/senha
+                            de uma conta de funcionário dedicada — o token abaixo tem escopo restrito a este
+                            endpoint, sem depender de um colaborador cadastrado. Ao trocar o token, atualize
+                            também o <code>SUPPORTPONTO_API_TOKEN</code> no <code>.env</code> do SupportSEV.
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">URL base</label>
+                        <label class="form-label fw-semibold">URL base <span class="text-muted fw-normal">(não usado — o SEV chama o PONTO, não o contrário)</span></label>
                         <input type="url" class="form-control" name="supportsev_base_url"
                                value="<?= esc($settings['supportsev_base_url'] ?? '') ?>"
                                placeholder="https://sev.supportsondagens.com.br">

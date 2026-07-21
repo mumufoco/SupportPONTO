@@ -50,6 +50,7 @@ class Filters extends BaseConfig
         'correlation-id'       => \App\Filters\CorrelationIdFilter::class,
         'terminal-security'       => \App\Filters\PublicTerminalSecurityFilter::class,
         'supportcheck-callback'   => \App\Filters\SupportCheckCallbackFilter::class,
+        'supportsev-api'          => \App\Filters\SupportSevApiFilter::class,
     ];
 
     /**

@@ -57,9 +57,22 @@ class IntegrationsController extends BaseController
      * Catalogo de plataformas do ecossistema Support (mesmo conceito de
      * "sistemas conectados" do SupportCHECK, do lado do PONTO). SupportCHECK
      * ja e usado de fato (SupportCheckApiClient passa a aceitar estes campos
-     * como fallback do .env). SupportSPT/SEV/VISUAL/ERP sao sistemas de
-     * engenharia do mesmo grupo sem uso funcional no PONTO hoje -- os campos
-     * ficam guardados para quando/se essa integracao for construida.
+     * como fallback do .env).
+     *
+     * SupportSEV TAMBEM ja esta em uso -- o SupportSEV (app Laravel separado,
+     * www/wwwroot/sev.supportsondagens.com.br) chama GET /api/v1/supportsev/
+     * team com supportsev_api_token no header Authorization: Bearer
+     * (SupportSevApiFilter). Antes autenticava via OAuth2 password-grant
+     * numa conta de funcionario dedicada ("Integracao SupportSEV", role=rh)
+     * -- migrado para token de escopo restrito porque essa conta, sendo um
+     * colaborador de verdade, era pega por toda rotina que trata "funcionario
+     * ativo" (cron de pendencia de ponto, sync com o SupportCheck, etc.).
+     * supportsev_base_url continua sem uso -- so faria sentido num fluxo no
+     * sentido contrario (PONTO chamando o SEV), que nao existe hoje.
+     *
+     * SupportSPT/VISUAL/ERP continuam sem uso funcional no PONTO hoje -- os
+     * campos ficam guardados para quando/se essas integracoes forem
+     * construidas.
      */
     private const SUPPORT_PLATFORM_FIELDS = [
         'supportcheck_base_url', 'supportcheck_api_token',
