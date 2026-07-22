@@ -48,7 +48,9 @@ class WorkShiftModel extends Model
         'end_time' => 'required|valid_time',
         'type' => 'required|in_list[morning,afternoon,night,custom]',
         'color' => 'permit_empty|max_length[7]',
-        'break_duration' => 'permit_empty|integer|greater_than_equal_to[0]'
+        'break_duration' => 'permit_empty|integer|greater_than_equal_to[0]',
+        'lunch_start_time' => 'permit_empty|valid_time',
+        'lunch_end_time' => 'permit_empty|valid_time'
     ];
 
     protected $validationMessages = [
@@ -315,6 +317,8 @@ class WorkShiftModel extends Model
             'color' => $shift->color,
             'type' => $shift->type,
             'break_duration' => $shift->break_duration,
+            'lunch_start_time' => $shift->lunch_start_time ?? null,
+            'lunch_end_time' => $shift->lunch_end_time ?? null,
             'active' => 0 // Clones start as inactive
         ];
 

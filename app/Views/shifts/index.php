@@ -125,8 +125,11 @@
                                     <td class="text-muted small">
                                         <?php
                                         $mins = (int) ($shift->break_duration ?? 0);
+                                        $hasLunch = !empty($shift->lunch_start_time) && !empty($shift->lunch_end_time);
                                         if ($mins === 0) {
                                             echo '–';
+                                        } elseif ($hasLunch) {
+                                            echo esc(substr((string) $shift->lunch_start_time, 0, 5)) . ' – ' . esc(substr((string) $shift->lunch_end_time, 0, 5));
                                         } elseif ($mins >= 60) {
                                             $h = (int) floor($mins / 60);
                                             $m = $mins % 60;

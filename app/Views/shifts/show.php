@@ -19,6 +19,9 @@ $typeBadges = [
 $isActive = !empty($shift->active);
 $shiftStart = substr((string) $shift->start_time, 0, 5);
 $shiftEnd = substr((string) $shift->end_time, 0, 5);
+$hasLunch = !empty($shift->lunch_start_time) && !empty($shift->lunch_end_time);
+$lunchStart = $hasLunch ? substr((string) $shift->lunch_start_time, 0, 5) : null;
+$lunchEnd = $hasLunch ? substr((string) $shift->lunch_end_time, 0, 5) : null;
 ?>
 <div class="container-fluid sp-responsive-screen">
     <?= view('components/page_header', [
@@ -92,8 +95,22 @@ $shiftEnd = substr((string) $shift->end_time, 0, 5);
                                 </td>
                             </tr>
                             <tr>
-                                <th>Horário</th>
-                                <td><i class="bi bi-clock text-muted me-2"></i><strong><?= esc($shiftStart) ?></strong> até <strong><?= esc($shiftEnd) ?></strong></td>
+                                <th>Entrada</th>
+                                <td><i class="bi bi-box-arrow-in-right text-muted me-2"></i><strong><?= esc($shiftStart) ?></strong></td>
+                            </tr>
+                            <?php if ($hasLunch): ?>
+                            <tr>
+                                <th>Saída para intervalo</th>
+                                <td><i class="bi bi-cup-hot-fill text-muted me-2"></i><strong><?= esc($lunchStart) ?></strong></td>
+                            </tr>
+                            <tr>
+                                <th>Retorno do intervalo</th>
+                                <td><i class="bi bi-arrow-return-left text-muted me-2"></i><strong><?= esc($lunchEnd) ?></strong></td>
+                            </tr>
+                            <?php endif; ?>
+                            <tr>
+                                <th>Saída final</th>
+                                <td><i class="bi bi-box-arrow-right text-muted me-2"></i><strong><?= esc($shiftEnd) ?></strong></td>
                             </tr>
                             <tr>
                                 <th>Duração</th>
@@ -101,7 +118,14 @@ $shiftEnd = substr((string) $shift->end_time, 0, 5);
                             </tr>
                             <tr>
                                 <th>Intervalo</th>
-                                <td><?= $shift->break_duration > 0 ? (int) $shift->break_duration . ' minutos' : 'Sem intervalo' ?></td>
+                                <td>
+                                    <?php if ($hasLunch): ?>
+                                        <?= esc($lunchStart) ?> – <?= esc($lunchEnd) ?>
+                                        <span class="text-muted">(<?= (int) $shift->break_duration ?> min)</span>
+                                    <?php else: ?>
+                                        <?= $shift->break_duration > 0 ? (int) $shift->break_duration . ' minutos' : 'Sem intervalo' ?>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Cor</th>

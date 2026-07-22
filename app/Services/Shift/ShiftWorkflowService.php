@@ -22,6 +22,8 @@ class ShiftWorkflowService
     {
         $startTime = (string) ($payload['start_time'] ?? '');
         $endTime = (string) ($payload['end_time'] ?? '');
+        $lunchStart = $this->normalizeTime($payload['lunch_start_time'] ?? null);
+        $lunchEnd = $this->normalizeTime($payload['lunch_end_time'] ?? null);
 
         $data = [
             'name' => $payload['name'] ?? null,
@@ -29,7 +31,9 @@ class ShiftWorkflowService
             'start_time' => $startTime,
             'end_time' => $endTime,
             'type' => $payload['type'] ?? null,
-            'break_duration' => !empty($payload['break_duration']) ? (int) $payload['break_duration'] : 0,
+            'break_duration' => $this->resolveBreakDuration($payload, $lunchStart, $lunchEnd),
+            'lunch_start_time' => $lunchStart,
+            'lunch_end_time' => $lunchEnd,
             'color' => !empty($payload['color']) ? $payload['color'] : $this->defaultColor((string) ($payload['type'] ?? '')),
             'active' => true,
             'created_by' => $actorId,
@@ -63,6 +67,8 @@ class ShiftWorkflowService
 
         $startTime = (string) ($payload['start_time'] ?? '');
         $endTime = (string) ($payload['end_time'] ?? '');
+        $lunchStart = $this->normalizeTime($payload['lunch_start_time'] ?? null);
+        $lunchEnd = $this->normalizeTime($payload['lunch_end_time'] ?? null);
 
         $oldValues = [
             'name' => $shift->name,
@@ -70,6 +76,8 @@ class ShiftWorkflowService
             'end_time' => $shift->end_time,
             'type' => $shift->type,
             'break_duration' => $shift->break_duration,
+            'lunch_start_time' => $shift->lunch_start_time ?? null,
+            'lunch_end_time' => $shift->lunch_end_time ?? null,
             'active' => $shift->active,
         ];
 
@@ -79,7 +87,9 @@ class ShiftWorkflowService
             'start_time' => $startTime,
             'end_time' => $endTime,
             'type' => $payload['type'] ?? null,
-            'break_duration' => !empty($payload['break_duration']) ? (int) $payload['break_duration'] : 0,
+            'break_duration' => $this->resolveBreakDuration($payload, $lunchStart, $lunchEnd),
+            'lunch_start_time' => $lunchStart,
+            'lunch_end_time' => $lunchEnd,
             'color' => !empty($payload['color']) ? $payload['color'] : $shift->color,
             'active' => !empty($payload['active']),
         ];
@@ -195,6 +205,36 @@ class ShiftWorkflowService
         return !empty($overlappingShifts)
             ? 'Atenção: Este turno se sobrepõe a outros turnos existentes.'
             : null;
+    }
+
+    private function normalizeTime(mixed $value): ?string
+    {
+        $value = trim((string) ($value ?? ''));
+        return $value === '' ? null : $value;
+    }
+
+    /**
+     * O intervalo é a fonte de verdade quando os dois horários (saída/retorno)
+     * estão preenchidos — break_duration é recalculado a partir deles em vez
+     * de confiar apenas no valor calculado no navegador (JS pode estar
+     * desabilitado ou o campo pode ter sido enviado divergente).
+     */
+    private function resolveBreakDuration(array $payload, ?string $lunchStart, ?string $lunchEnd): int
+    {
+        if ($lunchStart !== null && $lunchEnd !== null) {
+            $start = strtotime($lunchStart);
+            $end = strtotime($lunchEnd);
+
+            if ($start !== false && $end !== false) {
+                if ($end < $start) {
+                    $end += 86400;
+                }
+
+                return min(480, (int) round(($end - $start) / 60));
+            }
+        }
+
+        return !empty($payload['break_duration']) ? (int) $payload['break_duration'] : 0;
     }
 
     private function defaultColor(string $type): string

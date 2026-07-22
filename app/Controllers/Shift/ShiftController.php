@@ -193,6 +193,8 @@ class ShiftController extends BaseController
             'end_time' => 'required|valid_time',
             'type' => 'required|in_list[morning,afternoon,night,custom]',
             'break_duration' => 'permit_empty|integer|greater_than_equal_to[0]|less_than_equal_to[480]',
+            'lunch_start_time' => 'permit_empty|valid_time',
+            'lunch_end_time' => 'permit_empty|valid_time',
             'color' => 'permit_empty|regex_match[/^#[0-9A-Fa-f]{6}$/]',
         ];
     }
@@ -205,6 +207,8 @@ class ShiftController extends BaseController
             'end_time' => 'required|valid_time',
             'type' => 'required|in_list[morning,afternoon,night,custom]',
             'break_duration' => 'permit_empty|integer|greater_than_equal_to[0]|less_than_equal_to[480]',
+            'lunch_start_time' => 'permit_empty|valid_time',
+            'lunch_end_time' => 'permit_empty|valid_time',
             'color' => 'permit_empty|regex_match[/^#[0-9A-Fa-f]{6}$/]',
         ];
     }
