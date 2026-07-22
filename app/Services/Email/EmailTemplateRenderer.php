@@ -12,6 +12,11 @@ class EmailTemplateRenderer
 
     public function render(string $templateName, array $data = []): string
     {
+        // Disponivel em TODO template (novo ou existente) sem cada chamador
+        // precisar lembrar de adicionar -- mesma logo cadastrada em
+        // Admin/Informacoes da Empresa e Personalizacao (support_logo_url()).
+        $data['company_logo'] ??= support_logo_url();
+
         $catalogEntry = EmailTemplateCatalog::get($templateName);
 
         // 1) Customização salva pelo admin (Configurações > E-mail > Templates) tem prioridade.
@@ -47,6 +52,7 @@ class EmailTemplateRenderer
     {
         $companyName = (string) $this->settings->get('company_name', 'Empresa');
         $primaryColor = (string) $this->settings->get('primary_color', '#1f9d57');
+        $logoUrl = support_logo_url();
 
         return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
             . '<title>' . htmlspecialchars($templateName, ENT_QUOTES, 'UTF-8') . '</title>'
@@ -54,11 +60,14 @@ class EmailTemplateRenderer
             . 'body{font-family:Arial,sans-serif;line-height:1.6;color:#333;margin:0;background:#f4f4f4}'
             . '.container{max-width:600px;margin:0 auto;padding:20px}'
             . '.header{background-color:' . htmlspecialchars($primaryColor, ENT_QUOTES, 'UTF-8') . ';color:#fff;padding:20px;text-align:center;border-radius:8px 8px 0 0}'
+            . '.header img{max-height:48px;max-width:220px;margin-bottom:8px}'
             . '.content{padding:24px;background-color:#fff}'
             . '.footer{padding:16px 20px;text-align:center;font-size:12px;color:#888;background:#fff;border-radius:0 0 8px 8px}'
             . 'a{color:' . htmlspecialchars($primaryColor, ENT_QUOTES, 'UTF-8') . '}'
             . '</style></head><body><div class="container">'
-            . '<div class="header"><strong>' . htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') . '</strong><br><small>Sistema de Ponto Eletrônico</small></div>'
+            . '<div class="header">'
+            . ($logoUrl !== '' ? '<img src="' . htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') . '"><br>' : '')
+            . '<strong>' . htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') . '</strong><br><small>Sistema de Ponto Eletrônico</small></div>'
             . '<div class="content">' . $bodyHtml . '</div>'
             . '<div class="footer">&copy; ' . date('Y') . ' ' . htmlspecialchars($companyName, ENT_QUOTES, 'UTF-8') . '. Todos os direitos reservados.<br>Este é um e-mail automático, não responda.</div>'
             . '</div></body></html>';

@@ -538,7 +538,9 @@ if (!function_exists('sp_consent_term_variables')) {
      * empresa/responsaveis (Admin/Informacoes da Empresa) + dados basicos do
      * colaborador quando um $employee especifico e informado. Sintaxe de uso
      * no corpo do termo: {nome}, mesmo padrao usado pelos templates de e-mail
-     * (EmailTemplateCatalog).
+     * (EmailTemplateCatalog). company_logo (URL da logo cadastrada) usa o
+     * mesmo nome de variavel do template de e-mail, para nao exigir duas
+     * chaves diferentes para a mesma logo.
      *
      * @return array<string,string>
      */
@@ -557,6 +559,7 @@ if (!function_exists('sp_consent_term_variables')) {
         }
 
         return [
+            'company_logo'                => support_logo_url(),
             'empresa_razao_social'        => $get('company_name'),
             'empresa_nome_fantasia'       => $get('company_trade_name'),
             'empresa_cnpj'                => $get('company_cnpj'),

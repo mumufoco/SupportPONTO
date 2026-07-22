@@ -170,7 +170,20 @@ HTML,
     /** @return array{label:string,description:string,variables:list<string>,default_subject:string,default_body:string}|null */
     public static function get(string $key): ?array
     {
-        return self::TEMPLATES[$key] ?? null;
+        $entry = self::TEMPLATES[$key] ?? null;
+        if ($entry === null) {
+            return null;
+        }
+
+        // company_logo fica disponível em todo template (ver
+        // EmailTemplateRenderer::render(), que injeta o valor
+        // automaticamente) -- adicionado aqui, e não em cada entrada acima,
+        // para não precisar repetir isso 11 vezes nem esquecer em templates novos.
+        if (! in_array('company_logo', $entry['variables'], true)) {
+            $entry['variables'][] = 'company_logo';
+        }
+
+        return $entry;
     }
 
     public static function bodySettingKey(string $key): string

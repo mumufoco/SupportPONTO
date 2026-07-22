@@ -12,6 +12,36 @@
     ]) ?>
 
 
+    <!-- Logo da empresa -->
+    <div class="sp-card mb-3">
+        <div class="sp-card-header">
+            <span class="sp-card-title"><i class="bi bi-image-fill"></i> Logo da empresa</span>
+            <span class="text-muted small">JPG, PNG ou WEBP · usada em e-mails, termos e nos demais lugares do sistema.</span>
+        </div>
+        <div class="sp-card-body">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div id="infoLogoPreviewWrap" style="width:96px;height:96px;display:flex;align-items:center;justify-content:center;background:var(--sp-gray-100,#eef1f4);border-radius:.6rem;overflow:hidden;flex-shrink:0">
+                    <img id="infoLogoPreview" src="<?= sp_safe_url(support_logo_url('small')) ?>" alt="Logo da empresa" style="max-width:100%;max-height:100%;object-fit:contain">
+                </div>
+                <div class="flex-grow-1" style="min-width:220px">
+                    <input type="file" class="form-control form-control-sm mb-2" id="infoLogoFile" accept="image/png,image/jpeg,image/webp">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="infoLogoUploadBtn">
+                            <i class="bi bi-cloud-upload me-1"></i>Enviar logo
+                        </button>
+                        <?php if (!empty($settings['logo_path'] ?? '')): ?>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="infoLogoRemoveBtn">
+                                <i class="bi bi-trash me-1"></i>Remover
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                    <div class="form-text mt-1">Também é usada nas telas de Personalização — atualizar aqui atualiza lá também.</div>
+                </div>
+            </div>
+            <div id="infoLogoMsg" class="mt-2"></div>
+        </div>
+    </div>
+
     <form action="<?= sp_safe_url(sp_route_url('admin.settings.information.update')) ?>" method="POST">
         <?= csrf_field() ?>
 
@@ -306,5 +336,54 @@ SupportPontoValidation.bindCepField(document.getElementById('company_cep'), {
         uf: 'company_state'
     }
 });
+
+/* Logo da empresa -- mesmo endpoint já usado em Personalização
+   (admin.settings.personalization.upload-logo), então as duas telas ficam
+   sempre em sincronia (mesma configuração company_logo). */
+(function () {
+    var fileInput = document.getElementById('infoLogoFile');
+    var uploadBtn = document.getElementById('infoLogoUploadBtn');
+    var removeBtn = document.getElementById('infoLogoRemoveBtn');
+    var preview   = document.getElementById('infoLogoPreview');
+    var msgEl     = document.getElementById('infoLogoMsg');
+
+    function showMsg(text, ok) {
+        msgEl.innerHTML = '<div class="alert alert-' + (ok === false ? 'danger' : 'success') + ' py-2 mb-0">' + text + '</div>';
+    }
+
+    uploadBtn?.addEventListener('click', async function () {
+        if (!fileInput.files[0]) { showMsg('Selecione um arquivo primeiro.', false); return; }
+        var fd = new FormData();
+        fd.append('logo', fileInput.files[0]);
+        uploadBtn.disabled = true;
+        try {
+            var r = await spFetch('<?= esc(sp_route_url('admin.settings.personalization.upload-logo')) ?>', { method: 'POST', body: fd });
+            var j = await r.json();
+            showMsg(j.message || (j.success ? 'Logo enviada!' : 'Erro ao enviar.'), j.success);
+            if (j.success && j.url) {
+                preview.src = j.url + '?t=' + Date.now();
+            }
+        } catch (e) {
+            showMsg('Erro de comunicação com o servidor.', false);
+        }
+        uploadBtn.disabled = false;
+    });
+
+    removeBtn?.addEventListener('click', async function () {
+        if (!confirm('Remover a logo da empresa?')) return;
+        removeBtn.disabled = true;
+        try {
+            var r = await spFetch('<?= esc(sp_route_url('admin.settings.personalization.images.delete', 'logo')) ?>', { method: 'POST' });
+            var j = await r.json();
+            showMsg(j.message || (j.success ? 'Logo removida!' : 'Erro ao remover.'), j.success);
+            if (j.success) {
+                location.reload();
+            }
+        } catch (e) {
+            showMsg('Erro de comunicação com o servidor.', false);
+        }
+        removeBtn.disabled = false;
+    });
+})();
 </script>
 <?= $this->endSection() ?>
