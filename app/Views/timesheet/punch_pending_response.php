@@ -11,8 +11,8 @@
     ]) ?>
 
     <?php if (!empty($awaiting)): ?>
-    <div class="row justify-content-center mb-4">
-        <div class="col-lg-8">
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6">
             <div class="stat-card">
                 <div class="stat-card-icon warning"><i class="bi bi-hourglass-split"></i></div>
                 <div class="stat-card-content">
@@ -24,32 +24,31 @@
     </div>
     <?php endif; ?>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    <?php if (empty($awaiting)): ?>
+        <div class="sp-data-card">
+            <div class="sp-empty">
+                <div class="sp-empty-icon"><i class="bi bi-check-circle"></i></div>
+                <p class="sp-empty-title">Nenhuma pendência no momento</p>
+                <p class="text-muted small mb-0">Todas as suas marcações de ponto estão em dia.</p>
+            </div>
+        </div>
+    <?php else: ?>
 
-            <?php if (empty($awaiting)): ?>
-                <div class="sp-data-card">
-                    <div class="sp-empty">
-                        <div class="sp-empty-icon"><i class="bi bi-check-circle"></i></div>
-                        <p class="sp-empty-title">Nenhuma pendência no momento</p>
-                        <p class="text-muted small mb-0">Todas as suas marcações de ponto estão em dia.</p>
-                    </div>
-                </div>
-            <?php else: ?>
+        <div class="alert alert-warning d-flex align-items-start gap-3 mb-4">
+            <i class="bi bi-exclamation-triangle-fill fs-4 mt-1"></i>
+            <div>
+                <strong>Marcação de ponto incompleta detectada</strong>
+                <p class="mb-0 mt-1 small">
+                    O sistema identificou que uma ou mais marcações de dias anteriores ficaram incompletas.
+                    Explique o ocorrido em cada pendência abaixo para que seu gestor possa revisar.
+                </p>
+            </div>
+        </div>
 
-                <div class="alert alert-warning d-flex align-items-start gap-3 mb-4">
-                    <i class="bi bi-exclamation-triangle-fill fs-4 mt-1"></i>
-                    <div>
-                        <strong>Marcação de ponto incompleta detectada</strong>
-                        <p class="mb-0 mt-1 small">
-                            O sistema identificou que uma ou mais marcações de dias anteriores ficaram incompletas.
-                            Explique o ocorrido em cada pendência abaixo para que seu gestor possa revisar.
-                        </p>
-                    </div>
-                </div>
-
-                <?php foreach ($awaiting as $item): ?>
-                <div class="sp-data-card mb-3">
+        <div class="row g-3">
+            <?php foreach ($awaiting as $item): ?>
+            <div class="col-xl-4 col-lg-6">
+                <div class="sp-data-card h-100">
                     <div class="sp-data-card__header">
                         <h2 class="sp-data-card__title">
                             <span class="stat-card-icon warning" style="width:2.1rem;height:2.1rem;font-size:1rem;"><i class="bi bi-clock-history"></i></span>
@@ -101,12 +100,12 @@
                         </form>
                     </div>
                 </div>
-                <?php endforeach; ?>
-
-            <?php endif; ?>
-
+            </div>
+            <?php endforeach; ?>
         </div>
-    </div>
+
+    <?php endif; ?>
+
 </div>
 
 <?= $this->endSection() ?>
