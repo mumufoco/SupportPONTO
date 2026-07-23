@@ -169,7 +169,7 @@ class TimePunchModel extends Model
 
         $generator = new NsrGeneratorService(\Config\Database::connect());
         $generator->assertReady();
-        $data['data']['nsr'] = $generator->next();
+        $data['data']['nsr'] = $generator->next('time_punches');
 
         return $data;
     }

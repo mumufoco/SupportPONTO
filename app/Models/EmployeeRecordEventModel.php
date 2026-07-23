@@ -93,7 +93,7 @@ class EmployeeRecordEventModel extends Model
             $generator = new NsrGeneratorService($db);
             $generator->assertReady();
 
-            $nsr = $generator->next();
+            $nsr = $generator->next('employee_record_events');
 
             $id = $this->insert([
                 'nsr'             => $nsr,

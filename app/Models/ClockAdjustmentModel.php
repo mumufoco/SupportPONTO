@@ -78,7 +78,7 @@ class ClockAdjustmentModel extends Model
 
         $generator = new NsrGeneratorService(\Config\Database::connect());
         $generator->assertReady();
-        $data['data']['nsr'] = $generator->next();
+        $data['data']['nsr'] = $generator->next('clock_adjustments');
 
         return $data;
     }

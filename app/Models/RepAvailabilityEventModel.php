@@ -89,8 +89,8 @@ class RepAvailabilityEventModel extends Model
             $generator = new NsrGeneratorService($db);
             $generator->assertReady();
 
-            $unavailableNsr = $generator->next();
-            $availableNsr   = $generator->next();
+            $unavailableNsr = $generator->next('rep_availability_events:unavailable');
+            $availableNsr   = $generator->next('rep_availability_events:available');
 
             $unavailableId = $this->insert([
                 'nsr'         => $unavailableNsr,

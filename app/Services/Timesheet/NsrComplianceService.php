@@ -106,24 +106,52 @@ class NsrComplianceService
         return $issues;
     }
 
+    /**
+     * Duplicatas de NSR entre QUALQUER uma das 5 tabelas que compartilham a mesma
+     * sequência canônica — não apenas time_punches. Checar só time_punches aqui
+     * deixava passar despercebida uma duplicata real entre employee_record_events
+     * e rep_availability_events (mesmo NSR usado em duas tabelas diferentes),
+     * já que o count-by-nsr nunca via as duas linhas juntas (ver CreateNsrLedgerTable
+     * para o achado e a rede de segurança adicionada para novos NSRs).
+     */
     public function recentDuplicateNsrs(int $days = 30): array
     {
         $from = date('Y-m-d H:i:s', strtotime('-' . max(1, $days) . ' days'));
 
-        $rows = $this->db->table('time_punches')
-            ->select('nsr, COUNT(*) AS total, MIN(punch_time) AS first_punch_time, MAX(punch_time) AS last_punch_time', false)
-            ->where('created_at >=', $from)
-            ->groupBy('nsr')
-            ->having('COUNT(*) >', 1)
-            ->orderBy('nsr', 'ASC')
-            ->get()
-            ->getResultArray();
+        $sql = "
+            SELECT nsr, COUNT(*) AS total,
+                   MIN(recorded_at) AS first_occurrence,
+                   MAX(recorded_at) AS last_occurrence,
+                   STRING_AGG(DISTINCT source_table, ', ' ORDER BY source_table) AS source_tables
+            FROM (
+                SELECT CAST(nsr AS BIGINT) AS nsr, created_at AS recorded_at, 'time_punches' AS source_table
+                FROM time_punches WHERE nsr IS NOT NULL AND created_at >= ?
+                UNION ALL
+                SELECT CAST(nsr AS BIGINT), recorded_at, 'employee_record_events'
+                FROM employee_record_events WHERE nsr IS NOT NULL AND recorded_at >= ?
+                UNION ALL
+                SELECT CAST(nsr AS BIGINT), adjusted_datetime AS recorded_at, 'clock_adjustments'
+                FROM clock_adjustments WHERE nsr IS NOT NULL AND adjusted_datetime >= ?
+                UNION ALL
+                SELECT CAST(nsr AS BIGINT), recorded_at, 'rep_availability_events'
+                FROM rep_availability_events WHERE nsr IS NOT NULL AND recorded_at >= ?
+                UNION ALL
+                SELECT CAST(nsr AS BIGINT), recorded_at, 'company_record_events'
+                FROM company_record_events WHERE nsr IS NOT NULL AND recorded_at >= ?
+            ) all_events
+            GROUP BY nsr
+            HAVING COUNT(*) > 1
+            ORDER BY nsr ASC
+        ";
+
+        $rows = $this->db->query($sql, [$from, $from, $from, $from, $from])->getResultArray();
 
         return array_map(static fn(array $row): array => [
             'nsr' => (int) ($row['nsr'] ?? 0),
             'count' => (int) ($row['total'] ?? 0),
-            'first_punch_time' => $row['first_punch_time'] ?? null,
-            'last_punch_time' => $row['last_punch_time'] ?? null,
+            'source_tables' => (string) ($row['source_tables'] ?? ''),
+            'first_occurrence' => $row['first_occurrence'] ?? null,
+            'last_occurrence' => $row['last_occurrence'] ?? null,
         ], $rows);
     }
 

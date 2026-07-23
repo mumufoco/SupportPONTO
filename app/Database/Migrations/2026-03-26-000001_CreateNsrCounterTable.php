@@ -39,15 +39,23 @@ class CreateNsrCounterTable extends Migration
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('nsr_counter', true);
 
-        // Inicializa o contador com o maior NSR existente na tabela de punches
-        // para não reiniciar do zero em bancos que já têm registros
+        // Inicializa o contador com o maior NSR já existente em QUALQUER tabela que
+        // compartilhe a sequência canônica — não apenas time_punches. Checar só
+        // time_punches aqui já causou um contador reinicializado atrás do maior NSR
+        // realmente persistido (ver CreateNsrLedgerTable), sempre que esta tabela
+        // precisar ser recriada num ambiente que já tinha as demais tabelas com dados.
         $db = \Config\Database::connect();
 
         $initialValue = 0;
-        if ($db->fieldExists('nsr', 'time_punches')) {
-            $result       = $db->table('time_punches')->selectMax('nsr')->get();
-            $maxRow       = $result ? $result->getRow() : null;
-            $initialValue = ($maxRow && $maxRow->nsr) ? (int) $maxRow->nsr : 0;
+        foreach (['time_punches', 'clock_adjustments', 'rep_availability_events', 'employee_record_events', 'company_record_events'] as $table) {
+            if (! $db->tableExists($table) || ! $db->fieldExists('nsr', $table)) {
+                continue;
+            }
+
+            $result = $db->table($table)->selectMax('nsr')->get();
+            $maxRow = $result ? $result->getRow() : null;
+            $tableMax = ($maxRow && $maxRow->nsr) ? (int) $maxRow->nsr : 0;
+            $initialValue = max($initialValue, $tableMax);
         }
 
         $db->table('nsr_counter')->insert([

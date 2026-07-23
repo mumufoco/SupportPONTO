@@ -278,8 +278,9 @@
                             <tr>
                                 <th>NSR</th>
                                 <th>Ocorrências</th>
-                                <th>Primeira marcação</th>
-                                <th>Última marcação</th>
+                                <th>Tabelas envolvidas</th>
+                                <th>Primeira ocorrência</th>
+                                <th>Última ocorrência</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -287,8 +288,9 @@
                             <tr>
                                 <td><?= (int) ($issue['nsr'] ?? 0) ?></td>
                                 <td class="text-danger fw-semibold"><?= (int) ($issue['count'] ?? 0) ?></td>
-                                <td><?= !empty($issue['first_punch_time']) ? esc(format_datetime_br((string) $issue['first_punch_time'], false)) : 'N/A' ?></td>
-                                <td><?= !empty($issue['last_punch_time']) ? esc(format_datetime_br((string) $issue['last_punch_time'], false)) : 'N/A' ?></td>
+                                <td><?= esc((string) ($issue['source_tables'] ?? '')) ?></td>
+                                <td><?= !empty($issue['first_occurrence']) ? esc(format_datetime_br((string) $issue['first_occurrence'], false)) : 'N/A' ?></td>
+                                <td><?= !empty($issue['last_occurrence']) ? esc(format_datetime_br((string) $issue['last_occurrence'], false)) : 'N/A' ?></td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
