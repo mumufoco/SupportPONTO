@@ -126,7 +126,17 @@ try {
 } catch (\Throwable $_he) {
     $_health = ['status' => 'error', 'summary' => [], 'modules' => [], 'alerts' => []];
 }
+// SystemHealthCheckService::detailedHealth()['status'] vem de aggregateStatus(),
+// que usa um vocabulário PRÓPRIO ("healthy"/"degraded"/"unhealthy") — diferente do
+// vocabulário por módulo ("ok"/"warning"/"error", usado em cada item de
+// $_hModules). Sem esta tradução, "healthy" nunca batia com nenhuma chave de
+// $_statusMeta e caía sempre no fallback de erro — o sistema aparecia com o
+// selo "Erro detectado" mesmo 100% saudável, e a palavra em inglês "HEALTHY"
+// ainda vazava direto pro card de Métricas Administrativas.
 $_hStatus  = $_health['status']  ?? 'error';
+$_hStatusToVariant = ['healthy' => 'ok', 'degraded' => 'warning', 'unhealthy' => 'error'];
+$_hVariant = $_hStatusToVariant[$_hStatus] ?? 'error';
+$_hStatusLabelPt = ['healthy' => 'SAUDÁVEL', 'degraded' => 'DEGRADADO', 'unhealthy' => 'COM ERRO'][$_hStatus] ?? 'DESCONHECIDO';
 $_hSummary = $_health['summary'] ?? [];
 $_hModules = $_health['modules'] ?? [];
 $_hAlerts  = $_health['alerts']  ?? [];
@@ -139,7 +149,7 @@ $_statusMeta = [
     'warning' => ['color' => '#f59e0b', 'bg' => 'rgba(245,158,11,.1)', 'icon' => 'bi-exclamation-triangle-fill', 'label' => 'Atenção em algum módulo'],
     'error'   => ['color' => '#dc3545', 'bg' => 'rgba(220,53,69,.1)',  'icon' => 'bi-x-circle-fill',            'label' => 'Erro detectado'],
 ];
-$_overallMeta = $_statusMeta[$_hStatus] ?? $_statusMeta['error'];
+$_overallMeta = $_statusMeta[$_hVariant] ?? $_statusMeta['error'];
 
 $_moduleLabels = [
     'database'      => ['icon' => 'bi-database-fill',      'label' => 'Banco de Dados'],
@@ -285,9 +295,9 @@ $catHead = static function (string $variantClass, string $icon, string $title, s
                 <div class="card-body">
                     <div class="row g-2 mb-3">
                         <div class="col-4">
-                            <div class="text-center p-2 rounded" style="background:var(--sp-warning-light);border:1px solid transparent">
-                                <div style="font-size:1.6rem;font-weight:700;color:var(--sp-warning);line-height:1"><?= $_justSummary['pendente'] ?></div>
-                                <div style="font-size:.7rem;color:var(--sp-warning);margin-top:.2rem">Pendentes</div>
+                            <div class="text-center p-2 rounded" style="background:rgba(245,158,11,.16);border:1px solid transparent">
+                                <div style="font-size:1.6rem;font-weight:700;color:#f59e0b;line-height:1"><?= $_justSummary['pendente'] ?></div>
+                                <div style="font-size:.7rem;color:#f59e0b;margin-top:.2rem">Pendentes</div>
                             </div>
                         </div>
                         <div class="col-4">
@@ -617,7 +627,7 @@ $_pisMeta = $employeesWithoutPis > 0
                             <i class="bi <?= $_overallMeta['icon'] ?>" style="color:<?= $_overallMeta['color'] ?>;font-size:1rem"></i>
                         </span>
                         <div>
-                            <div class="fw-bold" style="font-size:.85rem;color:<?= $_overallMeta['color'] ?>">Sistema <?= esc(strtoupper($_hStatus)) ?></div>
+                            <div class="fw-bold" style="font-size:.85rem;color:<?= $_overallMeta['color'] ?>">Sistema <?= esc($_hStatusLabelPt) ?></div>
                             <div class="text-muted" style="font-size:.72rem"><?= $_hOk ?> ok &middot; <?= $_hWarn ?> alerta(s) &middot; <?= $_hErr ?> erro(s)</div>
                         </div>
                     </div>
@@ -625,21 +635,23 @@ $_pisMeta = $employeesWithoutPis > 0
                     <div class="vr d-none d-md-block" style="height:2rem;opacity:.2"></div>
 
                     <div class="d-flex flex-wrap gap-2 flex-grow-1">
+                        <?php $_msLabelPt = ['ok' => 'OK', 'warning' => 'ATENÇÃO', 'error' => 'ERRO']; ?>
                         <?php foreach ($_moduleLabels as $_mk => $_ml): ?>
                         <?php if (!isset($_hModules[$_mk])) continue; ?>
                         <?php
                         $_ms    = (string)($_hModules[$_mk]['status'] ?? 'error');
                         $_mmeta = $_statusMeta[$_ms] ?? $_statusMeta['error'];
+                        $_msPt  = $_msLabelPt[$_ms] ?? 'ERRO';
                         $detail = '';
                         if (!empty($_hModules[$_mk]['details']['response_ms'])) $detail = ' · '.$_hModules[$_mk]['details']['response_ms'].'ms';
                         elseif (!empty($_hModules[$_mk]['details']['free_mb']))  $detail = ' · '.$_hModules[$_mk]['details']['free_mb'].'MB livre';
                         ?>
                         <div class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill"
                              style="background:<?= $_mmeta['bg'] ?>;border:1px solid <?= $_mmeta['color'] ?>30;font-size:.73rem;white-space:nowrap"
-                             title="<?= esc($_ml['label']) ?>: <?= esc(strtoupper($_ms)) ?><?= esc($detail) ?>">
+                             title="<?= esc($_ml['label']) ?>: <?= esc($_msPt) ?><?= esc($detail) ?>">
                             <i class="bi <?= $_ml['icon'] ?>" style="color:<?= $_mmeta['color'] ?>;font-size:.8rem"></i>
                             <span style="font-weight:600"><?= esc($_ml['label']) ?></span>
-                            <span class="ms-1 fw-bold" style="color:<?= $_mmeta['color'] ?>"><?= esc(strtoupper($_ms)) ?></span>
+                            <span class="ms-1 fw-bold" style="color:<?= $_mmeta['color'] ?>"><?= esc($_msPt) ?></span>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -651,7 +663,13 @@ $_pisMeta = $employeesWithoutPis > 0
                 <?php if (!empty($_hAlerts)): ?>
                 <div class="mt-3 pt-2 border-top d-flex flex-column gap-1">
                     <?php foreach (array_slice($_hAlerts, 0, 3) as $_alert): ?>
-                    <?php $_am = $_statusMeta[$_alert['status'] ?? 'warning'] ?? $_statusMeta['warning']; ?>
+                    <?php
+                    // buildAlerts() do SystemHealthCheckService gera 'severity' ('critical'/
+                    // 'warning'), não 'status' — lendo a chave errada, todo alerta (mesmo
+                    // crítico) sempre caía no visual de "atenção" (laranja), nunca no de erro.
+                    $_alertVariant = ($_alert['severity'] ?? 'warning') === 'critical' ? 'error' : 'warning';
+                    $_am = $_statusMeta[$_alertVariant] ?? $_statusMeta['warning'];
+                    ?>
                     <div class="d-flex align-items-start gap-2" style="font-size:.78rem">
                         <i class="bi <?= $_am['icon'] ?>" style="color:<?= $_am['color'] ?>;margin-top:.1rem;flex-shrink:0"></i>
                         <span><?= esc($_alert['message'] ?? '') ?></span>
