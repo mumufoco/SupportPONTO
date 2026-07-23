@@ -27,7 +27,14 @@ class DashboardManagerService
 
     public function buildViewData(object|array|null $currentUser): array
     {
-        $department = (string) $this->userValue($currentUser, 'department', 'default');
+        $rawDepartment = trim((string) $this->userValue($currentUser, 'department', ''));
+        $missingDepartment = $rawDepartment === '';
+        // Sem isto, um gestor sem 'department' configurado no cadastro cai no
+        // fallback 'default' e toda consulta abaixo (equipe, presença, atrasos,
+        // horas, justificativas) casa com um departamento que não existe —
+        // resultando num dashboard silenciosamente zerado, sem nenhum aviso
+        // explicando que a causa é um cadastro incompleto, não uma equipe vazia.
+        $department = $missingDepartment ? '__no_department_configured__' : $rawDepartment;
         $userId = (int) $this->userValue($currentUser, 'id', 0);
         $stats = $this->statistics($department);
 
@@ -48,7 +55,7 @@ class DashboardManagerService
             ],
             'pendingJustifications' => $this->pendingJustifications($department),
             'teamActivity' => $this->teamActivity($department),
-            'alerts' => $this->alerts($department, $stats['pending_justifications'] ?? 0),
+            'alerts' => $this->alerts($department, $stats['pending_justifications'] ?? 0, $missingDepartment),
             'notifications' => $this->userNotifications($userId),
         ];
 
@@ -85,11 +92,16 @@ class DashboardManagerService
 
     private function pendingJustifications(string $department): array
     {
+        // O valor real gravado em justifications.status é 'pendente' (PT-BR), não
+        // 'pending' — com o valor errado, esta lista sempre vinha vazia mesmo com o
+        // KPI "Aprovações Pendentes" (statistics(), acima) mostrando uma contagem
+        // maior que zero: o gestor via um número e uma tabela vazia contradizendo
+        // um ao outro na mesma tela.
         return $this->justificationModel
             ->select('justifications.*, employees.name as employee_name, employees.position')
             ->join('employees', 'employees.id = justifications.employee_id')
             ->where('employees.department', $department)
-            ->where('justifications.status', 'pending')
+            ->where('justifications.status', 'pendente')
             ->orderBy('justifications.created_at', 'ASC')
             ->limit(10)
             ->find();
@@ -117,10 +129,17 @@ class DashboardManagerService
         ], $activities);
     }
 
-    private function alerts(string $department, int $pendingCount = 0): array
+    private function alerts(string $department, int $pendingCount = 0, bool $missingDepartment = false): array
     {
         // $pendingCount is passed in from statistics() — eliminates duplicate countAllResults() query
         $alerts = [];
+
+        if ($missingDepartment) {
+            $alerts[] = [
+                'message' => 'Seu usuário não tem um departamento configurado — os indicadores desta página não podem ser calculados. Peça para o RH/administrador completar seu cadastro.',
+                'type' => 'danger',
+            ];
+        }
 
         if ($pendingCount > 5) {
             $alerts[] = [

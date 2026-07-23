@@ -171,7 +171,10 @@ class AdminDashboardViewPresenter extends AbstractDashboardViewPresenter
             'pending_justifications' => $this->intValue($statistics['pending_justifications'] ?? 0),
             'total_inactive' => $this->intValue($statistics['total_inactive'] ?? 0),
             'active_warnings' => $this->intValue($statistics['active_warnings'] ?? 0),
-            'recent_registrations' => $this->intValue($statistics['recent_registrations'] ?? 0),
+            // A chave gerada por DashboardAdminService::statistics() é
+            // 'pending_registrations' — este card lia 'recent_registrations', que
+            // nunca existia, e sempre mostrava 0.
+            'recent_registrations' => $this->intValue($statistics['pending_registrations'] ?? 0),
         ];
     }
 

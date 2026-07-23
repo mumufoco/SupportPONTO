@@ -186,7 +186,11 @@ class DashboardEmployeeService
     private function attendanceRate(int $employeeId): string
     {
         [$monthStart, $nextMonthStart] = DashboardDateRange::month();
-        $workDays = $this->workDaysInMonth();
+        // Conta dias úteis só até HOJE, não o mês inteiro — sem isso, no início de
+        // todo mês a taxa de presença aparecia artificialmente baixa (ex.: 9% no dia
+        // 3, mesmo com presença em todos os dias já passados), porque o denominador
+        // já contava dias que ainda nem aconteceram.
+        $workDays = $this->workDaysInMonth((int) date('j'));
 
         $punches = $this->timePunchModel
             ->select('punch_time')
@@ -202,14 +206,15 @@ class DashboardEmployeeService
         return $rate . '%';
     }
 
-    private function workDaysInMonth(): int
+    private function workDaysInMonth(?int $upToDay = null): int
     {
         $month = (int) date('m');
         $year = (int) date('Y');
         $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
+        $lastDay = $upToDay !== null ? min($upToDay, $daysInMonth) : $daysInMonth;
         $workDays = 0;
 
-        for ($day = 1; $day <= $daysInMonth; $day++) {
+        for ($day = 1; $day <= $lastDay; $day++) {
             $dayOfWeek = (int) date('N', strtotime("{$year}-{$month}-{$day}"));
             if ($dayOfWeek < 6) {
                 $workDays++;
