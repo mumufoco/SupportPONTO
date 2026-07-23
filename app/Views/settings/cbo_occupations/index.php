@@ -9,6 +9,9 @@
         'title'    => 'CBO — Classificação Brasileira de Ocupações',
         'subtitle' => 'Tabela oficial de referência (Ministério do Trabalho) usada para indicar o CBO de cada cargo. Consulta apenas — os códigos não são editáveis aqui.',
         'icon'     => 'bi bi-journal-bookmark-fill',
+        'actions'  => [
+            ['label' => 'Voltar para Cargos', 'icon' => 'bi bi-arrow-left', 'url' => route_to('settings.positions')],
+        ],
     ]) ?>
 
     <div class="card shadow-sm">

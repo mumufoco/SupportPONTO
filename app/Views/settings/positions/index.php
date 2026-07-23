@@ -11,6 +11,7 @@
         'icon'     => 'bi bi-person-badge-fill',
         'actions'  => [
             ['label' => 'Novo Cargo', 'icon' => 'bi bi-plus-lg', 'url' => route_to('settings.positions.create')],
+            ['label' => 'CBO', 'icon' => 'bi bi-bookmark-fill', 'url' => route_to('settings.cbo-occupations')],
         ],
     ]) ?>
 
