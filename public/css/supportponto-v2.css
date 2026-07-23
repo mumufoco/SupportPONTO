@@ -260,6 +260,25 @@ hr { border-color: var(--sp-border); opacity: 1; }
   .app-sidebar.is-collapsed + .app-main { margin-left: 0 !important; width: 100% !important; }
 }
 
+/* ── Botões flutuantes (Chat interno / Dados de colaboradores) ──────────
+   Fixos no canto inferior esquerdo, mas deslocados pra nunca ficar por
+   baixo do menu lateral: no mobile o menu vira off-canvas (sem espaço
+   reservado), então fica colado na borda; no desktop soma a largura atual
+   do menu (expandido ou só ícones, --sp-sidebar-width-collapsed) + 2rem de
+   respiro. */
+.sp-floating-actions {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 1050;
+}
+@media (min-width: 992px) {
+  .sp-floating-actions { left: calc(256px + 2rem); }
+  .app-sidebar.is-collapsed ~ .app-main .sp-floating-actions {
+    left: calc(var(--sp-sidebar-width-collapsed, 58px) + 2rem);
+  }
+}
+
 .app-brand, .sidebar-brand { border-bottom: 1px solid var(--sp-sidebar-border); }
 .app-brand--logo-only { border-bottom: 1px solid var(--sp-sidebar-border) !important; padding: 1.1rem .75rem !important; }
 .app-brand__logo { border-radius: 12px !important; }

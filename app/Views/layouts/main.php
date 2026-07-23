@@ -131,7 +131,7 @@ $__pendingGateConsents = ($isAuthenticated && in_array(trim(uri_string(), '/'), 
         $__role = $employee['role'] ?? '';
         if ($isAuthenticated && in_array($__role, ['admin','gestor','rh'], true)):
         ?>
-        <div class="position-fixed d-flex gap-2" style="bottom:2rem;right:2rem;z-index:1050;">
+        <div class="sp-floating-actions d-flex gap-2">
             <a href="<?= site_url('chat') ?>"
                class="d-flex align-items-center gap-2 btn btn-success shadow-lg px-4 py-3"
                style="border-radius:2.5rem;font-size:1rem;"
