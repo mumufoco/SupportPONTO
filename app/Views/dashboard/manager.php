@@ -33,6 +33,7 @@ function mgTrend(string $t): string {
 
 <!-- ════════════ KPIs ════════════ -->
 <?php if (!empty($kpis)): ?>
+<div class="db-section-label"><i class="bi bi-people-fill"></i>Minha equipe &mdash; RH &amp; Controle de Ponto</div>
 <div class="db-kpi-grid mb-4" role="list" aria-label="Indicadores">
     <?php foreach ($kpis as $kpi):
         $mod  = mgKpiMod($kpi['iconColor'] ?? '');
@@ -59,6 +60,8 @@ function mgTrend(string $t): string {
 
     <!-- Coluna principal -->
     <div class="col-12 col-xl-8 d-flex flex-column gap-4">
+
+        <div class="db-section-label mb-0"><i class="bi bi-clipboard-check-fill"></i>Pendências</div>
 
         <!-- Justificativas pendentes -->
         <section class="card" aria-labelledby="pending-heading">
@@ -116,6 +119,8 @@ function mgTrend(string $t): string {
                 <?php endif; ?>
             </div>
         </section>
+
+        <div class="db-section-label mb-0"><i class="bi bi-activity"></i>Auditoria &mdash; Atividade da equipe</div>
 
         <!-- Atividade recente da equipe -->
         <section class="card" aria-labelledby="activity-heading">

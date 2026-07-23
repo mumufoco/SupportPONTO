@@ -5,22 +5,9 @@
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= sp_safe_url(asset_url('css/pages/dashboard.css')) ?>">
 <style>
-.sp-section-label{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sp-text-muted,#888);margin-bottom:.5rem;padding-left:.1rem}
-.sp-kpi-card{border:1px solid var(--sp-border,rgba(0,0,0,.08))!important;transition:transform .15s,box-shadow .15s}
-.sp-kpi-card:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)!important;transform:translateY(-1px)}
-.sp-kpi-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
-.sp-kpi-value{font-size:1.7rem;font-weight:700;line-height:1.1;color:var(--sp-text-primary,#1a1a1a)}
-.sp-kpi-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--sp-text-muted,#888);margin-top:.15rem;font-weight:600}
-.sp-kpi-desc{font-size:.7rem;color:var(--sp-text-muted,#999);margin-top:.2rem}
-.sp-kpi-sec-card{border:1px solid var(--sp-border,rgba(0,0,0,.08))!important}
-.sp-kpi-sec-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem}
-.sp-kpi-sec-value{font-size:1.3rem;font-weight:700;line-height:1.1;color:var(--sp-text-primary,#1a1a1a)}
-#health-band .card{border-left-width:3px!important}
-#health-band .card-body{padding:.75rem 1.1rem!important}
-
 /* ══ Comando / hero ══════════════════════════════════════════════════ */
 .sp-cmd-hero{
-    position:relative;overflow:hidden;border-radius:16px;margin-bottom:1.1rem;
+    position:relative;overflow:hidden;border-radius:16px;margin-bottom:1.25rem;
     background:linear-gradient(135deg,var(--sp-bg-surface,#161a22) 0%,var(--sp-bg-page,#0e1116) 100%);
     border:1px solid var(--sp-border,rgba(255,255,255,.08));
     padding:1.4rem 1.6rem;
@@ -40,19 +27,48 @@
 .sp-cmd-hero__status-dot{width:.55rem;height:.55rem;border-radius:50%;flex-shrink:0}
 .sp-cmd-hero__status-text{font-size:.78rem;font-weight:600;color:var(--sp-text-primary)}
 
-/* ══ Tira de atenção rápida ══════════════════════════════════════════ */
-.sp-attn-strip{display:flex;flex-wrap:wrap;gap:.65rem;margin-bottom:1.3rem}
-.sp-attn-chip{
-    display:flex;align-items:center;gap:.65rem;padding:.65rem 1rem;border-radius:12px;flex:1 1 200px;min-width:200px;
-    background:var(--sp-bg-surface,#161a22);border:1px solid var(--sp-border,rgba(255,255,255,.08));
-    text-decoration:none;transition:transform .15s,box-shadow .15s;cursor:pointer;
+/* ══ Categoria (agrupamento tematico de indicadores) ═══════════════════ */
+/* Component tokens por categoria — cada uma referencia as mesmas variaveis
+   semanticas (--sp-*) só trocando o par bg/color, nada de hex novo solto. */
+.sp-cat{ margin-bottom:1.75rem; }
+.sp-cat__head{ display:flex; align-items:center; gap:.75rem; margin-bottom:.85rem; }
+.sp-cat__icon{
+    width:2.4rem;height:2.4rem;border-radius:.65rem;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:1.05rem;
 }
-.sp-attn-chip:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);text-decoration:none}
-.sp-attn-chip__icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-.sp-attn-chip__value{font-size:1.25rem;font-weight:800;line-height:1;color:var(--sp-text-primary)}
-.sp-attn-chip__label{font-size:.72rem;color:var(--sp-text-muted);font-weight:600;margin-top:.1rem}
-.sp-attn-chip.is-idle{opacity:.65}
-.sp-attn-chip.is-idle:hover{transform:none;box-shadow:none}
+.sp-cat__title{ font-size:1rem; font-weight:700; color:var(--sp-text-primary); margin:0; line-height:1.2 }
+.sp-cat__desc{ font-size:.76rem; color:var(--sp-text-muted); margin:.1rem 0 0 }
+.sp-cat__badge{
+    margin-left:auto; font-size:.72rem; font-weight:700; padding:.3rem .65rem; border-radius:999px;
+    flex-shrink:0; white-space:nowrap;
+}
+.sp-cat--rh        .sp-cat__icon{ background:var(--sp-info-light);    color:var(--sp-info) }
+.sp-cat--ponto      .sp-cat__icon{ background:var(--sp-primary-light); color:var(--sp-primary) }
+.sp-cat--pendencias .sp-cat__icon{ background:var(--sp-warning-light); color:var(--sp-warning) }
+.sp-cat--compliance .sp-cat__icon{ background:rgba(139,92,246,.15);    color:#8b5cf6 }
+.sp-cat--auditoria  .sp-cat__icon{ background:rgba(91,115,232,.15);    color:var(--sp-info) }
+.sp-cat--metricas   .sp-cat__icon{ background:var(--sp-gray-200);      color:var(--sp-text-secondary) }
+
+/* KPI card — mesmo componente pra todas as categorias */
+.sp-kpi-card{border:1px solid var(--sp-border,rgba(0,0,0,.08))!important;transition:transform .15s,box-shadow .15s}
+.sp-kpi-card:hover{box-shadow:0 6px 18px rgba(0,0,0,.1)!important;transform:translateY(-1px)}
+.sp-kpi-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
+.sp-kpi-value{font-size:1.55rem;font-weight:700;line-height:1.1;color:var(--sp-text-primary,#1a1a1a)}
+.sp-kpi-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--sp-text-muted,#888);margin-top:.15rem;font-weight:600}
+.sp-kpi-desc{font-size:.7rem;color:var(--sp-text-muted,#999);margin-top:.2rem}
+
+/* Cartao de status de compliance (NSR / PIS) */
+.sp-compliance-card{ border:1px solid var(--sp-border) !important; height:100% }
+.sp-compliance-card__row{ display:flex; align-items:flex-start; gap:.75rem; padding:.9rem 1rem }
+.sp-compliance-card__icon{ width:2.2rem;height:2.2rem;border-radius:.6rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem }
+.sp-compliance-card__title{ font-size:.85rem; font-weight:700; color:var(--sp-text-primary); margin:0 }
+.sp-compliance-card__desc{ font-size:.76rem; color:var(--sp-text-muted); margin:.15rem 0 0 }
+.sp-compliance-status--ok{ background:var(--sp-success-light); color:var(--sp-success) }
+.sp-compliance-status--warning{ background:var(--sp-warning-light); color:var(--sp-warning) }
+.sp-compliance-status--error{ background:var(--sp-danger-light); color:var(--sp-danger) }
+
+#health-band .card{border-left-width:3px!important}
+#health-band .card-body{padding:.75rem 1.1rem!important}
 </style>
 <?= $this->endSection() ?>
 
@@ -61,12 +77,6 @@
 
 <?php
 $dashboardPresentation        = is_array($dashboardPresentation ?? null)                          ? $dashboardPresentation                          : [];
-$pageHeader                   = is_array($dashboardPresentation['pageHeader'] ?? null)            ? $dashboardPresentation['pageHeader']            : [];
-$primaryStats                 = is_array($dashboardPresentation['primaryStats'] ?? null)          ? $dashboardPresentation['primaryStats']          : [];
-$secondaryStats               = is_array($dashboardPresentation['secondaryStats'] ?? null)        ? $dashboardPresentation['secondaryStats']        : [];
-$hubPresentation              = is_array($dashboardPresentation['hub'] ?? null)                   ? $dashboardPresentation['hub']                   : [];
-$adminActionCards             = is_array($hubPresentation['cards'] ?? null)                       ? $hubPresentation['cards']                       : [];
-$navigationGuideItems         = is_array(($dashboardPresentation['navigationGuide'] ?? [])['items'] ?? null) ? $dashboardPresentation['navigationGuide']['items'] : [];
 $pendingJustificationsView    = is_array($dashboardPresentation['pendingJustifications'] ?? null) ? $dashboardPresentation['pendingJustifications'] : [];
 $pendingJustificationRows     = is_array($pendingJustificationsView['rows'] ?? null)              ? $pendingJustificationsView['rows']              : [];
 $pendingJustificationCount    = (int) ($pendingJustificationsView['count'] ?? 0);
@@ -83,11 +93,13 @@ $missingText                  = lang('DashboardAdmin.common.missingText');
 $missingInitial               = lang('DashboardAdmin.common.missingInitial');
 $defaultPendingStatusLabel    = lang('DashboardAdmin.common.pending');
 
-// BAIXO-05 (auditoria): estatísticas de método de ponto, resumo de justificativas e
-// pontos pendentes agora são calculados em DashboardAdminService (query builder
-// parametrizado) e chegam prontos como $_methodLabels, $_statsJson, $_justSummary,
-// $_situationLabels, $_punchTypeLabels, $_pendingPunches, $_pendingPunchCount — antes
-// viviam como SQL bruto interpolado direto nesta view.
+// Estatisticas cruas (DashboardAdminService::statistics()) — usadas direto aqui em
+// vez de reindexar as listas primaryStats/secondaryStats do presenter, pra deixar
+// explicito qual numero alimenta qual card em cada categoria.
+$statistics = is_array($statistics ?? null) ? $statistics : [];
+$compliance = is_array($compliance ?? null) ? $compliance : [];
+$nsrHealth  = is_array($compliance['nsr_health'] ?? null) ? $compliance['nsr_health'] : ['status' => 'error', 'message' => 'Indisponível'];
+$employeesWithoutPis = (int) ($compliance['employees_without_pis'] ?? 0);
 
 // Saudação + status geral (calculados aqui pra dar identidade à página sem
 // precisar de nenhum dado novo do backend).
@@ -104,14 +116,11 @@ $_dataExtenso = $_diasSemana[(int) $_now->format('w')] . ', ' . (int) $_now->for
 $_hour       = (int) $_now->format('G');
 $_saudacao   = $_hour < 12 ? 'Bom dia' : ($_hour < 18 ? 'Boa tarde' : 'Boa noite');
 
-// Cadastros pendentes de aprovação -- já vinham em $pendingApprovals['employees']
-// (DashboardAdminService::pendingApprovals()) mas ficavam sem uso nesta view.
+// Cadastros pendentes de aprovação -- vem de $pendingApprovals['employees']
+// (DashboardAdminService::pendingApprovals()).
 $_pendingRegistrations      = is_array($pendingApprovals['employees'] ?? null) ? $pendingApprovals['employees'] : [];
 $_pendingRegistrationsCount = (int) ($statistics['pending_registrations'] ?? count($_pendingRegistrations));
-?>
 
-<!-- ══ Comando / boas-vindas ═══════════════════════════════════════════════ -->
-<?php
 try {
     $_health = (new \App\Services\Health\SystemHealthCheckService())->detailedHealth();
 } catch (\Throwable $_he) {
@@ -143,7 +152,35 @@ $_moduleLabels = [
     'logs'          => ['icon' => 'bi-journal-text',        'label' => 'Logs'],
     'env'           => ['icon' => 'bi-gear-fill',           'label' => 'Ambiente'],
 ];
+
+/** Renderiza um card de KPI simples (usado nas seções RH / Ponto / Compliance). */
+$kpiCard = static function (string $label, string $value, string $icon, string $bg, string $color, string $col = 'col-6 col-md-3', ?string $href = null) {
+    $tag = $href ? 'a' : 'div';
+    $hrefAttr = $href ? ' href="' . esc($href) . '"' : '';
+    echo '<div class="' . $col . '">';
+    echo "<{$tag}{$hrefAttr} class=\"card border-0 h-100 sp-kpi-card text-decoration-none\">";
+    echo '<div class="card-body d-flex align-items-center gap-3 py-3 px-3">';
+    echo '<span class="sp-kpi-icon flex-shrink-0" style="background:' . $bg . ';color:' . $color . '"><i class="' . esc($icon) . '"></i></span>';
+    echo '<div class="min-w-0 overflow-hidden">';
+    echo '<div class="sp-kpi-value">' . esc($value) . '</div>';
+    echo '<div class="sp-kpi-label">' . esc($label) . '</div>';
+    echo '</div></div>';
+    echo "</{$tag}>";
+    echo '</div>';
+};
+
+/** Cabeçalho padrão de categoria — mesmo componente nas 6 seções. */
+$catHead = static function (string $variantClass, string $icon, string $title, string $desc, ?array $badge = null) {
+    echo '<div class="sp-cat__head">';
+    echo '<span class="sp-cat__icon"><i class="' . esc($icon) . '"></i></span>';
+    echo '<div><h2 class="sp-cat__title">' . esc($title) . '</h2><p class="sp-cat__desc">' . esc($desc) . '</p></div>';
+    if ($badge !== null) {
+        echo '<span class="sp-cat__badge" style="background:' . esc($badge['bg']) . ';color:' . esc($badge['color']) . '">' . esc($badge['text']) . '</span>';
+    }
+    echo '</div>';
+};
 ?>
+<!-- ══ Comando / boas-vindas ═══════════════════════════════════════════════ -->
 <div class="sp-cmd-hero">
     <div class="sp-cmd-hero__row">
         <div>
@@ -159,607 +196,557 @@ $_moduleLabels = [
     </div>
 </div>
 
-<!-- ══ O que precisa de você agora ═══════════════════════════════════════ -->
-<div class="sp-section-label">O que precisa de você agora</div>
-<div class="sp-attn-strip">
-    <a href="#pending-justifications-section" data-dashboard-scroll-link="true"
-       class="sp-attn-chip <?= $_justSummary['pendente'] > 0 ? '' : 'is-idle' ?>">
-        <span class="sp-attn-chip__icon" style="background:rgba(245,158,11,.14);color:#b45309"><i class="bi bi-clipboard-check"></i></span>
-        <span>
-            <span class="sp-attn-chip__value"><?= (int) $_justSummary['pendente'] ?></span>
-            <span class="sp-attn-chip__label d-block">Justificativas pendentes</span>
-        </span>
-    </a>
-    <a href="#pending-punches-section" data-dashboard-scroll-link="true"
-       class="sp-attn-chip <?= $_pendingPunchCount > 0 ? '' : 'is-idle' ?>">
-        <span class="sp-attn-chip__icon" style="background:rgba(220,53,69,.14);color:#a32d2d"><i class="bi bi-clock-history"></i></span>
-        <span>
-            <span class="sp-attn-chip__value"><?= (int) $_pendingPunchCount ?></span>
-            <span class="sp-attn-chip__label d-block">Pontos p/ revisão</span>
-        </span>
-    </a>
-    <a href="<?= sp_safe_url(sp_route_url('employees.pending')) ?>"
-       class="sp-attn-chip <?= $_pendingRegistrationsCount > 0 ? '' : 'is-idle' ?>">
-        <span class="sp-attn-chip__icon" style="background:rgba(79,70,229,.14);color:#4338ca"><i class="bi bi-person-plus-fill"></i></span>
-        <span>
-            <span class="sp-attn-chip__value"><?= (int) $_pendingRegistrationsCount ?></span>
-            <span class="sp-attn-chip__label d-block">Cadastros aguardando aprovação</span>
-        </span>
-    </a>
-    <a href="#system-alerts-section" data-dashboard-scroll-link="true"
-       class="sp-attn-chip <?= $systemAlertCount > 0 ? '' : 'is-idle' ?>">
-        <span class="sp-attn-chip__icon" style="background:<?= $systemAlertCount > 0 ? 'rgba(220,53,69,.14);color:#a32d2d' : 'rgba(25,135,84,.14);color:#198754' ?>">
-            <i class="bi <?= $systemAlertCount > 0 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check' ?>"></i>
-        </span>
-        <span>
-            <span class="sp-attn-chip__value"><?= (int) $systemAlertCount ?></span>
-            <span class="sp-attn-chip__label d-block">Alertas do sistema</span>
-        </span>
-    </a>
-</div>
+<!-- ══════════════════════ 1. PENDÊNCIAS ═══════════════════════════════════ -->
+<div class="sp-cat sp-cat--pendencias" id="cat-pendencias">
+    <?php $catHead('pendencias', 'bi-clipboard-check-fill', 'Pendências', 'Tudo que está aguardando uma ação sua, num só lugar.', $pendingJustificationCount + $_pendingPunchCount + $_pendingRegistrationsCount > 0 ? ['text' => ($pendingJustificationCount + $_pendingPunchCount + $_pendingRegistrationsCount) . ' aguardando', 'bg' => 'var(--sp-warning-light)', 'color' => 'var(--sp-warning)'] : ['text' => 'Tudo em dia', 'bg' => 'var(--sp-success-light)', 'color' => 'var(--sp-success)']); ?>
 
-<!-- ══ Barra de saúde operacional ══════════════════════════════════════════ -->
-<div class="sp-section-label">Saúde do sistema</div>
-<div class="mb-3" id="health-band">
-    <div class="card border-0 shadow-sm overflow-hidden" style="border-left:4px solid <?= $_overallMeta['color'] ?> !important">
-        <div class="card-body py-3 px-4">
-            <div class="d-flex flex-wrap align-items-center gap-3">
-
-                <div class="d-flex align-items-center gap-2 me-2" style="min-width:140px">
-                    <span style="width:2.2rem;height:2.2rem;background:<?= $_overallMeta['bg'] ?>;border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <i class="bi <?= $_overallMeta['icon'] ?>" style="color:<?= $_overallMeta['color'] ?>;font-size:1rem"></i>
-                    </span>
-                    <div>
-                        <div class="fw-bold" style="font-size:.85rem;color:<?= $_overallMeta['color'] ?>">Sistema <?= esc(strtoupper($_hStatus)) ?></div>
-                        <div class="text-muted" style="font-size:.72rem"><?= $_hOk ?> ok &middot; <?= $_hWarn ?> alerta(s) &middot; <?= $_hErr ?> erro(s)</div>
-                    </div>
-                </div>
-
-                <div class="vr d-none d-md-block" style="height:2rem;opacity:.2"></div>
-
-                <div class="d-flex flex-wrap gap-2 flex-grow-1">
-                    <?php foreach ($_moduleLabels as $_mk => $_ml): ?>
-                    <?php if (!isset($_hModules[$_mk])) continue; ?>
-                    <?php
-                    $_ms    = (string)($_hModules[$_mk]['status'] ?? 'error');
-                    $_mmeta = $_statusMeta[$_ms] ?? $_statusMeta['error'];
-                    $detail = '';
-                    if (!empty($_hModules[$_mk]['details']['response_ms'])) $detail = ' · '.$_hModules[$_mk]['details']['response_ms'].'ms';
-                    elseif (!empty($_hModules[$_mk]['details']['free_mb']))  $detail = ' · '.$_hModules[$_mk]['details']['free_mb'].'MB livre';
-                    ?>
-                    <div class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill"
-                         style="background:<?= $_mmeta['bg'] ?>;border:1px solid <?= $_mmeta['color'] ?>30;font-size:.73rem;white-space:nowrap"
-                         title="<?= esc($_ml['label']) ?>: <?= esc(strtoupper($_ms)) ?><?= esc($detail) ?>">
-                        <i class="bi <?= $_ml['icon'] ?>" style="color:<?= $_mmeta['color'] ?>;font-size:.8rem"></i>
-                        <span style="font-weight:600"><?= esc($_ml['label']) ?></span>
-                        <span class="ms-1 fw-bold" style="color:<?= $_mmeta['color'] ?>"><?= esc(strtoupper($_ms)) ?></span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <a href="<?= site_url('admin/health') ?>" class="btn btn-sm btn-outline-secondary flex-shrink-0 ms-auto">
-                    <i class="bi bi-activity me-1"></i>Detalhes
-                </a>
-
-            </div>
-            <?php if (!empty($_hAlerts)): ?>
-            <div class="mt-3 pt-2 border-top d-flex flex-column gap-1">
-                <?php foreach (array_slice($_hAlerts, 0, 3) as $_alert): ?>
-                <?php $_am = $_statusMeta[$_alert['status'] ?? 'warning'] ?? $_statusMeta['warning']; ?>
-                <div class="d-flex align-items-start gap-2" style="font-size:.78rem">
-                    <i class="bi <?= $_am['icon'] ?>" style="color:<?= $_am['color'] ?>;margin-top:.1rem;flex-shrink:0"></i>
-                    <span><?= esc($_alert['message'] ?? '') ?></span>
-                </div>
-                <?php endforeach; ?>
-                <?php if (count($_hAlerts) > 3): ?>
-                <div class="mt-1" style="font-size:.75rem;color:var(--sp-text-muted)">
-                    + <?= count($_hAlerts) - 3 ?> alerta(s) adicional(is) &mdash; <a href="<?= site_url('admin/health') ?>">ver todos</a>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
-        </div>
+    <div class="row g-3 mb-3">
+        <?php $kpiCard('Justificativas pendentes', (string) $pendingJustificationCount, 'bi bi-clipboard-check', 'var(--sp-warning-light)', 'var(--sp-warning)', 'col-6 col-md-3', '#pending-justifications-section'); ?>
+        <?php $kpiCard('Pontos p/ revisão', (string) $_pendingPunchCount, 'bi bi-clock-history', 'var(--sp-danger-light)', 'var(--sp-danger)', 'col-6 col-md-3', '#pending-punches-section'); ?>
+        <?php $kpiCard('Cadastros aguardando', (string) $_pendingRegistrationsCount, 'bi bi-person-plus-fill', 'rgba(79,70,229,.14)', '#4338ca', 'col-6 col-md-3', sp_safe_url(sp_route_url('employees.pending'))); ?>
+        <?php $kpiCard('Advertências pendentes', (string) ($statistics['active_warnings'] ?? 0), 'bi bi-exclamation-triangle-fill', 'var(--sp-danger-light)', 'var(--sp-danger)', 'col-6 col-md-3'); ?>
     </div>
-</div>
-<!-- ════════════════════════════════════════════════════════════════════════ -->
 
-
-
-<!-- 1. KPIs principais -->
-<div class="sp-section-label">Força de trabalho</div>
-<div class="row g-3 mb-2" id="main-admin-content">
-<?php
-$_vmap = [
-    'primary'   => ['bg'=>'#e6f1fb','color'=>'#185fa5'],
-    'success'   => ['bg'=>'#eaf3de','color'=>'#3b6d11'],
-    'info'      => ['bg'=>'#e1f5ee','color'=>'#0f6e56'],
-    'warning'   => ['bg'=>'#faeeda','color'=>'#854f0b'],
-    'danger'    => ['bg'=>'#fcebeb','color'=>'#a32d2d'],
-    'secondary' => ['bg'=>'#f1efe8','color'=>'#5f5e5a'],
-    'dark'      => ['bg'=>'#eeedfe','color'=>'#534ab7'],
-];
-foreach ($primaryStats as $_st):
-    $_vc = $_vmap[$_st['variant'] ?? 'primary'] ?? $_vmap['primary'];
-?>
-    <div class="col-6 col-md-3">
-        <div class="card border-0 h-100 sp-kpi-card">
-            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-                <span class="sp-kpi-icon flex-shrink-0" style="background:<?= $_vc['bg'] ?>;color:<?= $_vc['color'] ?>">
-                    <i class="<?= esc($_st['icon'] ?? 'bi bi-graph-up') ?>"></i>
-                </span>
-                <div class="min-w-0 overflow-hidden">
-                    <div class="sp-kpi-value"><?= esc($_st['value'] ?? '0') ?></div>
-                    <div class="sp-kpi-label"><?= esc($_st['label'] ?? '') ?></div>
-                    <?php if (!empty($_st['description'])): ?>
-                    <div class="sp-kpi-desc text-truncate"><?= esc($_st['description']) ?></div>
+    <div class="row g-4">
+        <div class="col-12 col-xl-8" id="pending-justifications-section">
+            <section class="card h-100" aria-labelledby="admin-pending-h">
+                <div class="db-card-header">
+                    <h2 class="db-card-title" id="admin-pending-h" tabindex="-1" data-section-heading="pending-justifications-section">
+                        <i class="bi bi-clipboard-check" aria-hidden="true"></i>
+                        <?= esc(lang('DashboardAdmin.sections.pending.title')) ?>
+                    </h2>
+                    <?php if ($pendingJustificationCount > 0): ?>
+                        <span class="badge rounded-pill text-bg-warning">
+                            <?= esc(lang('DashboardAdmin.sections.pending.badge', [$pendingJustificationCount])) ?>
+                        </span>
                     <?php endif; ?>
                 </div>
-            </div>
+                <div class="card-body p-0">
+                    <?php if ($pendingJustificationRows !== []): ?>
+                        <div class="table-responsive">
+                            <table class="table table-enhanced mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.employee')) ?></th>
+                                        <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.date')) ?></th>
+                                        <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.type')) ?></th>
+                                        <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.status')) ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($pendingJustificationRows as $j): ?>
+                                        <tr>
+                                            <td>
+                                                <div class="table-cell-avatar">
+                                                    <?= view('components/employee_avatar', ['employeeId' => (int) ($j['employeeId'] ?? 0), 'initials' => $j['employeeInitial'] ?? $missingInitial, 'size' => 32]) ?>
+                                                    <span><?= esc($j['employeeName'] ?? $missingText) ?></span>
+                                                </div>
+                                            </td>
+                                            <td><?= esc($j['createdAtLabel'] ?? $missingText) ?></td>
+                                            <td><span class="table-status info"><?= esc($j['typeLabel'] ?? $missingText) ?></span></td>
+                                            <td><span class="table-status warning"><?= esc($j['statusLabel'] ?? $defaultPendingStatusLabel) ?></span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3" data-flow-external="true"
+                             data-flow-label="<?= sp_attr((string) ($pendingJustificationFooter['flowLabel'] ?? '')) ?>"
+                             data-flow-context="<?= sp_attr((string) ($pendingJustificationFooter['flowContext'] ?? '')) ?>"
+                             data-flow-return-label="<?= sp_attr((string) ($pendingJustificationFooter['returnLabel'] ?? '')) ?>">
+                            <?= view('components/admin/section_action_footer', $pendingJustificationFooter) ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="p-4">
+                            <?= view('components/empty_state', [
+                                'icon'             => 'bi bi-inbox',
+                                'title'            => lang('DashboardAdmin.sections.pending.emptyTitle'),
+                                'description'      => lang('DashboardAdmin.sections.pending.emptyDescription'),
+                                'wrapperClass'     => 'table-empty',
+                                'iconWrapperClass' => 'table-empty-icon',
+                                'titleClass'       => 'table-empty-title',
+                                'descriptionClass' => 'table-empty-description',
+                                'iconClass'        => '',
+                            ]) ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <section class="card h-100" id="justifications-summary-section" aria-labelledby="jsumm-h">
+                <div class="db-card-header">
+                    <h2 class="db-card-title" id="jsumm-h">
+                        <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>
+                        Justificativas &mdash; resumo
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <div class="text-center p-2 rounded" style="background:var(--sp-warning-light);border:1px solid transparent">
+                                <div style="font-size:1.6rem;font-weight:700;color:var(--sp-warning);line-height:1"><?= $_justSummary['pendente'] ?></div>
+                                <div style="font-size:.7rem;color:var(--sp-warning);margin-top:.2rem">Pendentes</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-2 rounded" style="background:var(--sp-success-light);border:1px solid transparent">
+                                <div style="font-size:1.6rem;font-weight:700;color:var(--sp-success);line-height:1"><?= $_justSummary['aprovada'] ?></div>
+                                <div style="font-size:.7rem;color:var(--sp-success);margin-top:.2rem">Aprovadas</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-2 rounded" style="background:var(--sp-danger-light);border:1px solid transparent">
+                                <div style="font-size:1.6rem;font-weight:700;color:var(--sp-danger);line-height:1"><?= $_justSummary['reprovada'] ?></div>
+                                <div style="font-size:.7rem;color:var(--sp-danger);margin-top:.2rem">Reprovadas</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php
+                    $_justTotal = array_sum($_justSummary);
+                    $_justPct   = $_justTotal > 0 ? round($_justSummary['aprovada'] / $_justTotal * 100) : 0;
+                    ?>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1" style="font-size:.78rem;color:var(--sp-text-muted)">
+                            <span>Taxa de aprovação</span>
+                            <strong><?= $_justPct ?>%</strong>
+                        </div>
+                        <div style="height:8px;background:var(--sp-gray-200);border-radius:4px;overflow:hidden">
+                            <div style="height:100%;width:<?= $_justPct ?>%;background:var(--sp-success);border-radius:4px;transition:width .4s"></div>
+                        </div>
+                    </div>
+
+                    <a href="<?= site_url('justifications') ?>" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-list-check me-1"></i>Ver todas as justificativas
+                    </a>
+                </div>
+            </section>
         </div>
     </div>
-<?php endforeach; ?>
+
+    <div class="row g-4 mt-1" id="pending-punches-row">
+        <div class="col-12" id="pending-punches-section">
+            <section class="card h-100" aria-labelledby="pp-h">
+                <div class="db-card-header">
+                    <h2 class="db-card-title" id="pp-h">
+                        <i class="bi bi-clock-history text-warning" aria-hidden="true"></i>
+                        Pontos Pendentes de Revisão
+                    </h2>
+                    <?php if ($_pendingPunchCount > 0): ?>
+                        <span class="badge rounded-pill text-bg-danger"><?= $_pendingPunchCount ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="card-body p-0">
+                    <?php if (!empty($_pendingPunches)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-enhanced mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Colaborador</th>
+                                        <th>Tipo</th>
+                                        <th>Data/Hora</th>
+                                        <th>Situação</th>
+                                        <th style="text-align:center">Tentativas</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($_pendingPunches as $_pp): ?>
+                                        <?php
+                                        $_ppDate = $_pp['intended_time'] ? date('d/m/Y H:i', strtotime($_pp['intended_time'])) : '-';
+                                        $_ppType = $_punchTypeLabels[$_pp['intended_punch_type']] ?? ucfirst($_pp['intended_punch_type']);
+                                        $_ppSit  = $_situationLabels[$_pp['situation_type']]     ?? ucfirst($_pp['situation_type']);
+                                        $_ppInit = mb_strtoupper(mb_substr($_pp['employee_name'] ?? '?', 0, 1));
+                                        ?>
+                                        <tr title="<?= esc($_pp['justification_text'] ?? '') ?>">
+                                            <td>
+                                                <div class="table-cell-avatar">
+                                                    <?= view('components/employee_avatar', ['employeeId' => (int) ($_pp['employee_id'] ?? 0), 'initials' => $_ppInit, 'size' => 32]) ?>
+                                                    <span><?= esc($_pp['employee_name'] ?? '-') ?></span>
+                                                </div>
+                                            </td>
+                                            <td><span class="table-status info"><?= esc($_ppType) ?></span></td>
+                                            <td><?= esc($_ppDate) ?></td>
+                                            <td><span class="table-status warning"><?= esc($_ppSit) ?></span></td>
+                                            <td style="text-align:center">
+                                                <span class="badge <?= (int)$_pp['technical_failures_count'] >= 4 ? 'text-bg-danger' : 'text-bg-secondary' ?>">
+                                                    <?= (int)$_pp['technical_failures_count'] ?>x
+                                                </span>
+                                            </td>
+                                            <td><span class="badge text-bg-warning">Pendente</span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3">
+                            <a href="<?= site_url('manager/pending-punches') ?>" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-arrow-right-circle me-1"></i>Ver todas as pendências
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-2"></i>
+                            Nenhum ponto pendente de revisão.
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </section>
+        </div>
+    </div>
 </div>
 
-<div class="row g-3 mb-4">
-<?php foreach ($secondaryStats as $_st):
-    $_vc = $_vmap[$_st['variant'] ?? 'secondary'] ?? $_vmap['secondary'];
+<!-- ══════════════════════ 2. RH ═══════════════════════════════════════════ -->
+<div class="sp-cat sp-cat--rh" id="cat-rh">
+    <?php $catHead('rh', 'bi-people-fill', 'RH', 'Quadro de colaboradores — quem está ativo, inativo e chegando.'); ?>
+    <div class="row g-3">
+        <?php $kpiCard('Total de funcionários', (string) ($statistics['total_employees'] ?? 0), 'bi bi-people-fill', 'rgba(91,115,232,.14)', 'var(--sp-info)'); ?>
+        <?php $kpiCard('Funcionários ativos', (string) ($statistics['active_employees'] ?? 0), 'bi bi-person-check-fill', 'var(--sp-success-light)', 'var(--sp-success)'); ?>
+        <?php $kpiCard('Funcionários inativos', (string) ($statistics['total_inactive'] ?? 0), 'bi bi-person-x-fill', 'var(--sp-danger-light)', 'var(--sp-danger)'); ?>
+        <?php $kpiCard('Cadastros recentes (7 dias)', (string) ($statistics['pending_registrations'] ?? 0), 'bi bi-calendar-plus', 'rgba(91,115,232,.14)', 'var(--sp-info)', 'col-6 col-md-3', site_url('employees')); ?>
+    </div>
+</div>
+
+<!-- ══════════════════════ 3. CONTROLE DE PONTO ════════════════════════════ -->
+<div class="sp-cat sp-cat--ponto" id="cat-ponto">
+    <?php $catHead('ponto', 'bi-fingerprint', 'Controle de Ponto', 'Presença de hoje e como os colaboradores estão registrando o ponto.'); ?>
+    <div class="row g-4">
+        <div class="col-12 col-lg-4">
+            <div class="row g-3 h-100">
+                <?php $kpiCard('Presentes hoje', (string) ($statistics['employees_present'] ?? 0), 'bi bi-fingerprint', 'var(--sp-warning-light)', 'var(--sp-warning)', 'col-12'); ?>
+                <?php $kpiCard('Registros hoje', (string) ($statistics['punches_today'] ?? 0), 'bi bi-clock-fill', 'var(--sp-primary-light)', 'var(--sp-primary)', 'col-12'); ?>
+                <?php $kpiCard('Registros no mês', (string) ($statistics['punches_month'] ?? 0), 'bi bi-calendar3', 'var(--sp-primary-light)', 'var(--sp-primary)', 'col-12'); ?>
+            </div>
+        </div>
+        <div class="col-12 col-lg-8">
+            <section class="card h-100 mb-0" id="punch-methods-kpi" aria-labelledby="methods-h" style="min-height:0;overflow:hidden">
+                <div class="db-card-header">
+                    <h2 class="db-card-title" id="methods-h">
+                        <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
+                        Métodos de registro
+                    </h2>
+                    <div class="d-flex gap-1 flex-wrap" id="methodFilterBtns" role="group" aria-label="Filtrar período">
+                        <button type="button" class="btn btn-sm btn-primary"          data-period="hoje">Hoje</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-period="7d">7 dias</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-period="30d">30 dias</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-period="tudo">Tudo</button>
+                    </div>
+                </div>
+                <div class="card-body" style="padding:1rem;overflow:hidden">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted" style="font-size:.78rem">Total no período:</span>
+                        <span id="methodsTotal" class="badge rounded-pill text-bg-primary" style="font-size:.78rem">0</span>
+                    </div>
+                    <div id="methodsChartWrap" style="position:relative;width:100%;height:150px;overflow:hidden">
+                        <canvas id="methodsChart" style="position:absolute;inset:0;width:100%!important;height:150px!important"
+                                aria-label="Gráfico de métodos de registro"></canvas>
+                    </div>
+                    <div id="methodsRuler" style="margin-top:.85rem;display:flex;flex-direction:column;gap:.55rem"></div>
+                    <p id="methodsEmpty" class="text-muted text-center mt-3 mb-0 d-none" style="font-size:.85rem">
+                        <i class="bi bi-inbox me-1"></i>Nenhum registro no período.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ 4. COMPLIANCE ═══════════════════════════════════ -->
+<?php
+$_nsrStatus = (string) ($nsrHealth['status'] ?? 'error');
+$_nsrMeta = [
+    'ok'      => ['class' => 'sp-compliance-status--ok',      'icon' => 'bi-check-circle-fill',        'label' => 'Contador coerente'],
+    'warning' => ['class' => 'sp-compliance-status--warning', 'icon' => 'bi-exclamation-triangle-fill', 'label' => 'Atenção'],
+    'error'   => ['class' => 'sp-compliance-status--error',   'icon' => 'bi-x-circle-fill',             'label' => 'Erro'],
+][$_nsrStatus] ?? ['class' => 'sp-compliance-status--error', 'icon' => 'bi-x-circle-fill', 'label' => 'Erro'];
+$_pisMeta = $employeesWithoutPis > 0
+    ? ['class' => 'sp-compliance-status--warning', 'icon' => 'bi-exclamation-triangle-fill']
+    : ['class' => 'sp-compliance-status--ok',      'icon' => 'bi-check-circle-fill'];
 ?>
-    <div class="col-4">
-        <div class="card border-0 sp-kpi-sec-card">
-            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
-                <span class="sp-kpi-sec-icon flex-shrink-0" style="background:<?= $_vc['bg'] ?>;color:<?= $_vc['color'] ?>">
-                    <i class="<?= esc($_st['icon'] ?? 'bi bi-graph-up') ?>"></i>
-                </span>
-                <div class="min-w-0 overflow-hidden">
-                    <div class="sp-kpi-sec-value"><?= esc($_st['value'] ?? '0') ?></div>
-                    <div class="sp-kpi-label"><?= esc($_st['label'] ?? '') ?></div>
+<div class="sp-cat sp-cat--compliance" id="cat-compliance">
+    <?php $catHead('compliance', 'bi-shield-check', 'Compliance', 'Conformidade trabalhista — NSR (Portaria MTE 671/2021) e PIS/eSocial.', $compliance['status'] === 'ok' ? ['text' => 'Regular', 'bg' => 'var(--sp-success-light)', 'color' => 'var(--sp-success)'] : ['text' => ($compliance['issues_count'] ?? 0) . ' pendência(s)', 'bg' => 'var(--sp-warning-light)', 'color' => 'var(--sp-warning)']); ?>
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <div class="card sp-compliance-card">
+                <div class="sp-compliance-card__row">
+                    <span class="sp-compliance-card__icon <?= $_nsrMeta['class'] ?>"><i class="bi <?= $_nsrMeta['icon'] ?>"></i></span>
+                    <div class="flex-grow-1">
+                        <p class="sp-compliance-card__title">Contador NSR</p>
+                        <p class="sp-compliance-card__desc"><?= esc((string) ($nsrHealth['message'] ?? 'Indisponível')) ?></p>
+                    </div>
+                </div>
+                <div class="px-3 pb-3">
+                    <a href="<?= site_url('audit/compliance') ?>" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Ver relatório de compliance
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="card sp-compliance-card">
+                <div class="sp-compliance-card__row">
+                    <span class="sp-compliance-card__icon <?= $_pisMeta['class'] ?>"><i class="bi <?= $_pisMeta['icon'] ?>"></i></span>
+                    <div class="flex-grow-1">
+                        <p class="sp-compliance-card__title"><?= $employeesWithoutPis ?> colaborador(es) sem PIS/NIS cadastrado</p>
+                        <p class="sp-compliance-card__desc">Obrigatório para o eSocial — colaboradores ativos, administrador já excluído da contagem.</p>
+                    </div>
+                </div>
+                <div class="px-3 pb-3">
+                    <a href="<?= site_url('employees') ?>?filter=no_pis" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Ver colaboradores
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-<?php endforeach; ?>
 </div>
 
-<div class="sp-section-label">Operação</div>
-<!-- 2. Pendencias + Alertas -->
-<div class="row g-4 mb-4">
-
-    <div class="col-12 col-xl-8" id="pending-justifications-section">
-        <section class="card h-100" aria-labelledby="admin-pending-h">
-            <div class="db-card-header">
-                <h2 class="db-card-title" id="admin-pending-h" tabindex="-1" data-section-heading="pending-justifications-section">
-                    <i class="bi bi-clipboard-check" aria-hidden="true"></i>
-                    <?= esc(lang('DashboardAdmin.sections.pending.title')) ?>
-                </h2>
-                <?php if ($pendingJustificationCount > 0): ?>
-                    <span class="badge rounded-pill text-bg-warning">
-                        <?= esc(lang('DashboardAdmin.sections.pending.badge', [$pendingJustificationCount])) ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-            <div class="card-body p-0">
-                <?php if ($pendingJustificationRows !== []): ?>
-                    <div class="table-responsive">
-                        <table class="table table-enhanced mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.employee')) ?></th>
-                                    <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.date')) ?></th>
-                                    <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.type')) ?></th>
-                                    <th scope="col"><?= esc(lang('DashboardAdmin.sections.pending.columns.status')) ?></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($pendingJustificationRows as $j): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="table-cell-avatar">
-                                                <?= view('components/employee_avatar', ['employeeId' => (int) ($j['employeeId'] ?? 0), 'initials' => $j['employeeInitial'] ?? $missingInitial, 'size' => 32]) ?>
-                                                <span><?= esc($j['employeeName'] ?? $missingText) ?></span>
-                                            </div>
-                                        </td>
-                                        <td><?= esc($j['createdAtLabel'] ?? $missingText) ?></td>
-                                        <td><span class="table-status info"><?= esc($j['typeLabel'] ?? $missingText) ?></span></td>
-                                        <td><span class="table-status warning"><?= esc($j['statusLabel'] ?? $defaultPendingStatusLabel) ?></span></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="p-3" data-flow-external="true"
-                         data-flow-label="<?= sp_attr((string) ($pendingJustificationFooter['flowLabel'] ?? '')) ?>"
-                         data-flow-context="<?= sp_attr((string) ($pendingJustificationFooter['flowContext'] ?? '')) ?>"
-                         data-flow-return-label="<?= sp_attr((string) ($pendingJustificationFooter['returnLabel'] ?? '')) ?>">
-                        <?= view('components/admin/section_action_footer', $pendingJustificationFooter) ?>
-                    </div>
-                <?php else: ?>
-                    <div class="p-4">
+<!-- ══════════════════════ 5. AUDITORIA ═════════════════════════════════════ -->
+<div class="sp-cat sp-cat--auditoria" id="cat-auditoria">
+    <?php $catHead('auditoria', 'bi-journal-text', 'Auditoria', 'Alertas do sistema e trilha de atividades administrativas recentes.'); ?>
+    <div class="row g-4">
+        <div class="col-12 col-xl-6" id="system-alerts-section">
+            <section class="card h-100" aria-labelledby="admin-alerts-h">
+                <div class="db-card-header">
+                    <h2 class="db-card-title" id="admin-alerts-h" tabindex="-1" data-section-heading="system-alerts-section">
+                        <i class="bi bi-exclamation-triangle warn" aria-hidden="true"></i>
+                        <?= esc(lang('DashboardAdmin.sections.alerts.title')) ?>
+                    </h2>
+                    <?php if ($systemAlertCount > 0): ?>
+                        <span class="badge rounded-pill text-bg-danger"><?= esc($systemAlertCount) ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="card-body">
+                    <?php if ($systemAlertItems !== []): ?>
+                        <?= view('components/admin/alert_stack', [
+                            'alerts'       => $systemAlertItems,
+                            'wrapperClass' => 'd-flex flex-column gap-2',
+                            'itemClass'    => 'alert d-flex align-items-start mb-0',
+                        ]) ?>
+                        <div class="mt-3" data-flow-external="true"
+                             data-flow-label="<?= sp_attr((string) ($systemAlertFooter['flowLabel'] ?? '')) ?>"
+                             data-flow-context="<?= sp_attr((string) ($systemAlertFooter['flowContext'] ?? '')) ?>"
+                             data-flow-return-label="<?= sp_attr((string) ($systemAlertFooter['returnLabel'] ?? '')) ?>">
+                            <?= view('components/admin/section_action_footer', $systemAlertFooter) ?>
+                        </div>
+                    <?php else: ?>
                         <?= view('components/empty_state', [
-                            'icon'             => 'bi bi-inbox',
-                            'title'            => lang('DashboardAdmin.sections.pending.emptyTitle'),
-                            'description'      => lang('DashboardAdmin.sections.pending.emptyDescription'),
+                            'icon'             => 'bi bi-shield-check',
+                            'title'            => lang('DashboardAdmin.sections.alerts.emptyTitle'),
+                            'description'      => lang('DashboardAdmin.sections.alerts.emptyDescription'),
                             'wrapperClass'     => 'table-empty',
                             'iconWrapperClass' => 'table-empty-icon',
                             'titleClass'       => 'table-empty-title',
                             'descriptionClass' => 'table-empty-description',
                             'iconClass'        => '',
                         ]) ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </section>
-    </div>
+                    <?php endif; ?>
+                </div>
+            </section>
+        </div>
 
-    <div class="col-12 col-xl-4" id="system-alerts-section">
-        <section class="card h-100" aria-labelledby="admin-alerts-h">
-            <div class="db-card-header">
-                <h2 class="db-card-title" id="admin-alerts-h" tabindex="-1" data-section-heading="system-alerts-section">
-                    <i class="bi bi-exclamation-triangle warn" aria-hidden="true"></i>
-                    <?= esc(lang('DashboardAdmin.sections.alerts.title')) ?>
-                </h2>
-                <?php if ($systemAlertCount > 0): ?>
-                    <span class="badge rounded-pill text-bg-danger"><?= esc($systemAlertCount) ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="card-body">
-                <?php if ($systemAlertItems !== []): ?>
-                    <?= view('components/admin/alert_stack', [
-                        'alerts'       => $systemAlertItems,
-                        'wrapperClass' => 'd-flex flex-column gap-2',
-                        'itemClass'    => 'alert d-flex align-items-start mb-0',
-                    ]) ?>
-                    <div class="mt-3" data-flow-external="true"
-                         data-flow-label="<?= sp_attr((string) ($systemAlertFooter['flowLabel'] ?? '')) ?>"
-                         data-flow-context="<?= sp_attr((string) ($systemAlertFooter['flowContext'] ?? '')) ?>"
-                         data-flow-return-label="<?= sp_attr((string) ($systemAlertFooter['returnLabel'] ?? '')) ?>">
-                        <?= view('components/admin/section_action_footer', $systemAlertFooter) ?>
-                    </div>
-                <?php else: ?>
-                    <?= view('components/empty_state', [
-                        'icon'             => 'bi bi-shield-check',
-                        'title'            => lang('DashboardAdmin.sections.alerts.emptyTitle'),
-                        'description'      => lang('DashboardAdmin.sections.alerts.emptyDescription'),
-                        'wrapperClass'     => 'table-empty',
-                        'iconWrapperClass' => 'table-empty-icon',
-                        'titleClass'       => 'table-empty-title',
-                        'descriptionClass' => 'table-empty-description',
-                        'iconClass'        => '',
-                    ]) ?>
-                <?php endif; ?>
-            </div>
-        </section>
+        <div class="col-12 col-xl-6">
+            <section class="card h-100 mb-0" id="recent-activities-section" aria-labelledby="recent-h">
+                <div class="db-card-header">
+                    <h2 class="db-card-title" id="recent-h" tabindex="-1" data-section-heading="recent-activities-section">
+                        <i class="bi bi-clock-history" aria-hidden="true"></i>
+                        <?= esc(lang('DashboardAdmin.sections.recent.title')) ?>
+                    </h2>
+                    <?php if ($recentActivityCount > 0): ?>
+                        <span class="badge rounded-pill text-bg-primary"><?= esc($recentActivityCount) ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="card-body p-0">
+                    <?php if ($recentActivityItems !== []): ?>
+                        <ul class="activity-list mb-0" role="list" style="max-height:340px;overflow-y:auto;overflow-x:hidden">
+                            <?php foreach ($recentActivityItems as $activity): ?>
+                                <li class="activity-item">
+                                    <div class="activity-icon info" aria-hidden="true"><i class="bi bi-dot"></i></div>
+                                    <div class="activity-content">
+                                        <div class="activity-title"><?= esc($activity['title'] ?? lang('DashboardAdmin.sections.recent.defaultTitle')) ?></div>
+                                        <div class="activity-description">
+                                            <?= esc(lang('DashboardAdmin.sections.recent.userPrefix')) ?>
+                                            <?= esc($activity['userLabel'] ?? lang('DashboardAdmin.sections.recent.defaultUser')) ?>
+                                        </div>
+                                        <div class="activity-time">
+                                            <i class="bi bi-clock" aria-hidden="true"></i>
+                                            <?= esc($activity['createdAtLabel'] ?? $missingText) ?>
+                                        </div>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <div class="p-3" data-flow-external="true"
+                             data-flow-label="<?= sp_attr((string) ($recentActivityFooter['flowLabel'] ?? '')) ?>"
+                             data-flow-context="<?= sp_attr((string) ($recentActivityFooter['flowContext'] ?? '')) ?>"
+                             data-flow-return-label="<?= sp_attr((string) ($recentActivityFooter['returnLabel'] ?? '')) ?>">
+                            <?= view('components/admin/section_action_footer', $recentActivityFooter) ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="p-4">
+                            <?= view('components/empty_state', [
+                                'icon'             => 'bi bi-inbox',
+                                'title'            => lang('DashboardAdmin.sections.recent.emptyTitle'),
+                                'description'      => lang('DashboardAdmin.sections.recent.emptyDescription'),
+                                'wrapperClass'     => 'table-empty',
+                                'iconWrapperClass' => 'table-empty-icon',
+                                'titleClass'       => 'table-empty-title',
+                                'descriptionClass' => 'table-empty-description',
+                                'iconClass'        => '',
+                            ]) ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 
-<!-- 2b. Pontos pendentes + Resumo justificativas -->
-<div class="row g-4 mb-4" id="pending-punches-row">
+<!-- ══════════════════════ 6. MÉTRICAS ADMINISTRATIVAS ═══════════════════════ -->
+<div class="sp-cat sp-cat--metricas" id="cat-metricas">
+    <?php $catHead('metricas', 'bi-speedometer2', 'Métricas Administrativas', 'Saúde técnica do sistema e indicadores operacionais avançados.'); ?>
 
-    <!-- Pontos pendentes de revisão -->
-    <div class="col-12 col-xl-8">
-        <section class="card h-100" id="pending-punches-section" aria-labelledby="pp-h">
-            <div class="db-card-header">
-                <h2 class="db-card-title" id="pp-h">
-                    <i class="bi bi-clock-history text-warning" aria-hidden="true"></i>
-                    Pontos Pendentes de Revisão
-                </h2>
-                <?php if ($_pendingPunchCount > 0): ?>
-                    <span class="badge rounded-pill text-bg-danger"><?= $_pendingPunchCount ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="card-body p-0">
-                <?php if (!empty($_pendingPunches)): ?>
-                    <div class="table-responsive">
-                        <table class="table table-enhanced mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Colaborador</th>
-                                    <th>Tipo</th>
-                                    <th>Data/Hora</th>
-                                    <th>Situação</th>
-                                    <th style="text-align:center">Tentativas</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($_pendingPunches as $_pp): ?>
-                                    <?php
-                                    $_ppDate = $_pp['intended_time'] ? date('d/m/Y H:i', strtotime($_pp['intended_time'])) : '-';
-                                    $_ppType = $_punchTypeLabels[$_pp['intended_punch_type']] ?? ucfirst($_pp['intended_punch_type']);
-                                    $_ppSit  = $_situationLabels[$_pp['situation_type']]     ?? ucfirst($_pp['situation_type']);
-                                    $_ppInit = mb_strtoupper(mb_substr($_pp['employee_name'] ?? '?', 0, 1));
-                                    ?>
-                                    <tr title="<?= esc($_pp['justification_text'] ?? '') ?>">
-                                        <td>
-                                            <div class="table-cell-avatar">
-                                                <?= view('components/employee_avatar', ['employeeId' => (int) ($_pp['employee_id'] ?? 0), 'initials' => $_ppInit, 'size' => 32]) ?>
-                                                <span><?= esc($_pp['employee_name'] ?? '-') ?></span>
-                                            </div>
-                                        </td>
-                                        <td><span class="table-status info"><?= esc($_ppType) ?></span></td>
-                                        <td><?= esc($_ppDate) ?></td>
-                                        <td><span class="table-status warning"><?= esc($_ppSit) ?></span></td>
-                                        <td style="text-align:center">
-                                            <span class="badge <?= (int)$_pp['technical_failures_count'] >= 4 ? 'text-bg-danger' : 'text-bg-secondary' ?>">
-                                                <?= (int)$_pp['technical_failures_count'] ?>x
-                                            </span>
-                                        </td>
-                                        <td><span class="badge text-bg-warning">Pendente</span></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="p-3">
-                        <a href="<?= site_url('manager/pending-punches') ?>" class="btn btn-sm btn-outline-warning">
-                            <i class="bi bi-arrow-right-circle me-1"></i>Ver todas as pendências
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <div class="p-4 text-center text-muted">
-                        <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-2"></i>
-                        Nenhum ponto pendente de revisão.
-                    </div>
-                <?php endif; ?>
-            </div>
-        </section>
-    </div>
-
-    <!-- Resumo de justificativas -->
-    <div class="col-12 col-xl-4">
-        <section class="card h-100" id="justifications-summary-section" aria-labelledby="jsumm-h">
-            <div class="db-card-header">
-                <h2 class="db-card-title" id="jsumm-h">
-                    <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>
-                    Justificativas
-                </h2>
-                <?php if ($_justSummary['pendente'] > 0): ?>
-                    <span class="badge rounded-pill text-bg-warning"><?= $_justSummary['pendente'] ?> pendentes</span>
-                <?php endif; ?>
-            </div>
-            <div class="card-body">
-                <!-- Status cards -->
-                <div class="row g-2 mb-3">
-                    <div class="col-4">
-                        <div class="text-center p-2 rounded" style="background:var(--sp-warning-light);border:1px solid transparent">
-                            <div style="font-size:1.6rem;font-weight:700;color:var(--sp-warning);line-height:1"><?= $_justSummary['pendente'] ?></div>
-                            <div style="font-size:.7rem;color:var(--sp-warning);margin-top:.2rem">Pendentes</div>
+    <div class="mb-3" id="health-band">
+        <div class="card border-0 shadow-sm overflow-hidden" style="border-left:4px solid <?= $_overallMeta['color'] ?> !important">
+            <div class="card-body py-3 px-4">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2 me-2" style="min-width:140px">
+                        <span style="width:2.2rem;height:2.2rem;background:<?= $_overallMeta['bg'] ?>;border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="bi <?= $_overallMeta['icon'] ?>" style="color:<?= $_overallMeta['color'] ?>;font-size:1rem"></i>
+                        </span>
+                        <div>
+                            <div class="fw-bold" style="font-size:.85rem;color:<?= $_overallMeta['color'] ?>">Sistema <?= esc(strtoupper($_hStatus)) ?></div>
+                            <div class="text-muted" style="font-size:.72rem"><?= $_hOk ?> ok &middot; <?= $_hWarn ?> alerta(s) &middot; <?= $_hErr ?> erro(s)</div>
                         </div>
                     </div>
-                    <div class="col-4">
-                        <div class="text-center p-2 rounded" style="background:var(--sp-success-light);border:1px solid transparent">
-                            <div style="font-size:1.6rem;font-weight:700;color:var(--sp-success);line-height:1"><?= $_justSummary['aprovada'] ?></div>
-                            <div style="font-size:.7rem;color:var(--sp-success);margin-top:.2rem">Aprovadas</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="text-center p-2 rounded" style="background:var(--sp-danger-light);border:1px solid transparent">
-                            <div style="font-size:1.6rem;font-weight:700;color:var(--sp-danger);line-height:1"><?= $_justSummary['reprovada'] ?></div>
-                            <div style="font-size:.7rem;color:var(--sp-danger);margin-top:.2rem">Reprovadas</div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Total bar -->
-                <?php
-                $_justTotal = array_sum($_justSummary);
-                $_justPct   = $_justTotal > 0 ? round($_justSummary['aprovada'] / $_justTotal * 100) : 0;
-                ?>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1" style="font-size:.78rem;color:var(--sp-text-muted)">
-                        <span>Taxa de aprovação</span>
-                        <strong><?= $_justPct ?>%</strong>
-                    </div>
-                    <div style="height:8px;background:var(--sp-gray-200);border-radius:4px;overflow:hidden">
-                        <div style="height:100%;width:<?= $_justPct ?>%;background:var(--sp-success);border-radius:4px;transition:width .4s"></div>
-                    </div>
-                </div>
+                    <div class="vr d-none d-md-block" style="height:2rem;opacity:.2"></div>
 
-                <!-- Pending list preview -->
-                <?php $pendingJustificationRows = $dashboardPresentation['pendingJustifications']['rows'] ?? []; ?>
-                <?php if ($_justSummary['pendente'] > 0 && $pendingJustificationRows !== []): ?>
-                    <ul class="list-unstyled mb-3" style="font-size:.82rem">
-                        <?php foreach (array_slice($pendingJustificationRows, 0, 4) as $_j): ?>
-                            <li class="d-flex align-items-center gap-2 py-1 border-bottom" style="border-color:var(--sp-border)!important">
-                                <span class="badge text-bg-warning" style="font-size:.65rem"><?= esc($_j['typeLabel'] ?? $missingText) ?></span>
-                                <span class="flex-grow-1 text-truncate"><?= esc($_j['employeeName'] ?? $missingText) ?></span>
-                                <span class="text-muted" style="font-size:.72rem;white-space:nowrap"><?= esc($_j['createdAtLabel'] ?? '') ?></span>
-                            </li>
+                    <div class="d-flex flex-wrap gap-2 flex-grow-1">
+                        <?php foreach ($_moduleLabels as $_mk => $_ml): ?>
+                        <?php if (!isset($_hModules[$_mk])) continue; ?>
+                        <?php
+                        $_ms    = (string)($_hModules[$_mk]['status'] ?? 'error');
+                        $_mmeta = $_statusMeta[$_ms] ?? $_statusMeta['error'];
+                        $detail = '';
+                        if (!empty($_hModules[$_mk]['details']['response_ms'])) $detail = ' · '.$_hModules[$_mk]['details']['response_ms'].'ms';
+                        elseif (!empty($_hModules[$_mk]['details']['free_mb']))  $detail = ' · '.$_hModules[$_mk]['details']['free_mb'].'MB livre';
+                        ?>
+                        <div class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill"
+                             style="background:<?= $_mmeta['bg'] ?>;border:1px solid <?= $_mmeta['color'] ?>30;font-size:.73rem;white-space:nowrap"
+                             title="<?= esc($_ml['label']) ?>: <?= esc(strtoupper($_ms)) ?><?= esc($detail) ?>">
+                            <i class="bi <?= $_ml['icon'] ?>" style="color:<?= $_mmeta['color'] ?>;font-size:.8rem"></i>
+                            <span style="font-weight:600"><?= esc($_ml['label']) ?></span>
+                            <span class="ms-1 fw-bold" style="color:<?= $_mmeta['color'] ?>"><?= esc(strtoupper($_ms)) ?></span>
+                        </div>
                         <?php endforeach; ?>
-                    </ul>
+                    </div>
+
+                    <a href="<?= site_url('admin/health') ?>" class="btn btn-sm btn-outline-secondary flex-shrink-0 ms-auto">
+                        <i class="bi bi-activity me-1"></i>Detalhes
+                    </a>
+                </div>
+                <?php if (!empty($_hAlerts)): ?>
+                <div class="mt-3 pt-2 border-top d-flex flex-column gap-1">
+                    <?php foreach (array_slice($_hAlerts, 0, 3) as $_alert): ?>
+                    <?php $_am = $_statusMeta[$_alert['status'] ?? 'warning'] ?? $_statusMeta['warning']; ?>
+                    <div class="d-flex align-items-start gap-2" style="font-size:.78rem">
+                        <i class="bi <?= $_am['icon'] ?>" style="color:<?= $_am['color'] ?>;margin-top:.1rem;flex-shrink:0"></i>
+                        <span><?= esc($_alert['message'] ?? '') ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                    <?php if (count($_hAlerts) > 3): ?>
+                    <div class="mt-1" style="font-size:.75rem;color:var(--sp-text-muted)">
+                        + <?= count($_hAlerts) - 3 ?> alerta(s) adicional(is) &mdash; <a href="<?= site_url('admin/health') ?>">ver todos</a>
+                    </div>
+                    <?php endif; ?>
+                </div>
                 <?php endif; ?>
-
-                <a href="<?= site_url('justifications') ?>" class="btn btn-sm btn-outline-secondary w-100">
-                    <i class="bi bi-list-check me-1"></i>Ver todas as justificativas
-                </a>
             </div>
-        </section>
+        </div>
     </div>
 
-</div><!-- /row pending-punches-row -->
+    <details class="mb-4" id="observability-details">
+        <summary class="card card-header d-flex align-items-center gap-2 mb-3" style="cursor:pointer;list-style:none;">
+            <i class="bi bi-broadcast-pin" aria-hidden="true"></i>
+            <span class="h5 mb-0"><?= esc(lang('DashboardAdmin.delivery.observabilityTitle')) ?></span>
+            <span class="ms-auto text-muted small" data-role="observability-toggle-hint">Clique para expandir</span>
+        </summary>
 
-<!-- 3. Atividades recentes + Métodos de registro -->
-<div class="row g-4 mb-4">
-
-<div class="col-12 col-lg-6">
-<section class="card h-100 mb-0" id="recent-activities-section" aria-labelledby="recent-h">
-    <div class="db-card-header">
-        <h2 class="db-card-title" id="recent-h" tabindex="-1" data-section-heading="recent-activities-section">
-            <i class="bi bi-clock-history" aria-hidden="true"></i>
-            <?= esc(lang('DashboardAdmin.sections.recent.title')) ?>
-        </h2>
-        <?php if ($recentActivityCount > 0): ?>
-            <span class="badge rounded-pill text-bg-primary"><?= esc($recentActivityCount) ?></span>
-        <?php endif; ?>
-    </div>
-    <div class="card-body p-0">
-        <?php if ($recentActivityItems !== []): ?>
-            <ul class="activity-list mb-0" role="list" style="max-height:340px;overflow-y:auto;overflow-x:hidden">
-                <?php foreach ($recentActivityItems as $activity): ?>
-                    <li class="activity-item">
-                        <div class="activity-icon info" aria-hidden="true"><i class="bi bi-dot"></i></div>
-                        <div class="activity-content">
-                            <div class="activity-title"><?= esc($activity['title'] ?? lang('DashboardAdmin.sections.recent.defaultTitle')) ?></div>
-                            <div class="activity-description">
-                                <?= esc(lang('DashboardAdmin.sections.recent.userPrefix')) ?>
-                                <?= esc($activity['userLabel'] ?? lang('DashboardAdmin.sections.recent.defaultUser')) ?>
-                            </div>
-                            <div class="activity-time">
-                                <i class="bi bi-clock" aria-hidden="true"></i>
-                                <?= esc($activity['createdAtLabel'] ?? $missingText) ?>
-                            </div>
+        <div id="dashboard-delivery-overview"
+             class="alert alert-warning d-none align-items-start gap-3 mb-4"
+             role="status" aria-live="polite">
+            <div class="fs-4 lh-1"><i class="bi bi-broadcast-pin" aria-hidden="true"></i></div>
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                    <div>
+                        <h2 class="h6 fw-semibold mb-1" id="dashboard-delivery-overview-title" data-role="delivery-overview-title">
+                            <?= esc(lang('DashboardAdmin.delivery.overviewTitle')) ?>
+                        </h2>
+                        <div class="small text-muted" data-role="delivery-overview-description">
+                            <?= esc(lang('DashboardAdmin.delivery.overviewDescriptionOk')) ?>
                         </div>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-            <div class="p-3" data-flow-external="true"
-                 data-flow-label="<?= sp_attr((string) ($recentActivityFooter['flowLabel'] ?? '')) ?>"
-                 data-flow-context="<?= sp_attr((string) ($recentActivityFooter['flowContext'] ?? '')) ?>"
-                 data-flow-return-label="<?= sp_attr((string) ($recentActivityFooter['returnLabel'] ?? '')) ?>">
-                <?= view('components/admin/section_action_footer', $recentActivityFooter) ?>
-            </div>
-        <?php else: ?>
-            <div class="p-4">
-                <?= view('components/empty_state', [
-                    'icon'             => 'bi bi-inbox',
-                    'title'            => lang('DashboardAdmin.sections.recent.emptyTitle'),
-                    'description'      => lang('DashboardAdmin.sections.recent.emptyDescription'),
-                    'wrapperClass'     => 'table-empty',
-                    'iconWrapperClass' => 'table-empty-icon',
-                    'titleClass'       => 'table-empty-title',
-                    'descriptionClass' => 'table-empty-description',
-                    'iconClass'        => '',
-                ]) ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</section>
-</div><!-- /col recent -->
-
-<!-- KPI: Métodos de registro de ponto -->
-<div class="col-12 col-lg-6">
-<section class="card mb-0" id="punch-methods-kpi" aria-labelledby="methods-h"
-         style="min-height:0;overflow:hidden">
-    <div class="db-card-header">
-        <h2 class="db-card-title" id="methods-h">
-            <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
-            Métodos de registro
-        </h2>
-        <div class="d-flex gap-1 flex-wrap" id="methodFilterBtns" role="group" aria-label="Filtrar período">
-            <button type="button" class="btn btn-sm btn-primary"          data-period="hoje">Hoje</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="7d">7 dias</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="30d">30 dias</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="tudo">Tudo</button>
-        </div>
-    </div>
-    <div class="card-body" style="padding:1rem;overflow:hidden">
-
-        <!-- total badge -->
-        <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted" style="font-size:.78rem">Total no período:</span>
-            <span id="methodsTotal" class="badge rounded-pill text-bg-primary" style="font-size:.78rem">0</span>
-        </div>
-
-        <!-- Chart: fixed 150px, non-growing -->
-        <div id="methodsChartWrap" style="position:relative;width:100%;height:150px;overflow:hidden">
-            <canvas id="methodsChart" style="position:absolute;inset:0;width:100%!important;height:150px!important"
-                    aria-label="Gráfico de métodos de registro"></canvas>
-        </div>
-
-        <!-- Ruler: horizontal progress bars -->
-        <div id="methodsRuler" style="margin-top:.85rem;display:flex;flex-direction:column;gap:.55rem"></div>
-
-        <!-- Empty state -->
-        <p id="methodsEmpty" class="text-muted text-center mt-3 mb-0 d-none" style="font-size:.85rem">
-            <i class="bi bi-inbox me-1"></i>Nenhum registro no período.
-        </p>
-    </div>
-</section>
-</div><!-- /col methods -->
-
-</div><!-- /row -->
-
-
-
-
-<!-- 5. Observabilidade -->
-<details class="mb-4" id="observability-details">
-    <summary class="card card-header d-flex align-items-center gap-2 mb-3" style="cursor:pointer;list-style:none;">
-        <i class="bi bi-broadcast-pin" aria-hidden="true"></i>
-        <span class="h5 mb-0"><?= esc(lang('DashboardAdmin.delivery.observabilityTitle')) ?></span>
-        <span class="ms-auto text-muted small" data-role="observability-toggle-hint">Clique para expandir</span>
-    </summary>
-
-    <div id="dashboard-delivery-overview"
-         class="alert alert-warning d-none align-items-start gap-3 mb-4"
-         role="status" aria-live="polite">
-        <div class="fs-4 lh-1"><i class="bi bi-broadcast-pin" aria-hidden="true"></i></div>
-        <div class="flex-grow-1">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                <div>
-                    <h2 class="h6 fw-semibold mb-1" id="dashboard-delivery-overview-title" data-role="delivery-overview-title">
-                        <?= esc(lang('DashboardAdmin.delivery.overviewTitle')) ?>
-                    </h2>
-                    <div class="small text-muted" data-role="delivery-overview-description">
-                        <?= esc(lang('DashboardAdmin.delivery.overviewDescriptionOk')) ?>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2" data-role="delivery-overview-badges">
+                        <span class="badge rounded-pill text-bg-success"><span data-role="delivery-ok-count">0</span> <?= esc(lang('DashboardAdmin.delivery.badgeOkSuffix')) ?></span>
+                        <span class="badge rounded-pill text-bg-warning"><span data-role="delivery-degraded-count">0</span> <?= esc(lang('DashboardAdmin.delivery.badgeDegradedSuffix')) ?></span>
+                        <span class="badge rounded-pill text-bg-danger"><span data-role="delivery-error-count">0</span> <?= esc(lang('DashboardAdmin.delivery.badgeErrorSuffix')) ?></span>
                     </div>
                 </div>
-                <div class="d-flex flex-wrap gap-2" data-role="delivery-overview-badges">
-                    <span class="badge rounded-pill text-bg-success"><span data-role="delivery-ok-count">0</span> <?= esc(lang('DashboardAdmin.delivery.badgeOkSuffix')) ?></span>
-                    <span class="badge rounded-pill text-bg-warning"><span data-role="delivery-degraded-count">0</span> <?= esc(lang('DashboardAdmin.delivery.badgeDegradedSuffix')) ?></span>
-                    <span class="badge rounded-pill text-bg-danger"><span data-role="delivery-error-count">0</span> <?= esc(lang('DashboardAdmin.delivery.badgeErrorSuffix')) ?></span>
+                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                    <div class="small text-muted" data-role="delivery-last-event"><?= esc(lang('DashboardAdmin.delivery.lastEventEmpty')) ?></div>
+                    <div class="btn-group btn-group-sm" role="group" data-role="delivery-filter-group">
+                        <button type="button" class="btn btn-outline-secondary active" data-delivery-filter="all" aria-pressed="true"><?= esc(lang('DashboardAdmin.delivery.filters.all')) ?></button>
+                        <button type="button" class="btn btn-outline-warning" data-delivery-filter="affected" aria-pressed="false"><?= esc(lang('DashboardAdmin.delivery.filters.affected')) ?></button>
+                        <button type="button" class="btn btn-outline-danger" data-delivery-filter="error" aria-pressed="false"><?= esc(lang('DashboardAdmin.delivery.filters.error')) ?></button>
+                        <button type="button" class="btn btn-outline-warning" data-delivery-filter="degraded" aria-pressed="false"><?= esc(lang('DashboardAdmin.delivery.filters.degraded')) ?></button>
+                    </div>
                 </div>
             </div>
-            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-                <div class="small text-muted" data-role="delivery-last-event"><?= esc(lang('DashboardAdmin.delivery.lastEventEmpty')) ?></div>
-                <div class="btn-group btn-group-sm" role="group" data-role="delivery-filter-group">
-                    <button type="button" class="btn btn-outline-secondary active" data-delivery-filter="all" aria-pressed="true"><?= esc(lang('DashboardAdmin.delivery.filters.all')) ?></button>
-                    <button type="button" class="btn btn-outline-warning" data-delivery-filter="affected" aria-pressed="false"><?= esc(lang('DashboardAdmin.delivery.filters.affected')) ?></button>
-                    <button type="button" class="btn btn-outline-danger" data-delivery-filter="error" aria-pressed="false"><?= esc(lang('DashboardAdmin.delivery.filters.error')) ?></button>
-                    <button type="button" class="btn btn-outline-warning" data-delivery-filter="degraded" aria-pressed="false"><?= esc(lang('DashboardAdmin.delivery.filters.degraded')) ?></button>
-                </div>
+            <div class="d-flex flex-column align-items-stretch gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary d-none" data-role="delivery-scroll-action">
+                    <i class="bi bi-arrow-down-right-circle me-1" aria-hidden="true"></i><?= esc(lang('DashboardAdmin.delivery.scrollAction')) ?>
+                </button>
+                <div class="small text-end text-muted d-none" data-role="delivery-filter-hint"></div>
             </div>
         </div>
-        <div class="d-flex flex-column align-items-stretch gap-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary d-none" data-role="delivery-scroll-action">
-                <i class="bi bi-arrow-down-right-circle me-1" aria-hidden="true"></i><?= esc(lang('DashboardAdmin.delivery.scrollAction')) ?>
-            </button>
-            <div class="small text-end text-muted d-none" data-role="delivery-filter-hint"></div>
-        </div>
-    </div>
 
-    <section id="observability-widgets-region">
-        <div class="row g-3 mb-4">
-            <div class="col-12" data-widget-shell="system-incident">
-                <?= view('dashboard/partials/admin_system_incident_widget', ['systemIncidentObservability' => $systemIncidentObservability ?? []]) ?>
+        <section id="observability-widgets-region">
+            <div class="row g-3 mb-4">
+                <div class="col-12" data-widget-shell="system-incident">
+                    <?= view('dashboard/partials/admin_system_incident_widget', ['systemIncidentObservability' => $systemIncidentObservability ?? []]) ?>
+                </div>
             </div>
-        </div>
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-xxl-6" data-widget-shell="database">
-                <?= view('dashboard/partials/admin_database_observability_widget', ['dbObservability' => $dbObservability ?? []]) ?>
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-xxl-6" data-widget-shell="database">
+                    <?= view('dashboard/partials/admin_database_observability_widget', ['dbObservability' => $dbObservability ?? []]) ?>
+                </div>
+                <div class="col-12 col-xxl-6" data-widget-shell="deepface">
+                    <?= view('dashboard/partials/admin_deepface_observability_widget', ['deepFaceObservability' => $deepFaceObservability ?? []]) ?>
+                </div>
             </div>
-            <div class="col-12 col-xxl-6" data-widget-shell="deepface">
-                <?= view('dashboard/partials/admin_deepface_observability_widget', ['deepFaceObservability' => $deepFaceObservability ?? []]) ?>
+            <div class="row g-3">
+                <div class="col-12 col-xl-6" data-widget-shell="settings-cache">
+                    <?= view('dashboard/partials/admin_settings_cache_widget', ['settingsCacheObservability' => $settingsCacheObservability ?? []]) ?>
+                </div>
+                <div class="col-12 col-xl-6" data-widget-shell="performance-index">
+                    <?= view('dashboard/partials/admin_performance_index_widget', ['performanceIndexObservability' => $performanceIndexObservability ?? []]) ?>
+                </div>
+                <div class="col-12 col-xl-6" data-widget-shell="report-performance">
+                    <?= view('dashboard/partials/admin_report_performance_widget', ['reportPerformanceObservability' => $reportPerformanceObservability ?? []]) ?>
+                </div>
+                <div class="col-12 col-xl-6" data-widget-shell="rate-limit">
+                    <?= view('dashboard/partials/admin_rate_limit_widget', ['rateLimitObservability' => $rateLimitObservability ?? []]) ?>
+                </div>
+                <div class="col-12 col-xl-6" data-widget-shell="feature-flags">
+                    <?= view('dashboard/partials/admin_feature_flags_widget', ['featureFlagsObservability' => $featureFlagsObservability ?? []]) ?>
+                </div>
             </div>
-        </div>
-        <div class="row g-3">
-            <div class="col-12 col-xl-6" data-widget-shell="settings-cache">
-                <?= view('dashboard/partials/admin_settings_cache_widget', ['settingsCacheObservability' => $settingsCacheObservability ?? []]) ?>
-            </div>
-            <div class="col-12 col-xl-6" data-widget-shell="performance-index">
-                <?= view('dashboard/partials/admin_performance_index_widget', ['performanceIndexObservability' => $performanceIndexObservability ?? []]) ?>
-            </div>
-            <div class="col-12 col-xl-6" data-widget-shell="report-performance">
-                <?= view('dashboard/partials/admin_report_performance_widget', ['reportPerformanceObservability' => $reportPerformanceObservability ?? []]) ?>
-            </div>
-            <div class="col-12 col-xl-6" data-widget-shell="rate-limit">
-                <?= view('dashboard/partials/admin_rate_limit_widget', ['rateLimitObservability' => $rateLimitObservability ?? []]) ?>
-            </div>
-            <div class="col-12 col-xl-6" data-widget-shell="feature-flags">
-                <?= view('dashboard/partials/admin_feature_flags_widget', ['featureFlagsObservability' => $featureFlagsObservability ?? []]) ?>
-            </div>
-        </div>
-    </section>
-</details>
+        </section>
+    </details>
+</div>
 
 <?= $this->endSection() ?>
 
@@ -925,7 +912,6 @@ foreach ($primaryStats as $_st):
         wrap.style.display = '';
         emptyEl.classList.add('d-none');
 
-        /* ── Bar chart (fixed 150 px, no growth) ── */
         const labels = data.map(d => d.label);
         const counts = data.map(d => d.count);
 
@@ -933,7 +919,7 @@ foreach ($primaryStats as $_st):
             chartInst.data.labels                        = labels;
             chartInst.data.datasets[0].data              = counts;
             chartInst.data.datasets[0].backgroundColor   = colors;
-            chartInst.update('none'); /* skip animation on filter switch */
+            chartInst.update('none');
         } else {
             chartInst = new Chart(canvas, {
                 type: 'bar',
@@ -949,7 +935,7 @@ foreach ($primaryStats as $_st):
                     }]
                 },
                 options: {
-                    responsive: false,           /* fixed size — prevents growth loop */
+                    responsive: false,
                     animation: { duration: 300 },
                     plugins: {
                         legend: { display: false },
@@ -975,12 +961,10 @@ foreach ($primaryStats as $_st):
                     }
                 }
             });
-            /* force fixed pixel size after create */
             canvas.width  = wrap.offsetWidth  || 300;
             canvas.height = 150;
         }
 
-        /* ── Horizontal ruler bars ── */
         ruler.innerHTML = data.map((d, i) => {
             const pct  = total > 0 ? Math.round(d.count / total * 100) : 0;
             const icon = METHOD_ICONS[d.method] || 'bi-dot';
@@ -1011,7 +995,6 @@ foreach ($primaryStats as $_st):
         });
     });
 
-    /* init after layout is stable */
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => render(activePeriod));
     } else {

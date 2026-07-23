@@ -1,5 +1,9 @@
 ﻿<?= $this->extend('layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="<?= sp_safe_url(asset_url('css/pages/dashboard.css')) ?>">
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 <?php
 $dashboardPresentation = is_array($dashboardPresentation ?? null) ? $dashboardPresentation : [];
@@ -21,6 +25,7 @@ $notifications        = is_array($notificationsSection['items'] ?? null)        
 
     <!-- KPIs -->
     <?php if (!empty($kpis)): ?>
+    <div class="db-section-label"><i class="bi bi-shield-check"></i>Compliance &amp; Auditoria</div>
     <div class="sp-kpi-grid mb-4">
         <?php foreach ($kpis as $kpi): ?>
             <?= view('components/kpi', $kpi) ?>
@@ -52,6 +57,7 @@ $notifications        = is_array($notificationsSection['items'] ?? null)        
     <?php endif; ?>
 
     <!-- Alertas recentes -->
+    <div class="db-section-label"><i class="bi bi-bell-fill"></i>Auditoria &mdash; Alertas recentes</div>
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0">

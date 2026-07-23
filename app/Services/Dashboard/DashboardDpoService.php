@@ -4,6 +4,7 @@ namespace App\Services\Dashboard;
 
 use App\Models\AuditModel;
 use App\Models\NotificationModel;
+use App\Services\Timesheet\NsrComplianceService;
 
 class DashboardDpoService
 {
@@ -71,10 +72,23 @@ class DashboardDpoService
             ->where('created_at >=', date('Y-m-d H:i:s', strtotime('-24 hours')))
             ->countAllResults();
 
+        $employeesWithoutPis = db_connect()->table('employees')
+            ->where('role !=', 'admin')
+            ->groupStart()->where('pis IS NULL')->orWhere('pis', '')->groupEnd()
+            ->countAllResults();
+
+        try {
+            $nsrOk = (NsrComplianceService::createDefault()->counterHealth()['status'] ?? 'error') === 'ok';
+        } catch (\Throwable $e) {
+            $nsrOk = false;
+        }
+
         return [
             ['icon' => 'bi bi-shield-exclamation', 'iconColor' => 'danger', 'value' => (string) $critical24h, 'label' => 'Eventos críticos (24h)', 'classes' => 'grid-col-3'],
             ['icon' => 'bi bi-journal-text', 'iconColor' => 'primary', 'value' => (string) $audit24h, 'label' => 'Logs de auditoria (24h)', 'classes' => 'grid-col-3'],
             ['icon' => 'bi bi-download', 'iconColor' => 'warning', 'value' => (string) $exports24h, 'label' => 'Relatórios/exportações (24h)', 'classes' => 'grid-col-3'],
+            ['icon' => $nsrOk ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill', 'iconColor' => $nsrOk ? 'success' : 'danger', 'value' => $nsrOk ? 'OK' : 'Atenção', 'label' => 'Contador NSR (MTE 671/2021)', 'classes' => 'grid-col-3'],
+            ['icon' => 'bi bi-card-text', 'iconColor' => $employeesWithoutPis > 0 ? 'warning' : 'success', 'value' => (string) $employeesWithoutPis, 'label' => 'Colaboradores sem PIS/NIS', 'classes' => 'grid-col-3'],
         ];
     }
 

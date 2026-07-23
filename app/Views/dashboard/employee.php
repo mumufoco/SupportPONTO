@@ -70,6 +70,7 @@ function dbTrendMod(string $type): string {
 
 <!-- ════════════ KPIs ════════════ -->
 <?php if (!empty($kpis)): ?>
+<div class="db-section-label"><i class="bi bi-speedometer2"></i>Meus indicadores &mdash; Ponto &amp; Pendências</div>
 <div class="db-kpi-grid" role="list" aria-label="Indicadores de desempenho">
     <?php foreach ($kpis as $kpi):
         $mod      = dbKpiMod($kpi['iconColor'] ?? '');
@@ -98,6 +99,7 @@ function dbTrendMod(string $type): string {
 
 <!-- ════════════ ATALHOS ════════════ -->
 <?php if (!empty($shortcuts)): ?>
+<div class="db-section-label"><i class="bi bi-grid-fill"></i>Métricas administrativas &mdash; Acessos rápidos</div>
 <section class="card" aria-labelledby="shortcuts-heading">
     <div class="db-card-header">
         <h2 class="db-card-title" id="shortcuts-heading">

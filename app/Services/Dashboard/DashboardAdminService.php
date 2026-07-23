@@ -5,6 +5,7 @@ namespace App\Services\Dashboard;
 use App\Models\AuditModel;
 use App\Models\PendingPunchModel;
 use App\Services\Dashboard\Presenters\AdminDashboardViewPresenter;
+use App\Services\Timesheet\NsrComplianceService;
 use App\Support\Dates\DashboardDateRange;
 use App\Models\EmployeeModel;
 use App\Models\JustificationModel;
@@ -99,6 +100,7 @@ class DashboardAdminService
             '_punchTypeLabels' => self::PENDING_PUNCH_TYPE_LABELS,
             '_pendingPunches' => $this->pendingPunchesForDashboard(),
             '_pendingPunchCount' => $this->pendingPunchModel->where('status', 'pending')->countAllResults(),
+            'compliance' => $this->complianceSummary(),
         ];
 
         $viewData['dashboardPresentation'] = $this->dashboardViewPresenter->present($viewData);
@@ -291,6 +293,47 @@ class DashboardAdminService
             ->where('punch_time <', $tomorrowStart)
             ->where('punch_type', 'entrada')
             ->countAllResults();
+    }
+
+    /**
+     * Resumo leve de compliance para o dashboard — reaproveita
+     * NsrComplianceService::counterHealth() (uma leitura + um MAX agregado, barato o
+     * bastante pra rodar a cada carregamento do painel) e conta PIS pendente com o
+     * mesmo critério (role != admin) já usado em AuditComplianceService. Não chama
+     * AuditComplianceService::complianceSummary() aqui de propósito — aquele método
+     * varre uma amostra de hashes de ponto e verifica a cadeia de auditoria, caro
+     * demais para rodar em toda visita ao dashboard; fica reservado para a página
+     * dedicada /audit/compliance.
+     */
+    private function complianceSummary(): array
+    {
+        $db = \Config\Database::connect();
+
+        $employeesWithoutPis = $db->table('employees')
+            ->where('role !=', 'admin')
+            ->groupStart()->where('pis IS NULL')->orWhere('pis', '')->groupEnd()
+            ->countAllResults();
+
+        try {
+            $nsrHealth = NsrComplianceService::createDefault()->counterHealth();
+        } catch (\Throwable $e) {
+            $nsrHealth = ['status' => 'error', 'message' => 'Não foi possível verificar o contador NSR.'];
+        }
+
+        $issues = 0;
+        if (($nsrHealth['status'] ?? 'error') !== 'ok') {
+            $issues++;
+        }
+        if ($employeesWithoutPis > 0) {
+            $issues++;
+        }
+
+        return [
+            'employees_without_pis' => $employeesWithoutPis,
+            'nsr_health' => $nsrHealth,
+            'issues_count' => $issues,
+            'status' => $issues > 0 ? 'warning' : 'ok',
+        ];
     }
 
     private function userValue(object|array|null $user, string $key, mixed $default = null): mixed
