@@ -3,6 +3,7 @@ $employee = $employee ?? null;
 $value = static fn(string $field, $default = '') => old($field, $employee->{$field} ?? $default);
 $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 $possuiCnh = (bool) old('possui_cnh', $employee->possui_cnh ?? false);
+$possuiCtpsFisica = (bool) old('possui_ctps_fisica', $employee->possui_ctps_fisica ?? false);
 ?>
 <div class="row g-3">
 
@@ -100,37 +101,55 @@ $possuiCnh = (bool) old('possui_cnh', $employee->possui_cnh ?? false);
         </div>
     </div>
 
-    <!-- CTPS Digital -->
+    <!-- CTPS Digital / CTPS física -->
     <div class="col-12">
-        <div class="sp-form-divider"><i class="bi bi-journal-bookmark-fill me-1 text-primary"></i>CTPS Digital</div>
+        <div class="sp-form-divider"><i class="bi bi-journal-bookmark-fill me-1 text-primary"></i>CTPS Digital / CTPS física</div>
         <p class="text-muted small mb-0">
-            Preenchimento manual por enquanto — o governo não oferece hoje uma API pública
-            para consulta automática da Carteira de Trabalho Digital por sistemas de terceiros.
+            Desde 2019 a CTPS Digital dispensa carteira física para a maioria dos admitidos —
+            o vínculo é feito só por CPF. Só peça número/série de quem realmente tem a
+            carteira de trabalho física (o livrinho de papel).
         </p>
     </div>
-    <div class="col-6 col-md-2">
-        <label for="ctps_numero" class="form-label">CTPS número *</label>
-        <input type="text" id="ctps_numero" name="ctps_numero" class="form-control"
-               value="<?= esc($value('ctps_numero')) ?>" required maxlength="15">
+    <div class="col-12">
+        <label class="sp-toggle-card <?= $possuiCtpsFisica ? 'is-on' : '' ?>" id="cardPossuiCtpsFisica" for="possui_ctps_fisica">
+            <div class="sp-toggle-card__icon text-primary"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div class="sp-toggle-card__body">
+                <div class="sp-toggle-card__title">
+                    Possui CTPS física (carteira impressa)?
+                    <span class="sp-toggle-pill" id="pillPossuiCtpsFisica"></span>
+                </div>
+                <div class="sp-toggle-card__desc">Marque apenas se o colaborador tem carteira de trabalho física com número e série.</div>
+            </div>
+            <input class="form-check-input" type="checkbox" id="possui_ctps_fisica" name="possui_ctps_fisica" value="1" <?= $possuiCtpsFisica ? 'checked' : '' ?>>
+        </label>
     </div>
-    <div class="col-4 col-md-2">
-        <label for="ctps_serie" class="form-label">Série *</label>
-        <input type="text" id="ctps_serie" name="ctps_serie" class="form-control"
-               value="<?= esc($value('ctps_serie')) ?>" required maxlength="10">
-    </div>
-    <div class="col-4 col-md-1">
-        <label for="ctps_uf" class="form-label">UF *</label>
-        <select id="ctps_uf" name="ctps_uf" class="form-select" required>
-            <option value="">—</option>
-            <?php foreach ($states as $st): ?>
-                <option value="<?= esc($st) ?>" <?= (string) $value('ctps_uf') === $st ? 'selected' : '' ?>><?= esc($st) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="col-6 col-md-3">
-        <label for="ctps_data_emissao" class="form-label">Emissão CTPS *</label>
-        <input type="date" id="ctps_data_emissao" name="ctps_data_emissao" class="form-control"
-               value="<?= esc($value('ctps_data_emissao')) ?>" required>
+    <div class="col-12" id="ctpsFieldsWrap" style="<?= $possuiCtpsFisica ? '' : 'display:none' ?>">
+        <div class="row g-3 mt-1">
+            <div class="col-6 col-md-2">
+                <label for="ctps_numero" class="form-label">CTPS número</label>
+                <input type="text" id="ctps_numero" name="ctps_numero" class="form-control ctps-field"
+                       value="<?= esc($value('ctps_numero')) ?>" maxlength="15" <?= $possuiCtpsFisica ? '' : 'disabled' ?>>
+            </div>
+            <div class="col-4 col-md-2">
+                <label for="ctps_serie" class="form-label">Série</label>
+                <input type="text" id="ctps_serie" name="ctps_serie" class="form-control ctps-field"
+                       value="<?= esc($value('ctps_serie')) ?>" maxlength="10" <?= $possuiCtpsFisica ? '' : 'disabled' ?>>
+            </div>
+            <div class="col-4 col-md-1">
+                <label for="ctps_uf" class="form-label">UF</label>
+                <select id="ctps_uf" name="ctps_uf" class="form-select ctps-field" <?= $possuiCtpsFisica ? '' : 'disabled' ?>>
+                    <option value="">—</option>
+                    <?php foreach ($states as $st): ?>
+                        <option value="<?= esc($st) ?>" <?= (string) $value('ctps_uf') === $st ? 'selected' : '' ?>><?= esc($st) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="ctps_data_emissao" class="form-label">Emissão CTPS</label>
+                <input type="date" id="ctps_data_emissao" name="ctps_data_emissao" class="form-control ctps-field"
+                       value="<?= esc($value('ctps_data_emissao')) ?>" <?= $possuiCtpsFisica ? '' : 'disabled' ?>>
+            </div>
+        </div>
     </div>
 
     <!-- Dados Gerais -->
@@ -165,30 +184,35 @@ $possuiCnh = (bool) old('possui_cnh', $employee->possui_cnh ?? false);
 
 <script <?= csp_script_nonce_attr() ?>>
 (function () {
-    var cb = document.getElementById('possui_cnh');
-    var card = cb ? cb.closest('.sp-toggle-card') : null;
-    var wrap = document.getElementById('cnhFieldsWrap');
-    var fields = document.querySelectorAll('.cnh-field');
+    function bindToggle(checkboxId, wrapId, fieldClass) {
+        var cb = document.getElementById(checkboxId);
+        var card = cb ? cb.closest('.sp-toggle-card') : null;
+        var wrap = document.getElementById(wrapId);
+        var fields = document.querySelectorAll('.' + fieldClass);
 
-    function applyCnhState(checked) {
-        if (wrap) wrap.style.display = checked ? '' : 'none';
-        fields.forEach(function (el) {
-            el.disabled = !checked;
-            el.required = checked;
-        });
-        if (card) card.classList.toggle('is-on', checked);
-    }
-
-    if (cb) {
-        applyCnhState(cb.checked);
-        cb.addEventListener('change', function () { applyCnhState(this.checked); });
-        if (card) {
-            card.addEventListener('click', function (e) {
-                if (e.target === cb) return;
-                cb.checked = !cb.checked;
-                cb.dispatchEvent(new Event('change'));
+        function apply(checked) {
+            if (wrap) wrap.style.display = checked ? '' : 'none';
+            fields.forEach(function (el) {
+                el.disabled = !checked;
+                el.required = checked;
             });
+            if (card) card.classList.toggle('is-on', checked);
+        }
+
+        if (cb) {
+            apply(cb.checked);
+            cb.addEventListener('change', function () { apply(this.checked); });
+            if (card) {
+                card.addEventListener('click', function (e) {
+                    if (e.target === cb) return;
+                    cb.checked = !cb.checked;
+                    cb.dispatchEvent(new Event('change'));
+                });
+            }
         }
     }
+
+    bindToggle('possui_cnh', 'cnhFieldsWrap', 'cnh-field');
+    bindToggle('possui_ctps_fisica', 'ctpsFieldsWrap', 'ctps-field');
 })();
 </script>

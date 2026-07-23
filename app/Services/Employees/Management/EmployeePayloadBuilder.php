@@ -38,6 +38,7 @@ class EmployeePayloadBuilder
             'telefone' => $phone,
             'phone' => $phone,
             'email' => mb_strtolower(trim((string) ($postData['email'] ?? ''))),
+            'possui_ctps_fisica' => $this->boolString($this->truthy($postData['possui_ctps_fisica'] ?? false)),
             'ctps_numero' => $this->cleanText($postData['ctps_numero'] ?? null),
             'ctps_serie' => $this->cleanText($postData['ctps_serie'] ?? null),
             'ctps_uf' => $this->upper($postData['ctps_uf'] ?? null),

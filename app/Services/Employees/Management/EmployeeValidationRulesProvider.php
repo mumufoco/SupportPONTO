@@ -24,6 +24,26 @@ class EmployeeValidationRulesProvider
             'cnh_uf' => 'permit_empty|required_if_true[possui_cnh]|exact_length[2]|in_list[' . self::UF_LIST . ']',
             'rg_uf' => 'permit_empty|exact_length[2]|in_list[' . self::UF_LIST . ']',
             'certificado_militar' => 'permit_empty|max_length[30]',
+
+            // CTPS Digital (padrão desde 2019) substituiu a carteira física para a
+            // maioria dos admitidos — não faz sentido exigir número/série de quem só
+            // tem CTPS Digital. possui_ctps_fisica é obrigatório declarar (sim/não);
+            // os campos da carteira física só ficam obrigatórios quando ela existe.
+            //
+            // IMPORTANTE: não prefixar com `permit_empty` — o núcleo do CodeIgniter só
+            // continua avaliando required_with/required_without quando o valor está
+            // vazio (ver Validation::fillPlaceholders()/getRuleset()); qualquer outra
+            // regra encadeada depois de `permit_empty`, incluindo required_if_true
+            // (regra própria da aplicação), é silenciosamente pulada quando o campo
+            // está vazio. Testado e confirmado: `permit_empty|required_if_true[...]`
+            // NUNCA bloqueia um campo vazio, mesmo com o gatilho true. Por isso aqui
+            // fica só required_if_true, sem permit_empty nem checagem extra de
+            // formato (min/max/exact_length) encadeada.
+            'possui_ctps_fisica' => 'required|in_list[true,false,0,1]',
+            'ctps_numero' => 'required_if_true[possui_ctps_fisica]',
+            'ctps_serie' => 'required_if_true[possui_ctps_fisica]',
+            'ctps_uf' => 'required_if_true[possui_ctps_fisica]',
+            'ctps_data_emissao' => 'required_if_true[possui_ctps_fisica]',
         ];
     }
 
@@ -50,10 +70,6 @@ class EmployeeValidationRulesProvider
             'cep' => 'required|exact_length[8]|regex_match[/^\d{8}$/]',
             'telefone' => 'required|valid_phone_br',
             'email' => 'required|valid_email|max_length[255]|is_unique[employees.email]',
-            'ctps_numero' => 'required|min_length[5]|max_length[15]',
-            'ctps_serie' => 'required|min_length[3]|max_length[10]',
-            'ctps_uf' => 'required|exact_length[2]|in_list[AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MT,MS,MG,PA,PB,PR,PE,PI,RJ,RN,RS,RO,RR,SC,SP,SE,TO]',
-            'ctps_data_emissao' => 'required|valid_date[Y-m-d]',
             'pis_pasep' => 'required|exact_length[11]|regex_match[/^\d{11}$/]|is_unique[employees.pis_pasep]',
             'admission_date' => 'required|valid_date[Y-m-d]',
             'cargo' => 'required|min_length[3]|max_length[100]',
@@ -97,10 +113,6 @@ class EmployeeValidationRulesProvider
             'cep' => 'required|exact_length[8]|regex_match[/^\d{8}$/]',
             'telefone' => 'required|valid_phone_br',
             'email' => "required|valid_email|max_length[255]|is_unique[employees.email,id,{$id}]",
-            'ctps_numero' => 'required|min_length[5]|max_length[15]',
-            'ctps_serie' => 'required|min_length[3]|max_length[10]',
-            'ctps_uf' => 'required|exact_length[2]|in_list[AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MT,MS,MG,PA,PB,PR,PE,PI,RJ,RN,RS,RO,RR,SC,SP,SE,TO]',
-            'ctps_data_emissao' => 'required|valid_date[Y-m-d]',
             'pis_pasep' => "required|exact_length[11]|regex_match[/^\\d{11}$/]|is_unique[employees.pis_pasep,id,{$id}]",
             'admission_date' => 'required|valid_date[Y-m-d]',
             'cargo' => 'required|min_length[3]|max_length[100]',

@@ -167,21 +167,30 @@
             <div class="sp-auth-section">
                 <h2 class="sp-auth-section__title">Dados profissionais</h2>
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="ctps_numero" class="form-label">CTPS número *</label>
-                        <input type="text" class="form-control" id="ctps_numero" name="ctps_numero" value="<?= esc((string) old('ctps_numero'), 'attr') ?>" required>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="possui_ctps_fisica" name="possui_ctps_fisica" value="1" <?= old('possui_ctps_fisica') ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="possui_ctps_fisica">
+                                Possuo carteira de trabalho física (CTPS impressa)
+                            </label>
+                        </div>
+                        <small class="text-muted">Desmarque se você só tem CTPS Digital (padrão desde 2019) — número e série não se aplicam nesse caso.</small>
                     </div>
-                    <div class="col-md-4">
-                        <label for="ctps_serie" class="form-label">CTPS série *</label>
-                        <input type="text" class="form-control" id="ctps_serie" name="ctps_serie" value="<?= esc((string) old('ctps_serie'), 'attr') ?>" required>
+                    <div class="col-md-4 ctps-field-wrap">
+                        <label for="ctps_numero" class="form-label">CTPS número <span class="ctps-required-mark">*</span></label>
+                        <input type="text" class="form-control ctps-field" id="ctps_numero" name="ctps_numero" value="<?= esc((string) old('ctps_numero'), 'attr') ?>">
                     </div>
-                    <div class="col-md-4">
-                        <label for="ctps_uf" class="form-label">CTPS UF *</label>
-                        <input type="text" class="form-control" id="ctps_uf" name="ctps_uf" value="<?= esc((string) old('ctps_uf'), 'attr') ?>" maxlength="2" required>
+                    <div class="col-md-4 ctps-field-wrap">
+                        <label for="ctps_serie" class="form-label">CTPS série <span class="ctps-required-mark">*</span></label>
+                        <input type="text" class="form-control ctps-field" id="ctps_serie" name="ctps_serie" value="<?= esc((string) old('ctps_serie'), 'attr') ?>">
                     </div>
-                    <div class="col-md-4">
-                        <label for="ctps_data_emissao" class="form-label">Data de emissão CTPS *</label>
-                        <input type="date" class="form-control" id="ctps_data_emissao" name="ctps_data_emissao" value="<?= esc((string) old('ctps_data_emissao'), 'attr') ?>" required>
+                    <div class="col-md-4 ctps-field-wrap">
+                        <label for="ctps_uf" class="form-label">CTPS UF <span class="ctps-required-mark">*</span></label>
+                        <input type="text" class="form-control ctps-field" id="ctps_uf" name="ctps_uf" value="<?= esc((string) old('ctps_uf'), 'attr') ?>" maxlength="2">
+                    </div>
+                    <div class="col-md-4 ctps-field-wrap">
+                        <label for="ctps_data_emissao" class="form-label">Data de emissão CTPS <span class="ctps-required-mark">*</span></label>
+                        <input type="date" class="form-control ctps-field" id="ctps_data_emissao" name="ctps_data_emissao" value="<?= esc((string) old('ctps_data_emissao'), 'attr') ?>">
                     </div>
                     <div class="col-md-4">
                         <label for="pis_pasep" class="form-label">PIS/PASEP *</label>
@@ -344,6 +353,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     SupportPontoValidation.bindCpfField(cpfInput);
     SupportPontoValidation.bindEmailFormatField(document.getElementById('email'));
+
+    const possuiCtpsFisica = document.getElementById('possui_ctps_fisica');
+    const ctpsFields = document.querySelectorAll('.ctps-field');
+    const applyCtpsState = (checked) => {
+        ctpsFields.forEach((el) => { el.required = checked; });
+        document.querySelectorAll('.ctps-required-mark').forEach((el) => { el.style.display = checked ? '' : 'none'; });
+    };
+    if (possuiCtpsFisica) {
+        applyCtpsState(possuiCtpsFisica.checked);
+        possuiCtpsFisica.addEventListener('change', () => applyCtpsState(possuiCtpsFisica.checked));
+    }
 
     applyMask(phoneInput, value => {
         value = value.replace(/\D/g, '').slice(0, 11);

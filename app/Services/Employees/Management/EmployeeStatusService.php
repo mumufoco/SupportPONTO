@@ -16,6 +16,7 @@ class EmployeeStatusService
         private readonly SessionSecurityService $sessionSecurityService = new SessionSecurityService(),
         private readonly PendingPunchModel $pendingPunchModel = new PendingPunchModel(),
         private readonly JustificationModel $justificationModel = new JustificationModel(),
+        private readonly EmployeeMteComplianceChecker $mteComplianceChecker = new EmployeeMteComplianceChecker(),
     ) {
     }
 
@@ -110,6 +111,18 @@ class EmployeeStatusService
         $employee = $this->employeeModel->find($id);
         if (!$employee) {
             return ['success' => false, 'error' => 'Funcionário não encontrado.', 'status' => 404];
+        }
+
+        // Última barreira: não finaliza (ativa) um cadastro com dados obrigatórios do
+        // MTE/eSocial pendentes, não importa qual fluxo criou o registro pendente.
+        $missing = $this->mteComplianceChecker->missingFields($employee);
+        if ($missing !== []) {
+            return [
+                'success' => false,
+                'error' => 'Não é possível aprovar: faltam dados obrigatórios (MTE/eSocial): ' . implode(', ', $missing) . '.',
+                'missing_fields' => $missing,
+                'status' => 422,
+            ];
         }
 
         $this->employeeModel->update($id, ['active' => true]);

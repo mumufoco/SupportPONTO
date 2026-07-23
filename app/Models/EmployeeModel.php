@@ -47,7 +47,7 @@ class EmployeeModel extends Model
         // Aba "Documentação Geral" do cadastro (Título de Eleitor, CNH, RG UF, Certificado Militar)
         'titulo_eleitor_numero', 'titulo_eleitor_zona', 'titulo_eleitor_secao', 'titulo_eleitor_uf', 'titulo_eleitor_municipio',
         'possui_cnh', 'cnh_numero', 'cnh_categoria', 'cnh_data_emissao', 'cnh_validade', 'cnh_orgao_emissor', 'cnh_uf',
-        'rg_uf', 'certificado_militar',
+        'rg_uf', 'certificado_militar', 'possui_ctps_fisica',
     ];
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
@@ -98,6 +98,7 @@ class EmployeeModel extends Model
         'owed_hours_balance' => 'permit_empty|decimal',
         'titulo_eleitor_uf' => 'permit_empty|exact_length[2]',
         'possui_cnh' => 'permit_empty|in_list[true,false,0,1]',
+        'possui_ctps_fisica' => 'permit_empty|in_list[true,false,0,1]',
         'cnh_data_emissao' => 'permit_empty|valid_date[Y-m-d]',
         'cnh_validade' => 'permit_empty|valid_date[Y-m-d]',
         'cnh_uf' => 'permit_empty|exact_length[2]',
@@ -322,7 +323,7 @@ class EmployeeModel extends Model
         $fields = [
             'active', 'has_face_biometric', 'has_fingerprint_biometric',
             'two_factor_enabled', 'allow_remote_punch', 'require_geolocation',
-            'must_change_password', 'possui_cnh',
+            'must_change_password', 'possui_cnh', 'possui_ctps_fisica',
         ];
 
         $data['data'] = $this->applyBoolCastOnFind($data['data'], $fields);

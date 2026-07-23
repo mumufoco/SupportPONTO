@@ -74,10 +74,13 @@ class RegisterPolicyService
             'cep' => 'required|exact_length[8]|regex_match[/^\d{8}$/]',
             'telefone' => 'required|valid_phone_br',
             'email' => 'required|valid_email|max_length[255]|is_unique[employees.email]',
-            'ctps_numero' => 'required|min_length[5]|max_length[15]',
-            'ctps_serie' => 'required|min_length[3]|max_length[10]',
-            'ctps_uf' => 'required|exact_length[2]|in_list[AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MT,MS,MG,PA,PB,PR,PE,PI,RJ,RN,RS,RO,RR,SC,SP,SE,TO]',
-            'ctps_data_emissao' => 'required|valid_date[Y-m-d]',
+            // CTPS Digital (padrão desde 2019) — mesma regra e mesma ressalva sobre
+            // permit_empty + required_if_true de EmployeeValidationRulesProvider.
+            'possui_ctps_fisica' => 'required|in_list[true,false,0,1]',
+            'ctps_numero' => 'required_if_true[possui_ctps_fisica]',
+            'ctps_serie' => 'required_if_true[possui_ctps_fisica]',
+            'ctps_uf' => 'required_if_true[possui_ctps_fisica]',
+            'ctps_data_emissao' => 'required_if_true[possui_ctps_fisica]',
             'pis_pasep' => 'required|exact_length[11]|regex_match[/^\d{11}$/]|is_unique[employees.pis_pasep]',
             'admission_date' => 'required|valid_date[Y-m-d]',
             'cargo' => 'required|min_length[3]|max_length[100]',

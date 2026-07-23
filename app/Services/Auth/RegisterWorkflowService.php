@@ -137,6 +137,7 @@ class RegisterWorkflowService
             'cep' => $postData['cep'] ?? null,
             'telefone' => $postData['telefone'] ?? null,
             'email' => $postData['email'] ?? null,
+            'possui_ctps_fisica' => in_array($postData['possui_ctps_fisica'] ?? null, [true, 1, '1', 'true', 'on'], true),
             'ctps_numero' => $postData['ctps_numero'] ?? null,
             'ctps_serie' => $postData['ctps_serie'] ?? null,
             'ctps_uf' => $postData['ctps_uf'] ?? null,
@@ -209,7 +210,13 @@ class RegisterWorkflowService
             'work_end_time' => $postData['work_end_time'] ?? '18:00:00',
             'lunch_start_time' => $postData['lunch_start_time'] ?? '12:00:00',
             'lunch_end_time' => $postData['lunch_end_time'] ?? '13:00:00',
-            'active' => true,
+            // Nunca ativo direto: managerRules() não exige boa parte dos campos
+            // obrigatórios do MTE/eSocial (CPF/PIS já bastam para o cadastro rápido,
+            // mas não para ativar). Fica pendente até passar por
+            // EmployeeStatusService::approveRegistration(), que bloqueia a ativação
+            // enquanto faltar dado obrigatório — mesma regra de todo outro fluxo de
+            // admissão.
+            'active' => false,
         ];
     }
 
