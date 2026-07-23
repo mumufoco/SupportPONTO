@@ -183,9 +183,12 @@ class ReportViewService
 
     public function getEmployeesForReports(array $actor): array
     {
+        // Administradores do sistema não são colaboradores e não entram em relatórios
+        // (mesmo critério de getEmployeeScope() acima).
         $query = $this->employeeModel
             ->select('id, name, department')
             ->where('active', true)
+            ->where('role !=', 'admin')
             ->orderBy('name', 'ASC');
 
         if (($actor['role'] ?? '') === 'gestor') {

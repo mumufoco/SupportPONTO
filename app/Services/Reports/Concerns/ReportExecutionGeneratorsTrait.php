@@ -153,9 +153,11 @@ trait ReportExecutionGeneratorsTrait
     }
     protected function generateBankHoursReport(array $filters): array
     {
+        // Administradores do sistema não são colaboradores e não têm banco de horas.
         $query = $this->employeeModel
             ->select('id, name, department, extra_hours_balance, owed_hours_balance')
-            ->where('active', true);
+            ->where('active', true)
+            ->where('role !=', 'admin');
 
         $this->applyEmployeeIdFilter($query, $filters, 'id');
         $this->applyDepartmentFilter($query, $filters, 'department');

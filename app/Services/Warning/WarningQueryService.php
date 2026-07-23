@@ -72,7 +72,9 @@ class WarningQueryService
 
     public function createFormData(array $actor): array
     {
-        $query = $this->employeeModel->where('active IS TRUE', null, false);
+        // Administradores do sistema não são colaboradores — não podem ser alvo
+        // de advertência disciplinar (CLT), então ficam fora do seletor.
+        $query = $this->employeeModel->where('active IS TRUE', null, false)->where('role !=', 'admin');
 
         if ($actor['role'] === 'gestor') {
             $query->where('department', $actor['department']);

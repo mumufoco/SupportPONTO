@@ -172,9 +172,10 @@ class DashboardAdminService
 
         return [
             'total_employees' => $this->employeeModel->where('active', true)->where('role !=', 'admin')->countAllResults(),
-            'total_inactive' => $this->employeeModel->where('active', false)->countAllResults(),
+            'total_inactive' => $this->employeeModel->where('active', false)->where('role !=', 'admin')->countAllResults(),
             'pending_registrations' => $this->employeeModel
                 ->where('active', false)
+                ->where('role !=', 'admin')
                 ->where('created_at >=', date('Y-m-d', strtotime('-7 days')))
                 ->countAllResults(),
             'punches_today' => $this->timePunchModel
@@ -196,6 +197,7 @@ class DashboardAdminService
         return [
             'employees' => $this->employeeModel
                 ->where('active', false)
+                ->where('role !=', 'admin')
                 ->orderBy('created_at', 'DESC')
                 ->limit(5)
                 ->find(),

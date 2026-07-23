@@ -117,13 +117,18 @@ class AuditComplianceService
             'America/Rio_Branco', 'America/Noronha',
         ], true);
 
+        // Administradores do sistema não são colaboradores (não batem ponto, não
+        // têm CTPS/PIS) — precisam ficar fora deste relatório de conformidade
+        // trabalhista (Portaria MTE 671/2021), senão aparecem como "funcionário
+        // sem PIS" numa auditoria real.
         $missingPIS = $this->db->table('employees')
+            ->where('role !=', 'admin')
             ->groupStart()->where('pis IS NULL')->orWhere('pis', '')->groupEnd()
             ->countAllResults();
 
         $compliance['employees_without_pis'] = $missingPIS;
         $compliance['total_punches']         = $totalPunches;
-        $compliance['total_employees']       = $this->db->table('employees')->where('active', true)->countAllResults();
+        $compliance['total_employees']       = $this->db->table('employees')->where('active', true)->where('role !=', 'admin')->countAllResults();
 
         return $compliance;
     }

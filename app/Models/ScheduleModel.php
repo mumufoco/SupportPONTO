@@ -243,7 +243,7 @@ class ScheduleModel extends Model
     {
         $builder = $this->db->table('employees');
         $builder->select('employees.*');
-        $builder->where('.active', true);
+        $builder->where('employees.active', true);
 
         if ($department) {
             $builder->where('employees.department', $department);

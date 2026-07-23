@@ -28,9 +28,12 @@ class BiometricComplianceService
     public function getConsentSummary(): array
     {
         try {
-            $totalAtivos    = $this->employeeModel->where('active', true)->countAllResults();
+            // Administradores do sistema não são colaboradores e não têm obrigação
+            // de cadastro biométrico (Portaria MTE 671/2021) — excluídos da base.
+            $totalAtivos    = $this->employeeModel->where('active', true)->where('role !=', 'admin')->countAllResults();
             $comBiometria   = $this->employeeModel
                 ->where('active', true)
+                ->where('role !=', 'admin')
                 ->groupStart()
                     ->where('has_face_biometric', true)
                     ->orWhere('has_fingerprint_biometric', true)
@@ -83,9 +86,9 @@ class BiometricComplianceService
     public function getBiometricProfileCards(): array
     {
         try {
-            $totalAtivos    = $this->employeeModel->where('active', true)->countAllResults();
-            $comFacial      = $this->employeeModel->where('active', true)->where('has_face_biometric', true)->countAllResults();
-            $comDigital     = $this->employeeModel->where('active', true)->where('has_fingerprint_biometric', true)->countAllResults();
+            $totalAtivos    = $this->employeeModel->where('active', true)->where('role !=', 'admin')->countAllResults();
+            $comFacial      = $this->employeeModel->where('active', true)->where('role !=', 'admin')->where('has_face_biometric', true)->countAllResults();
+            $comDigital     = $this->employeeModel->where('active', true)->where('role !=', 'admin')->where('has_fingerprint_biometric', true)->countAllResults();
             $comConsentimento = $this->consentModel
                 ->where('granted', true)
                 ->whereIn('consent_type', ['biometric_face', 'biometric_fingerprint', 'biometric_data'])

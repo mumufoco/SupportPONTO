@@ -62,6 +62,7 @@ class DashboardManagerService
         $teamSize = $this->employeeModel
             ->where('department', $department)
             ->where('active', true)
+            ->where('role !=', 'admin')
             ->countAllResults();
 
         // Compute present count once and derive absent inline —

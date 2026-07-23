@@ -13,7 +13,9 @@ class DashboardMetricsRepository
 
     public function totalEmployees(?int $departmentId = null): int
     {
-        $builder = $this->db->table('employees');
+        // Administradores do sistema não são colaboradores — ficam fora das
+        // métricas de headcount do dashboard.
+        $builder = $this->db->table('employees')->where('role !=', 'admin');
         if ($departmentId) {
             $builder->where('department_id', $departmentId);
         }
@@ -23,7 +25,7 @@ class DashboardMetricsRepository
 
     public function activeEmployees(?int $departmentId = null): int
     {
-        $builder = $this->db->table('employees')->where('active', true);
+        $builder = $this->db->table('employees')->where('active', true)->where('role !=', 'admin');
         if ($departmentId) {
             $builder->where('department_id', $departmentId);
         }
@@ -135,7 +137,7 @@ class DashboardMetricsRepository
 
     public function inactiveEmployees(?int $departmentId = null): int
     {
-        $builder = $this->db->table('employees')->where('active', false);
+        $builder = $this->db->table('employees')->where('active', false)->where('role !=', 'admin');
         if ($departmentId) {
             $builder->where('department_id', $departmentId);
         }
