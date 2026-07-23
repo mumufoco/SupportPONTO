@@ -178,6 +178,7 @@ class DepartmentCatalogService
             $employeeCount = $db->table('employees')
                 ->where('department_id', $id)
                 ->where('active', true)
+                ->where('role !=', 'admin')
                 ->countAllResults();
 
             if ($employeeCount > 0) {

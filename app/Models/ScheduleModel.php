@@ -244,6 +244,8 @@ class ScheduleModel extends Model
         $builder = $this->db->table('employees');
         $builder->select('employees.*');
         $builder->where('employees.active', true);
+        // Administrador do sistema não é colaborador e não entra em escala.
+        $builder->where('employees.role !=', 'admin');
 
         if ($department) {
             $builder->where('employees.department', $department);

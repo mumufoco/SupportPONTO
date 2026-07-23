@@ -186,6 +186,7 @@ class PositionCatalogService
             $count = $db->table('employees')
                 ->where('position_id', $id)
                 ->where('active', true)
+                ->where('role !=', 'admin')
                 ->countAllResults();
 
             if ($count > 0) {

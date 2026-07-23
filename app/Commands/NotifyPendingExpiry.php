@@ -55,6 +55,7 @@ class NotifyPendingExpiry extends BaseCommand
             JOIN employees e ON e.id = j.employee_id
             WHERE j.status = 'pendente'
               AND j.deleted_at IS NULL
+              AND e.role != 'admin'
             ORDER BY j.created_at ASC
         ")->getResultArray();
 
@@ -102,6 +103,7 @@ class NotifyPendingExpiry extends BaseCommand
               AND pp.expires_at IS NOT NULL
               AND pp.expires_at > NOW()
               AND pp.expires_at <= NOW() + INTERVAL '" . self::PUNCH_WARN_HOURS . " hours'
+              AND e.role != 'admin'
             ORDER BY pp.expires_at ASC
         ")->getResultArray();
 

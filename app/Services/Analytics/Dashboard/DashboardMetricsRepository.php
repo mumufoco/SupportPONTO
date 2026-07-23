@@ -42,7 +42,7 @@ class DashboardMetricsRepository
             ->where('t.punch_time <', $rangeEnd);
 
         if ($departmentId) {
-            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId);
+            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId)->where('e.role !=', 'admin');
         }
 
         return $builder->countAllResults();
@@ -59,7 +59,7 @@ class DashboardMetricsRepository
             ->where('t.punch_out_time IS NOT NULL');
 
         if ($departmentId) {
-            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId);
+            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId)->where('e.role !=', 'admin');
         }
 
         $result = $builder->get()->getRow();
@@ -70,7 +70,7 @@ class DashboardMetricsRepository
     {
         $builder = $this->db->table('timesheets t')->where('t.status', 'pending');
         if ($departmentId) {
-            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId);
+            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId)->where('e.role !=', 'admin');
         }
 
         return $builder->countAllResults();
@@ -93,7 +93,7 @@ class DashboardMetricsRepository
             ->orderBy('hour', 'ASC');
 
         if ($departmentId) {
-            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId);
+            $builder->join('employees e', 'e.id = t.employee_id')->where('e.department_id', $departmentId)->where('e.role !=', 'admin');
         }
 
         return $builder->get()->getResult();
@@ -107,6 +107,7 @@ class DashboardMetricsRepository
             ->select('d.name as department, SUM(TIMESTAMPDIFF(SECOND, t.punch_time, t.punch_out_time) / 3600) as hours')
             ->join('employees e', 'e.id = t.employee_id')
             ->join('departments d', 'd.id = e.department_id')
+            ->where('e.role !=', 'admin')
             ->where('t.punch_time >=', $rangeStart)
             ->where('t.punch_time <', $rangeEnd)
             ->where('t.punch_out_time IS NOT NULL')
@@ -126,7 +127,8 @@ class DashboardMetricsRepository
             ->where('t.punch_time >=', $dayStart)
             ->where('t.punch_time <', $dayEnd)
             ->where('t.punch_out_time IS NULL')
-            ->where('e.active', true);
+            ->where('e.active', true)
+            ->where('e.role !=', 'admin');
 
         if ($departmentId) {
             $builder->where('e.department_id', $departmentId);
@@ -151,6 +153,7 @@ class DashboardMetricsRepository
             ->select('t.id, t.employee_id, t.punch_time, t.punch_out_time, t.punch_type, e.name as employee_name, d.name as department_name')
             ->join('employees e', 'e.id = t.employee_id')
             ->join('departments d', 'd.id = e.department_id')
+            ->where('e.role !=', 'admin')
             ->orderBy('t.punch_time', 'DESC')
             ->limit($limit);
 
@@ -169,6 +172,7 @@ class DashboardMetricsRepository
             ->select('e.id, e.name, d.name as department, SUM(TIMESTAMPDIFF(SECOND, t.punch_time, t.punch_out_time) / 3600) as total_hours')
             ->join('employees e', 'e.id = t.employee_id')
             ->join('departments d', 'd.id = e.department_id')
+            ->where('e.role !=', 'admin')
             ->where('t.punch_time >=', $rangeStart)
             ->where('t.punch_time <', $rangeEnd)
             ->where('t.punch_out_time IS NOT NULL')

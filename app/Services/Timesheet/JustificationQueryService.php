@@ -63,7 +63,7 @@ class JustificationQueryService
         $employeeIds = null;
         if ($actor['role'] === Role::Gestor->value) {
             $actorDepartmentId = ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0;
-            $employeeIds = $this->employeeModel->where('department_id', $actorDepartmentId)->findColumn('id') ?: [];
+            $employeeIds = $this->employeeModel->where('department_id', $actorDepartmentId)->where('role !=', 'admin')->findColumn('id') ?: [];
         }
 
         $query = $this->justificationModel

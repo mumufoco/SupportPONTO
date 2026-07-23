@@ -152,8 +152,8 @@ class EmployeeApiService
         }
 
         $targetEmployee = $this->employeeModel->findByCode($code);
-        if (!$targetEmployee) {
-            return ['success' => false, 'status' => 404, 'message' => 'Funcionário não encontrado.'];
+        if (!$targetEmployee || $targetEmployee->role === 'admin') {
+            return ['success' => false, 'status' => 404, 'message' => 'Colaborador não encontrado.'];
         }
 
         if ($this->hasDepartmentScope((string) $requester->role)) {

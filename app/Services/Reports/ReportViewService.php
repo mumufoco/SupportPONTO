@@ -118,11 +118,11 @@ class ReportViewService
         if (($actor['role'] ?? '') === 'gestor') {
             $actorDepartmentId = $actor['department_id'] ?? null;
             $employeeIds = $actorDepartmentId
-                ? $this->employeeModel->where('department_id', (int) $actorDepartmentId)->findColumn('id')
+                ? $this->employeeModel->where('department_id', (int) $actorDepartmentId)->where('role !=', 'admin')->findColumn('id')
                 : [];
             $query->whereIn('employee_id', $employeeIds ?: [0]);
         } elseif ($department) {
-            $employeeIds = $this->employeeModel->where('department_id', (int) $department)->findColumn('id');
+            $employeeIds = $this->employeeModel->where('department_id', (int) $department)->where('role !=', 'admin')->findColumn('id');
             $query->whereIn('employee_id', $employeeIds ?: [0]);
         }
 

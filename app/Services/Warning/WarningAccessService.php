@@ -110,6 +110,7 @@ class WarningAccessService
 
         $ids = $this->employeeModel
             ->where('department_id', ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0)
+            ->where('role !=', 'admin')
             ->findColumn('id');
 
         return array_map('intval', $ids ?? []);

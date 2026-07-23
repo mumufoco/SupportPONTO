@@ -91,6 +91,7 @@ class EmployeeStatusService
         // Truly pending: inactive and no demission_date = new registration awaiting approval
         return $this->employeeModel
             ->where('active', false)
+            ->where('role !=', 'admin')
             ->where('demission_date IS NULL', null, false)
             ->orderBy('created_at', 'DESC')
             ->findAll();
@@ -101,6 +102,7 @@ class EmployeeStatusService
         // Terminated: inactive and demission_date is set (admin deactivated)
         return $this->employeeModel
             ->where('active', false)
+            ->where('role !=', 'admin')
             ->where('demission_date IS NOT NULL', null, false)
             ->orderBy('demission_date', 'DESC')
             ->findAll();

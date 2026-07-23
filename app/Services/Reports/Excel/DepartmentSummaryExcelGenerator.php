@@ -28,6 +28,7 @@ class DepartmentSummaryExcelGenerator
         $employees = $this->employeeModel
             ->where('department', $department)
             ->where('active', true)
+            ->where('role !=', 'admin')
             ->orderBy('name', 'ASC')
             ->findAll();
 

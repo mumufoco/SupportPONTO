@@ -33,6 +33,9 @@ trait ReportExecutionGeneratorsTrait
                 . 'employees.cpf, employees.name as employee_name'
             )
             ->join('employees', 'employees.id = time_punches.employee_id')
+            // Administrador do sistema não é colaborador CLT -- não deve aparecer no
+            // AFD oficial entregue à fiscalização do MTE.
+            ->where('employees.role !=', 'admin')
             ->where('time_punches.punch_time >=', $startDate)
             ->where('time_punches.punch_time <=', $endDate)
             ->orderBy('time_punches.nsr', 'ASC');
@@ -80,6 +83,7 @@ trait ReportExecutionGeneratorsTrait
         $query = $this->consolidatedModel
             ->select('timesheet_consolidated.*, employees.name as employee_name, employees.department')
             ->join('employees', 'employees.id = timesheet_consolidated.employee_id')
+            ->where('employees.role !=', 'admin')
             ->where('date >=', $startDate)
             ->where('date <=', $endDate);
 
@@ -96,6 +100,7 @@ trait ReportExecutionGeneratorsTrait
         $query = $this->consolidatedModel
             ->select('timesheet_consolidated.*, employees.name as employee_name, employees.department')
             ->join('employees', 'employees.id = timesheet_consolidated.employee_id')
+            ->where('employees.role !=', 'admin')
             ->where('date >=', $startDate)
             ->where('date <=', $endDate)
             ->where('extra >', 0);
@@ -122,6 +127,7 @@ trait ReportExecutionGeneratorsTrait
         $query = $this->consolidatedModel
             ->select('timesheet_consolidated.*, employees.name as employee_name, employees.department')
             ->join('employees', 'employees.id = timesheet_consolidated.employee_id')
+            ->where('employees.role !=', 'admin')
             ->where('date >=', $startDate)
             ->where('date <=', $endDate)
             ->groupStart()
@@ -192,6 +198,7 @@ trait ReportExecutionGeneratorsTrait
             ->select("COALESCE(SUM(CASE WHEN timesheet_consolidated.first_punch IS NOT NULL AND employees.work_schedule_start IS NOT NULL AND (timesheet_consolidated.first_punch::time > (employees.work_schedule_start::time + (COALESCE((SELECT CASE WHEN value ~ '^[0-9]+$' THEN value::int ELSE NULL END FROM settings WHERE key = 'tolerance_minutes_late' LIMIT 1), 10) * INTERVAL '1 minute'))) THEN 1 ELSE 0 END), 0) AS late_count", false)
             ->select("COALESCE(SUM(CASE WHEN timesheet_consolidated.incomplete = TRUE OR timesheet_consolidated.owed > 0 THEN 1 ELSE 0 END), 0) AS absence_count", false)
             ->join('employees', 'employees.id = timesheet_consolidated.employee_id')
+            ->where('employees.role !=', 'admin')
             ->where('timesheet_consolidated.date >=', $startDate)
             ->where('timesheet_consolidated.date <=', $endDate)
             ->groupBy('timesheet_consolidated.employee_id, employees.name, employees.department')
@@ -226,6 +233,14 @@ trait ReportExecutionGeneratorsTrait
         $query = $this->justificationModel
             ->select('justifications.*, employees.name AS employee_name')
             ->join('employees', 'employees.id = justifications.employee_id', 'left')
+            // LEFT JOIN: uma justificativa nunca deve sumir da listagem só porque o
+            // colaborador foi excluído (fica "Desconhecido" abaixo) -- por isso o
+            // filtro de admin precisa aceitar employees.role NULL, não só != 'admin'
+            // (que descartaria silenciosamente as linhas sem colaborador vinculado).
+            ->groupStart()
+                ->where('employees.role !=', 'admin')
+                ->orWhere('employees.role IS NULL', null, false)
+            ->groupEnd()
             ->where('justifications.justification_date >=', $startDate)
             ->where('justifications.justification_date <=', $endDate)
             ->orderBy('justifications.justification_date', 'DESC');
@@ -261,6 +276,7 @@ trait ReportExecutionGeneratorsTrait
         $query = $this->warningModel
             ->select('warnings.*, employees.name AS employee_name, employees.department')
             ->join('employees', 'employees.id = warnings.employee_id')
+            ->where('employees.role !=', 'admin')
             ->where('warnings.occurrence_date >=', $startDate)
             ->where('warnings.occurrence_date <=', $endDate)
             ->orderBy('warnings.occurrence_date', 'DESC');

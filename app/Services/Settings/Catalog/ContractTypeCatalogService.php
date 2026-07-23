@@ -175,6 +175,7 @@ class ContractTypeCatalogService
             $employeeCount = $db->table('employees')
                 ->where('tipo_contrato', $contractType->name)
                 ->where('active', true)
+                ->where('role !=', 'admin')
                 ->countAllResults();
 
             if ($employeeCount > 0) {

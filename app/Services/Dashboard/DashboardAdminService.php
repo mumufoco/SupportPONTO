@@ -288,10 +288,12 @@ class DashboardAdminService
         [$todayStart, $tomorrowStart] = DashboardDateRange::day();
 
         return $this->timePunchModel
-            ->select('DISTINCT employee_id')
-            ->where('punch_time >=', $todayStart)
-            ->where('punch_time <', $tomorrowStart)
-            ->where('punch_type', 'entrada')
+            ->select('DISTINCT time_punches.employee_id')
+            ->join('employees', 'employees.id = time_punches.employee_id')
+            ->where('employees.role !=', 'admin')
+            ->where('time_punches.punch_time >=', $todayStart)
+            ->where('time_punches.punch_time <', $tomorrowStart)
+            ->where('time_punches.punch_type', 'entrada')
             ->countAllResults();
     }
 

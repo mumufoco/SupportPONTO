@@ -161,6 +161,7 @@ class WorkUnitCatalogService
             $count = $db->table('employees')
                 ->where('work_unit_id', $id)
                 ->where('active', true)
+                ->where('role !=', 'admin')
                 ->countAllResults();
 
             if ($count > 0) {

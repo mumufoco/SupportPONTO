@@ -67,7 +67,7 @@ class TimesheetController extends BaseController
 
         $isManager = in_array($actor['role'] ?? '', ['admin', 'rh', 'gestor'], true);
         $employeesList = $isManager
-            ? $this->employeeModel->select('id, name')->where('active', true)->orderBy('name', 'ASC')->findAll()
+            ? $this->employeeModel->select('id, name')->where('active', true)->where('role !=', 'admin')->orderBy('name', 'ASC')->findAll()
             : [];
 
         return view('timesheet/index', [
@@ -107,7 +107,7 @@ class TimesheetController extends BaseController
 
         $isManager = in_array($actor['role'] ?? '', ['admin', 'rh', 'gestor'], true);
         $employeesList = $isManager
-            ? $this->employeeModel->select('id, name')->where('active', true)->orderBy('name', 'ASC')->findAll()
+            ? $this->employeeModel->select('id, name')->where('active', true)->where('role !=', 'admin')->orderBy('name', 'ASC')->findAll()
             : [];
 
         return view('timesheet/history', [
