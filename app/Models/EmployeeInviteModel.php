@@ -9,7 +9,7 @@ class EmployeeInviteModel extends Model
     protected $returnType    = 'object';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'token','email','name','department','position','role','tipo_contrato',
+        'token','email','name','department','work_unit','position','role','tipo_contrato',
         'message','expires_at','used_at','status','created_by',
     ];
 

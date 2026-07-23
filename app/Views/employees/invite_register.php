@@ -157,6 +157,18 @@ $states = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA'
             <div class="inv-section">
                 <h3><i class="bi bi-briefcase me-1"></i>Vínculo profissional</h3>
                 <div class="row g-3">
+                    <?php if (!empty($formOptions['workUnits'])): ?>
+                    <div class="col-md-6">
+                        <label class="form-label" for="ir_unit">Unidade *</label>
+                        <select id="ir_unit" name="work_unit_id" class="form-select" required data-sync-text="work_unit">
+                            <option value="">Selecione...</option>
+                            <?php foreach ($formOptions['workUnits'] as $u): ?>
+                                <option value="<?= esc($u['id']) ?>" data-name="<?= esc($u['name']) ?>" <?= old('work_unit_id') == $u['id'] ? 'selected' : ($invite->work_unit === $u['name'] ? 'selected' : '') ?>><?= esc($u['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="hidden" name="work_unit" id="work_unit">
+                    </div>
+                    <?php endif; ?>
                     <?php if (!empty($formOptions['departments'])): ?>
                     <div class="col-md-6">
                         <label class="form-label" for="ir_dept">Departamento *</label>

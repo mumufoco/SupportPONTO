@@ -177,8 +177,8 @@
 
     <!-- Modal: Convidar Funcionário -->
     <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalTitle" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius:1rem;overflow:hidden;">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:1rem;">
 
           <!-- Header -->
           <div class="modal-header border-0 pb-0" style="background:var(--sp-primary-dark);padding:1.5rem 1.75rem 1.25rem;">
@@ -277,6 +277,18 @@
                              class="form-control"
                              placeholder="Nome completo"
                              autocomplete="off">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold" for="inv_unit">Unidade</label>
+                      <select id="inv_unit" name="work_unit" class="form-select">
+                        <option value="">— Selecione —</option>
+                        <?php foreach (($formOptions['workUnits'] ?? []) as $unit):
+                              $uName = is_object($unit) ? ($unit->name ?? '') : ($unit['name'] ?? '');
+                              if (empty($uName)) continue; ?>
+                          <option value="<?= esc($uName) ?>"><?= esc($uName) ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <div class="form-text">Mesma unidade já vinculará o colaborador ao ser cadastrado.</div>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-semibold" for="inv_dept">Departamento</label>

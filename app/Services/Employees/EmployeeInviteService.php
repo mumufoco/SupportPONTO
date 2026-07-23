@@ -21,6 +21,7 @@ class EmployeeInviteService
             'email'      => strtolower(trim($data['email'] ?? '')),
             'name'       => trim($data['name'] ?? ''),
             'department' => trim($data['department'] ?? ''),
+            'work_unit'  => trim($data['work_unit'] ?? ''),
             'position'   => trim($data['position'] ?? ''),
             'role'       => $data['role'] ?? 'funcionario',
             'tipo_contrato' => trim((string) ($data['tipo_contrato'] ?? '')) ?: null,
