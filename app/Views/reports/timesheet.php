@@ -22,7 +22,7 @@
                         <option value="">Selecione...</option>
                         <?php foreach (($employees ?? []) as $emp): ?>
                             <option value="<?= (int) $emp->id ?>"
-                                    data-department="<?= esc((string) ($emp->department ?? '')) ?>"
+                                    data-department-id="<?= (int) ($emp->department_id ?? 0) ?>"
                                     <?= (string) ($selectedEmployee ?? '') === (string) $emp->id ? 'selected' : '' ?>>
                                 <?= esc($emp->name) ?><?= !empty($emp->department) ? ' — ' . esc($emp->department) : '' ?>
                             </option>
@@ -40,7 +40,7 @@
                     <select id="department" name="department" class="form-select">
                         <option value="">Todos</option>
                         <?php foreach (($departments ?? []) as $departmentOption): ?>
-                            <option value="<?= esc((string) $departmentOption) ?>" <?= ($selectedDepartment ?? '') === $departmentOption ? 'selected' : '' ?>><?= esc((string) $departmentOption) ?></option>
+                            <option value="<?= (int) $departmentOption->id ?>" <?= (string) ($selectedDepartment ?? '') === (string) $departmentOption->id ? 'selected' : '' ?>><?= esc($departmentOption->name) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <div class="form-text" style="min-height:1.25rem">Filtra as opções do campo Colaborador</div>
@@ -210,7 +210,7 @@
 
         Array.prototype.forEach.call(employeeSelect.options, function (opt) {
             if (!opt.value) return;
-            var show = !dept || opt.dataset.department === dept;
+            var show = !dept || opt.dataset.departmentId === dept;
             opt.hidden = !show;
             opt.disabled = !show;
             if (show && opt.value === currentValue) currentStillVisible = true;

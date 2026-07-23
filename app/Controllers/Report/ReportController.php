@@ -666,11 +666,17 @@ class ReportController extends BaseController
             ? (string) ($owner->department ?? '')
             : (is_array($owner) ? (string) ($owner['department'] ?? '') : '');
 
+        $ownerDepartmentId = is_object($owner)
+            ? ($owner->department_id ?? null)
+            : (is_array($owner) ? ($owner['department_id'] ?? null) : null);
+
         return [
             'owner_id' => $ownerId,
             'employee_id' => $ownerId,
             'owner_department' => $ownerDepartment !== '' ? $ownerDepartment : null,
             'department' => $ownerDepartment !== '' ? $ownerDepartment : null,
+            'owner_department_id' => $ownerDepartmentId,
+            'department_id' => $ownerDepartmentId,
             'owner' => $owner,
             'employee' => $owner,
             'job_type' => (string) ($this->reportCoordinatorService->jobValue($job, 'job_type') ?? 'report'),

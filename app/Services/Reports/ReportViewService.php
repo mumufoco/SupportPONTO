@@ -2,6 +2,7 @@
 
 namespace App\Services\Reports;
 
+use App\Models\DepartmentModel;
 use App\Models\EmployeeModel;
 use App\Models\JustificationModel;
 use App\Services\TimesheetService;
@@ -12,6 +13,7 @@ class ReportViewService
         protected EmployeeModel $employeeModel,
         protected JustificationModel $justificationModel,
         protected TimesheetService $timesheetService,
+        protected DepartmentModel $departmentModel = new DepartmentModel(),
     ) {
     }
 
@@ -114,10 +116,13 @@ class ReportViewService
             ->where('justification_date <=', $endDate);
 
         if (($actor['role'] ?? '') === 'gestor') {
-            $employeeIds = $this->employeeModel->where('department', $actor['department'])->findColumn('id');
+            $actorDepartmentId = $actor['department_id'] ?? null;
+            $employeeIds = $actorDepartmentId
+                ? $this->employeeModel->where('department_id', (int) $actorDepartmentId)->findColumn('id')
+                : [];
             $query->whereIn('employee_id', $employeeIds ?: [0]);
         } elseif ($department) {
-            $employeeIds = $this->employeeModel->where('department', $department)->findColumn('id');
+            $employeeIds = $this->employeeModel->where('department_id', (int) $department)->findColumn('id');
             $query->whereIn('employee_id', $employeeIds ?: [0]);
         }
 
@@ -169,9 +174,12 @@ class ReportViewService
         $query = $this->employeeModel->where('active', true)->where('role !=', 'admin');
 
         if (($actor['role'] ?? '') === 'gestor') {
-            $query->where('department', $actor['department']);
+            // Sem department_id no ator, não há escopo válido -- não deve cair
+            // para "sem filtro" (mostraria todo mundo para um gestor mal
+            // configurado). Força zero resultados, mesmo sentinel usado abaixo.
+            $query->where('department_id', ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0);
         } elseif (! empty($department)) {
-            $query->where('department', $department);
+            $query->where('department_id', (int) $department);
         }
 
         if (! empty($employeeId)) {
@@ -186,25 +194,28 @@ class ReportViewService
         // Administradores do sistema não são colaboradores e não entram em relatórios
         // (mesmo critério de getEmployeeScope() acima).
         $query = $this->employeeModel
-            ->select('id, name, department')
+            ->select('id, name, department, department_id')
             ->where('active', true)
             ->where('role !=', 'admin')
             ->orderBy('name', 'ASC');
 
         if (($actor['role'] ?? '') === 'gestor') {
-            $query->where('department', $actor['department']);
+            $query->where('department_id', ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0);
         }
 
         return $query->findAll();
     }
 
+    /**
+     * Fonte canônica de departamentos (tabela `departments`), não mais
+     * `DISTINCT employees.department` -- esse texto legado só trazia
+     * departamentos que já tinham pelo menos um funcionário ativo vinculado,
+     * então um departamento recém-cadastrado sem ninguém ainda nunca
+     * aparecia no filtro.
+     */
     protected function getDepartments(): array
     {
-        return $this->employeeModel
-            ->distinct()
-            ->select('department')
-            ->where('active', true)
-            ->findColumn('department') ?? [];
+        return $this->departmentModel->getActive();
     }
 
     public function getDepartmentsForReports(): array

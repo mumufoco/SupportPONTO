@@ -54,7 +54,7 @@ class FacialFraudAlertModel extends Model
     /**
      * @return list<object>
      */
-    public function listWithEmployee(?string $status = null, ?int $employeeId = null, ?string $department = null, int $limit = 0, int $offset = 0): array
+    public function listWithEmployee(?string $status = null, ?int $employeeId = null, ?int $department = null, int $limit = 0, int $offset = 0): array
     {
         $builder = $this->scopedBuilder($status, $employeeId, $department)
             ->select('facial_fraud_alerts.*, employees.name AS employee_name, employees.unique_code AS employee_code')
@@ -67,7 +67,7 @@ class FacialFraudAlertModel extends Model
         return $builder->get()->getResult();
     }
 
-    public function countScoped(?string $status = null, ?int $employeeId = null, ?string $department = null): int
+    public function countScoped(?string $status = null, ?int $employeeId = null, ?int $department = null): int
     {
         $row = $this->scopedBuilder($status, $employeeId, $department)
             ->select('COUNT(DISTINCT facial_fraud_alerts.id) AS aggregate_count', false)
@@ -84,7 +84,7 @@ class FacialFraudAlertModel extends Model
      * (contagem por status + listagem), o que faria a 2a chamada herdar filtros da 1a.
      * Mesmo cuidado ja aplicado em WarningQueryService/AuditQueryService nesta sessao.
      */
-    private function scopedBuilder(?string $status = null, ?int $employeeId = null, ?string $department = null): BaseBuilder
+    private function scopedBuilder(?string $status = null, ?int $employeeId = null, ?int $department = null): BaseBuilder
     {
         // LEFT JOIN (nao INNER): um alerta nunca deve sumir da listagem so porque o
         // colaborador referenciado nao existe mais (fica "Colaborador removido" na tela
@@ -102,14 +102,14 @@ class FacialFraudAlertModel extends Model
 
         // Gestor so pode ver/revisar alertas da propria equipe - mesma restricao ja
         // aplicada em outras telas (auditoria, relatorios) para o papel gestor.
-        if ($department !== null && $department !== '') {
-            $builder->where('employees.department', $department);
+        if ($department !== null) {
+            $builder->where('employees.department_id', $department);
         }
 
         return $builder;
     }
 
-    public function countByStatus(string $status, ?string $department = null): int
+    public function countByStatus(string $status, ?int $department = null): int
     {
         return $this->countScoped($status, null, $department);
     }

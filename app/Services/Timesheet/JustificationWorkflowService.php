@@ -273,8 +273,12 @@ class JustificationWorkflowService
             ->where('active', true)
             ->findAll();
 
+        $actorDepartmentId = ! empty($actor['department_id']) ? (int) $actor['department_id'] : null;
+
         foreach ($managers as $manager) {
-            if (Role::normalize((string) $manager->role)->value === Role::Gestor->value && $manager->department !== ($actor['department'] ?? null)) {
+            $isGestor = Role::normalize((string) $manager->role)->value === Role::Gestor->value;
+            $sameDepartment = $actorDepartmentId !== null && (int) ($manager->department_id ?? 0) === $actorDepartmentId;
+            if ($isGestor && ! $sameDepartment) {
                 continue;
             }
 

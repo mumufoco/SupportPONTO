@@ -31,8 +31,11 @@ class TimesheetReadService
             return ['success' => false, 'status' => 404, 'message' => 'Funcionário não encontrado.'];
         }
 
-        if ($this->hasDepartmentScope($actor) && $viewingEmployee->department !== ($actor['department'] ?? null)) {
-            return ['success' => false, 'status' => 403, 'message' => 'Você só pode visualizar funcionários do seu departamento.'];
+        if ($this->hasDepartmentScope($actor)) {
+            $actorDepartmentId = ! empty($actor['department_id']) ? (int) $actor['department_id'] : null;
+            if ($actorDepartmentId === null || (int) ($viewingEmployee->department_id ?? 0) !== $actorDepartmentId) {
+                return ['success' => false, 'status' => 403, 'message' => 'Você só pode visualizar funcionários do seu departamento.'];
+            }
         }
 
         return ['success' => true, 'employee' => $viewingEmployee];

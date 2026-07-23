@@ -143,7 +143,7 @@ class TimesheetManagementService
         // Administradores do sistema não são colaboradores gerenciáveis via timesheet.
         $query = $this->employeeModel->where('active', true)->where('role !=', 'admin');
         if ($this->hasDepartmentScope($actor)) {
-            $query->where('department', $actor['department']);
+            $query->where('department_id', ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0);
         }
 
         return $query->orderBy('name', 'ASC')->findAll();

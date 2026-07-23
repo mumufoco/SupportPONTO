@@ -249,7 +249,7 @@ class AuditQueryService
         $builder->orderBy('name', 'ASC');
 
         if ($department !== null) {
-            $builder->where('department', $department);
+            $builder->where('department_id', $department);
         }
 
         return $builder->get()->getResult();
@@ -268,8 +268,8 @@ class AuditQueryService
                 'left'
             );
             $builder->groupStart()
-                ->where('audit_scope_employee.department', $department)
-                ->orWhere('audit_scope_subject_employee.department', $department)
+                ->where('audit_scope_employee.department_id', $department)
+                ->orWhere('audit_scope_subject_employee.department_id', $department)
                 ->groupEnd();
         }
 
@@ -286,7 +286,7 @@ class AuditQueryService
         return (int) ($row->aggregate_count ?? 0);
     }
 
-    private function limitedDepartment(?array $actor = null): ?string
+    private function limitedDepartment(?array $actor = null): ?int
     {
         if ($actor === null) {
             return null;
@@ -297,9 +297,13 @@ class AuditQueryService
             return null;
         }
 
-        $department = trim((string) ($actor['department'] ?? ''));
+        // Sentinel 0 (nunca um id real) em vez de null quando o gestor não tem
+        // department_id configurado -- sem isto, o filtro abaixo era pulado
+        // inteiramente e um gestor mal configurado via os logs de TODOS os
+        // departamentos, o oposto do escopo pretendido.
+        $departmentId = $actor['department_id'] ?? null;
 
-        return $department !== '' ? $department : null;
+        return ! empty($departmentId) ? (int) $departmentId : 0;
     }
 
     private function normalizeRole(string $role): string

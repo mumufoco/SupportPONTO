@@ -25,7 +25,7 @@
                     <select id="department" name="department" class="form-select">
                         <option value="">Todos</option>
                         <?php foreach (($departments ?? []) as $departmentOption): ?>
-                            <option value="<?= esc((string) $departmentOption) ?>" <?= ($selectedDepartment ?? '') === $departmentOption ? 'selected' : '' ?>><?= esc((string) $departmentOption) ?></option>
+                            <option value="<?= (int) $departmentOption->id ?>" <?= (string) ($selectedDepartment ?? '') === (string) $departmentOption->id ? 'selected' : '' ?>><?= esc($departmentOption->name) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

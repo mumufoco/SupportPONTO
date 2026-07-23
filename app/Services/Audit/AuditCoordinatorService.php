@@ -43,6 +43,7 @@ class AuditCoordinatorService
             'email' => $employee->email,
             'role' => $employee->role,
             'department' => $employee->department,
+            'department_id' => $employee->department_id ?? null,
         ];
     }
 

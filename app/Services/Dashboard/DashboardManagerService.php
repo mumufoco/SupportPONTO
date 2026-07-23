@@ -27,14 +27,18 @@ class DashboardManagerService
 
     public function buildViewData(object|array|null $currentUser): array
     {
-        $rawDepartment = trim((string) $this->userValue($currentUser, 'department', ''));
-        $missingDepartment = $rawDepartment === '';
-        // Sem isto, um gestor sem 'department' configurado no cadastro cai no
-        // fallback 'default' e toda consulta abaixo (equipe, presença, atrasos,
-        // horas, justificativas) casa com um departamento que não existe —
+        $rawDepartmentId = $this->userValue($currentUser, 'department_id', null);
+        $missingDepartment = empty($rawDepartmentId);
+        // Sem isto, um gestor sem department_id configurado no cadastro cai no
+        // sentinel 0 e toda consulta abaixo (equipe, presença, atrasos, horas,
+        // justificativas) casa com um departamento que não existe —
         // resultando num dashboard silenciosamente zerado, sem nenhum aviso
         // explicando que a causa é um cadastro incompleto, não uma equipe vazia.
-        $department = $missingDepartment ? '__no_department_configured__' : $rawDepartment;
+        // (department_id, não mais o texto legado employees.department -- este
+        // último não é atualizado quando o departamento é renomeado no
+        // cadastro, então dois gestores comparando o mesmo departamento por
+        // texto podiam divergir silenciosamente.)
+        $department = $missingDepartment ? 0 : (int) $rawDepartmentId;
         $userId = (int) $this->userValue($currentUser, 'id', 0);
         $stats = $this->statistics($department);
 
@@ -64,10 +68,10 @@ class DashboardManagerService
         return $viewData;
     }
 
-    private function statistics(string $department): array
+    private function statistics(int $department): array
     {
         $teamSize = $this->employeeModel
-            ->where('department', $department)
+            ->where('department_id', $department)
             ->where('active', true)
             ->where('role !=', 'admin')
             ->countAllResults();
@@ -83,14 +87,14 @@ class DashboardManagerService
             'late_today' => $this->lateEmployees($department),
             'pending_justifications' => $this->justificationModel
                 ->join('employees', 'employees.id = justifications.employee_id')
-                ->where('employees.department', $department)
+                ->where('employees.department_id', $department)
                 ->where('justifications.status', 'pendente')
                 ->countAllResults(),
             'team_hours_month' => $this->departmentHoursMonth($department),
         ];
     }
 
-    private function pendingJustifications(string $department): array
+    private function pendingJustifications(int $department): array
     {
         // O valor real gravado em justifications.status é 'pendente' (PT-BR), não
         // 'pending' — com o valor errado, esta lista sempre vinha vazia mesmo com o
@@ -100,21 +104,21 @@ class DashboardManagerService
         return $this->justificationModel
             ->select('justifications.*, employees.name as employee_name, employees.position')
             ->join('employees', 'employees.id = justifications.employee_id')
-            ->where('employees.department', $department)
+            ->where('employees.department_id', $department)
             ->where('justifications.status', 'pendente')
             ->orderBy('justifications.created_at', 'ASC')
             ->limit(10)
             ->find();
     }
 
-    private function teamActivity(string $department): array
+    private function teamActivity(int $department): array
     {
         [$todayStart, $tomorrowStart] = DashboardDateRange::day();
 
         $activities = $this->timePunchModel
             ->select('time_punches.*, employees.name as employee_name')
             ->join('employees', 'employees.id = time_punches.employee_id')
-            ->where('employees.department', $department)
+            ->where('employees.department_id', $department)
             ->where('time_punches.punch_time >=', $todayStart)
             ->where('time_punches.punch_time <', $tomorrowStart)
             ->orderBy('time_punches.punch_time', 'DESC')
@@ -129,7 +133,7 @@ class DashboardManagerService
         ], $activities);
     }
 
-    private function alerts(string $department, int $pendingCount = 0, bool $missingDepartment = false): array
+    private function alerts(int $department, int $pendingCount = 0, bool $missingDepartment = false): array
     {
         // $pendingCount is passed in from statistics() — eliminates duplicate countAllResults() query
         $alerts = [];
@@ -164,28 +168,28 @@ class DashboardManagerService
             ->findAll();
     }
 
-    private function employeesPresent(string $department): int
+    private function employeesPresent(int $department): int
     {
         [$todayStart, $tomorrowStart] = DashboardDateRange::day();
 
         return $this->timePunchModel
             ->select('DISTINCT employee_id')
             ->join('employees', 'employees.id = time_punches.employee_id')
-            ->where('employees.department', $department)
+            ->where('employees.department_id', $department)
             ->where('punch_time >=', $todayStart)
             ->where('punch_time <', $tomorrowStart)
             ->where('punch_type', 'entrada')
             ->countAllResults();
     }
 
-    private function lateEmployees(string $department): int
+    private function lateEmployees(int $department): int
     {
         [$todayStart, $tomorrowStart] = DashboardDateRange::day();
 
         return $this->timePunchModel
             ->select('DISTINCT time_punches.employee_id')
             ->join('employees', 'employees.id = time_punches.employee_id')
-            ->where('employees.department', $department)
+            ->where('employees.department_id', $department)
             ->where('time_punches.punch_time >=', $todayStart)
             ->where('time_punches.punch_time <', $tomorrowStart)
             ->where('time_punches.punch_type', 'entrada')
@@ -193,14 +197,14 @@ class DashboardManagerService
             ->countAllResults();
     }
 
-    private function departmentHoursMonth(string $department): float
+    private function departmentHoursMonth(int $department): float
     {
         [$monthStart, $nextMonthStart] = DashboardDateRange::month();
 
         $punches = $this->timePunchModel
             ->select('time_punches.*')
             ->join('employees', 'employees.id = time_punches.employee_id')
-            ->where('employees.department', $department)
+            ->where('employees.department_id', $department)
             ->where('time_punches.punch_time >=', $monthStart)
             ->where('time_punches.punch_time <', $nextMonthStart)
             ->orderBy('time_punches.punch_time', 'ASC')

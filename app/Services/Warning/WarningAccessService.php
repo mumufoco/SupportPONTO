@@ -30,6 +30,7 @@ class WarningAccessService
             'email' => $employee->email,
             'role' => $employee->role,
             'department' => $employee->department,
+            'department_id' => $employee->department_id ?? null,
         ];
     }
 
@@ -59,7 +60,9 @@ class WarningAccessService
         }
 
         $target = $this->employeeModel->find($targetEmployeeId);
-        return $target !== null && $target->department === $actor['department'];
+        return $target !== null
+            && ! empty($actor['department_id'])
+            && (int) ($target->department_id ?? 0) === (int) $actor['department_id'];
     }
 
     public function canViewWarning(array $actor, object $warning): bool
@@ -70,7 +73,9 @@ class WarningAccessService
 
         if ($actor['role'] === 'gestor') {
             $warningEmployee = $this->employeeModel->find($warning->employee_id);
-            return $warningEmployee !== null && $warningEmployee->department === $actor['department'];
+            return $warningEmployee !== null
+                && ! empty($actor['department_id'])
+                && (int) ($warningEmployee->department_id ?? 0) === (int) $actor['department_id'];
         }
 
         return true;
@@ -86,7 +91,8 @@ class WarningAccessService
         }
 
         if ($actor['role'] === 'gestor') {
-            return $targetEmployee->department === $actor['department'];
+            return ! empty($actor['department_id'])
+                && (int) ($targetEmployee->department_id ?? 0) === (int) $actor['department_id'];
         }
 
         if (in_array($actor['role'], ['admin', 'rh'], true)) {
@@ -103,7 +109,7 @@ class WarningAccessService
         }
 
         $ids = $this->employeeModel
-            ->where('department', $actor['department'])
+            ->where('department_id', ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0)
             ->findColumn('id');
 
         return array_map('intval', $ids ?? []);

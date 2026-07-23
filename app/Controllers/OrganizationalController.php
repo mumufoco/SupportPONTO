@@ -22,7 +22,7 @@ class OrganizationalController extends BaseController
 
         return view('organizational/index', [
             'workUnits' => $workUnitModel->findAll(),
-            'departments' => $departmentModel->findAll(),
+            'departments' => $departmentModel->getActive(),
             'positions' => $positionModel->findAll(),
             'roles' => $roleModel->findAll(),
             'holidays' => $holidayModel->findAll(),

@@ -91,7 +91,8 @@
                             <select name="filters[department]" id="filters-department" class="form-select">
                                 <option value="">Todos</option>
                                 <?php foreach (($departments ?? []) as $dept): ?>
-                                    <option value="<?= esc($dept) ?>"><?= esc($dept) ?></option>
+                                    <?php $deptName = is_object($dept) ? $dept->name : (string) $dept; ?>
+                                    <option value="<?= esc($deptName) ?>"><?= esc($deptName) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

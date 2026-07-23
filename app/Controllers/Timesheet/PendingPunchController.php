@@ -190,12 +190,12 @@ class PendingPunchController extends BaseController
         }
 
         $actorRole = $this->authorizationService->getRole($this->currentUser);
-        $department = ($actorRole === 'gestor')
-            ? (string) ($this->currentUser->department ?? '')
+        $departmentId = ($actorRole === 'gestor')
+            ? (! empty($this->currentUser->department_id) ? (int) $this->currentUser->department_id : 0)
             : null; // admin/RH vê todos
 
-        $pending = $this->pendingPunchService->listPendingForManager($department);
-        $violations = $this->violationModel->listPendingForManager($department);
+        $pending = $this->pendingPunchService->listPendingForManager($departmentId);
+        $violations = $this->violationModel->listPendingForManager($departmentId);
 
         return view('timesheet/pending_punch_panel', [
             'pendingList' => $pending,
@@ -230,7 +230,8 @@ class PendingPunchController extends BaseController
         $actorRole = $this->authorizationService->getRole($this->currentUser);
         if ($actorRole === 'gestor') {
             $employee = model(\App\Models\EmployeeModel::class)->find((int) $violation->employee_id);
-            if (!$employee || (string) $employee->department !== (string) ($this->currentUser->department ?? '')) {
+            $actorDepartmentId = ! empty($this->currentUser->department_id) ? (int) $this->currentUser->department_id : null;
+            if (!$employee || $actorDepartmentId === null || (int) ($employee->department_id ?? 0) !== $actorDepartmentId) {
                 return $this->approvalResponse(false, 'Você só pode tratar irregularidades do seu departamento.', null, 403);
             }
         }

@@ -95,15 +95,18 @@ class FacialFraudAlertController extends BaseController
     }
 
     /** null = sem restrição (admin/rh/dpo); string = departamento do gestor logado. */
-    private function resolveDepartmentScope(): ?string
+    private function resolveDepartmentScope(): ?int
     {
         $role = (string) ($this->currentUser->role ?? '');
         if ($role !== 'gestor') {
             return null;
         }
 
-        $department = trim((string) ($this->currentUser->department ?? ''));
+        // Sentinel 0 (nunca um id real) em vez de null quando o gestor não tem
+        // department_id configurado -- sem isto, o filtro era pulado inteiramente
+        // e um gestor mal configurado via os alertas de TODOS os departamentos.
+        $departmentId = $this->currentUser->department_id ?? null;
 
-        return $department !== '' ? $department : null;
+        return ! empty($departmentId) ? (int) $departmentId : 0;
     }
 }

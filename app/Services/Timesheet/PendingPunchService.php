@@ -512,7 +512,7 @@ class PendingPunchService
     }
 
     /** Lista pendências para gestor por departamento e para admin/RH em escopo global. */
-    public function listPendingForManager(?string $department = null): array
+    public function listPendingForManager(?int $departmentId = null): array
     {
         // Auto-expira registros vencidos antes de listar — não há cron/command
         // configurado para isso, então sem essa chamada lazy os registros
@@ -520,7 +520,7 @@ class PendingPunchService
         // mas continuam contando contra o limite mensal do colaborador).
         $this->pendingModel->expireStale(24);
 
-        return $this->pendingModel->getPending($department);
+        return $this->pendingModel->getPending($departmentId);
     }
 
     private function assertReviewerScope(object|array $reviewer, object $pending): array

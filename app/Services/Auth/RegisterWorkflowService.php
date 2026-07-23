@@ -161,6 +161,7 @@ class RegisterWorkflowService
             'unique_code' => !empty($postData['unique_code']) ? $postData['unique_code'] : $this->generateUniqueCode(),
             'work_unit' => $this->resolveCatalogName('work_units', $postData['work_unit'] ?? null),
             'department' => $this->resolveCatalogName('departments', $postData['department'] ?? null),
+            'department_id' => $this->resolveCatalogId('departments', $postData['department'] ?? null),
             'position' => $this->resolveCatalogName('positions', $postData['position'] ?? null),
             'allow_remote_punch' => ($postData['allow_remote_punch'] ?? '0') === '1',
             'require_geolocation' => ($postData['require_geolocation'] ?? '0') === '1',
@@ -192,6 +193,43 @@ class RegisterWorkflowService
         return $row['name'] ?? $stringValue;
     }
 
+    /**
+     * Irmã de resolveCatalogName(): em vez do nome, devolve o id validado do
+     * registro do catálogo (necessário para manter employees.department_id
+     * em sincronia com employees.department — ver
+     * BackfillEmployeeDepartmentId, que corrige os registros que já
+     * divergiram por esse caminho nunca ter setado o id).
+     */
+    private function resolveCatalogId(string $table, mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $db = \Config\Database::connect();
+        $stringValue = trim((string) $value);
+
+        if (ctype_digit($stringValue)) {
+            $exists = $db->table($table)
+                ->select('id')
+                ->where('id', (int) $stringValue)
+                ->where('active', true)
+                ->get()
+                ->getRowArray();
+
+            return $exists ? (int) $exists['id'] : null;
+        }
+
+        $row = $db->table($table)
+            ->select('id')
+            ->where('LOWER(TRIM(name))', mb_strtolower($stringValue))
+            ->where('active', true)
+            ->get()
+            ->getRowArray();
+
+        return $row ? (int) $row['id'] : null;
+    }
+
     private function buildManagerRegistrationData(array $postData): array
     {
         return [
@@ -200,7 +238,8 @@ class RegisterWorkflowService
             'cpf' => $this->policyService->cleanCPF((string) ($postData['cpf'] ?? '')),
             'password' => (string) ($postData['password'] ?? ''),
             'role' => $postData['role'] ?? 'funcionario',
-            'department' => $postData['department'] ?? null,
+            'department' => $this->resolveCatalogName('departments', $postData['department'] ?? null),
+            'department_id' => $this->resolveCatalogId('departments', $postData['department'] ?? null),
             'position' => $postData['position'] ?? null,
             'phone' => $postData['phone'] ?? null,
             'admission_date' => $postData['admission_date'] ?? null,

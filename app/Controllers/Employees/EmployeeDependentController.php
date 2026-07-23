@@ -132,7 +132,7 @@ class EmployeeDependentController extends BaseController
         $query = $this->employeeModel->where('active IS TRUE', null, false);
 
         if (($this->currentUser->role ?? null) === 'gestor') {
-            $query->where('department', $this->currentUser->department ?? null);
+            $query->where('department_id', ! empty($this->currentUser->department_id) ? (int) $this->currentUser->department_id : 0);
         }
 
         return $query->orderBy('name', 'ASC')->findAll();

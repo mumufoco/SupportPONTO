@@ -213,6 +213,21 @@ class AuthorizationService
             return false;
         }
 
+        $actorDepartmentId = $this->normalizeInt($this->getValue($actor, 'department_id'));
+        $ownerDepartmentId = $this->normalizeInt(
+            $this->getValue($jobContext, 'owner_department_id')
+                ?? $this->getValue($jobContext, 'department_id')
+                ?? $this->getValue($this->getValue($jobContext, 'owner') ?? $this->getValue($jobContext, 'employee'), 'department_id')
+        );
+
+        // Preferimos a FK department_id (imune a renomeação/case/espaço no
+        // cadastro de departamentos) quando disponível dos dois lados. Só cai
+        // para o texto legado quando algum dos dois não tiver o id — não
+        // regride nenhum caso que já funcionava antes desta migração.
+        if ($actorDepartmentId !== null && $ownerDepartmentId !== null) {
+            return $actorDepartmentId === $ownerDepartmentId;
+        }
+
         $actorDepartment = $this->normalizeScalar($this->getValue($actor, 'department'));
         if ($actorDepartment === '') {
             return false;
@@ -230,6 +245,17 @@ class AuthorizationService
     /**
      * @param array|object|null $actor
      * @param array|object|null $fallbackEntity
+     */
+    /**
+     * Continua devolvendo o NOME do departamento (texto), não o id -- é
+     * consumido pelo pipeline de geração de relatórios/AFD
+     * (ReportRequestPolicyService::applyDepartmentRestriction() ->
+     * ReportExecutionGeneratorsTrait::applyDepartmentFilter(), que ainda
+     * filtra por employees.department texto). Mudar esse retorno para id
+     * quebraria esse pipeline sem migrá-lo junto -- fora do escopo desta
+     * correção (ver auditoria de "filtro de departamento"; belongsToSameDepartment()
+     * e canAccessAsyncJob() acima já usam department_id, que é o que resolve
+     * o bug relatado nos demais pontos).
      */
     public function resolveDepartmentRestriction($actor, $fallbackEntity = null): ?string
     {
@@ -393,6 +419,15 @@ class AuthorizationService
      */
     public function belongsToSameDepartment($left, $right): bool
     {
+        $leftDepartmentId = $this->normalizeInt($this->getValue($left, 'department_id'));
+        $rightDepartmentId = $this->normalizeInt($this->getValue($right, 'department_id'));
+
+        // FK primeiro (não regride com renomeação de departamento); cai para
+        // o texto legado só quando um dos dois lados não tem department_id.
+        if ($leftDepartmentId !== null && $rightDepartmentId !== null) {
+            return $leftDepartmentId === $rightDepartmentId;
+        }
+
         $leftDepartment = $this->normalizeScalar($this->getValue($left, 'department'));
         $rightDepartment = $this->normalizeScalar($this->getValue($right, 'department'));
 

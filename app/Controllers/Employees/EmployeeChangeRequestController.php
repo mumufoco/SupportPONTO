@@ -196,9 +196,18 @@ class EmployeeChangeRequestController extends BaseController
         $directFields = ['name', 'email', 'phone', 'cpf', 'address', 'birth_date', 'department', 'position'];
 
         if (in_array($fieldKey, $directFields, true)) {
-            $this->employeeModel->update((int)$req->employee_id, [
-                $fieldKey => $req->requested_value,
-            ]);
+            $updateData = [$fieldKey => $req->requested_value];
+
+            // Departamento tem uma FK real (department_id) além do texto livre
+            // solicitado -- sem resolver e gravar o id aqui também, essa
+            // atualização deixaria employees.department_id desatualizado e o
+            // colaborador "sumiria" dos filtros/telas que já usam a FK (ver
+            // BackfillEmployeeDepartmentId).
+            if ($fieldKey === 'department') {
+                $updateData['department_id'] = $this->resolveDepartmentId((string) $req->requested_value);
+            }
+
+            $this->employeeModel->update((int)$req->employee_id, $updateData);
 
             // Registro tipo "5" do AFD ("A" — alteração de cadastro de empregado no
             // REP), a partir do snapshot do empregado JÁ ATUALIZADO. Nunca bloqueia
@@ -226,6 +235,31 @@ class EmployeeChangeRequestController extends BaseController
 
         return redirect()->to(site_url('admin/change-requests'))
             ->with('success', 'Solicitação aprovada e alteração aplicada.');
+    }
+
+    /**
+     * Resolve o id do departamento em `departments` a partir do texto livre
+     * solicitado pelo colaborador (case/trim-insensitive). Sem correspondência
+     * exata no catálogo, devolve null -- o texto ainda é gravado normalmente,
+     * mas o admin precisa corrigir o department_id manualmente reabrindo o
+     * cadastro (mesmo tratamento do backfill em massa).
+     */
+    private function resolveDepartmentId(string $departmentName): ?int
+    {
+        $trimmed = trim($departmentName);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $row = \Config\Database::connect()
+            ->table('departments')
+            ->select('id')
+            ->where('LOWER(TRIM(name))', mb_strtolower($trimmed))
+            ->where('active', true)
+            ->get()
+            ->getRowArray();
+
+        return $row ? (int) $row['id'] : null;
     }
 
     // POST /admin/change-requests/{id}/reject

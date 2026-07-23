@@ -36,6 +36,7 @@ class JustificationQueryService
             'email' => $employee->email,
             'role' => Role::normalize((string) $employee->role)->value,
             'department' => $employee->department,
+            'department_id' => $employee->department_id ?? null,
         ];
     }
 
@@ -61,7 +62,8 @@ class JustificationQueryService
         // Resolve employeeIds once for gestor role (avoids duplicate query below)
         $employeeIds = null;
         if ($actor['role'] === Role::Gestor->value) {
-            $employeeIds = $this->employeeModel->where('department', $actor['department'])->findColumn('id') ?: [];
+            $actorDepartmentId = ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0;
+            $employeeIds = $this->employeeModel->where('department_id', $actorDepartmentId)->findColumn('id') ?: [];
         }
 
         $query = $this->justificationModel
@@ -174,7 +176,9 @@ class JustificationQueryService
 
         if ($actor['role'] === Role::Gestor->value) {
             $target = $this->employeeModel->find($justification->employee_id);
-            return $target && is_object($target) && $target->department === $actor['department'];
+            return $target && is_object($target)
+                && ! empty($actor['department_id'])
+                && (int) ($target->department_id ?? 0) === (int) $actor['department_id'];
         }
 
         return false;

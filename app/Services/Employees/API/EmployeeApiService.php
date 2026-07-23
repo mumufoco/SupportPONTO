@@ -115,7 +115,7 @@ class EmployeeApiService
         // Administradores do sistema não são colaboradores e não aparecem em "minha equipe".
         $query = $this->employeeModel->where('active', true)->where('role !=', 'admin');
         if ($this->hasDepartmentScope((string) $employee->role)) {
-            $query->where('department', $employee->department);
+            $query->where('department_id', ! empty($employee->department_id) ? (int) $employee->department_id : 0);
         }
 
         $members = $query->orderBy('name', 'ASC')->findAll();
@@ -156,8 +156,13 @@ class EmployeeApiService
             return ['success' => false, 'status' => 404, 'message' => 'Funcionário não encontrado.'];
         }
 
-        if ($this->hasDepartmentScope((string) $requester->role) && $targetEmployee->department !== $requester->department) {
-            return ['success' => false, 'status' => 403, 'message' => 'Acesso negado.'];
+        if ($this->hasDepartmentScope((string) $requester->role)) {
+            $requesterDepartmentId = ! empty($requester->department_id) ? (int) $requester->department_id : null;
+            $targetDepartmentId = ! empty($targetEmployee->department_id) ? (int) $targetEmployee->department_id : null;
+
+            if ($requesterDepartmentId === null || $requesterDepartmentId !== $targetDepartmentId) {
+                return ['success' => false, 'status' => 403, 'message' => 'Acesso negado.'];
+            }
         }
 
         return [

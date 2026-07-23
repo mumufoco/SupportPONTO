@@ -43,8 +43,8 @@ class PendingPunchModel extends Model
         return $this->where('client_uuid', $clientUuid)->first();
     }
 
-    /** Retorna pendências aguardando aprovação, opcionalmente por departamento */
-    public function getPending(?string $department = null): array
+    /** Retorna pendências aguardando aprovação, opcionalmente por departamento (FK) */
+    public function getPending(?int $departmentId = null): array
     {
         $builder = $this->select('pending_punches.*, employees.name AS employee_name, employees.department')
             ->join('employees', 'employees.id = pending_punches.employee_id', 'left')
@@ -55,8 +55,8 @@ class PendingPunchModel extends Model
             ->groupEnd()
             ->orderBy('pending_punches.intended_time', 'DESC');
 
-        if ($department !== null && $department !== '') {
-            $builder->where('employees.department', $department);
+        if ($departmentId !== null) {
+            $builder->where('employees.department_id', $departmentId);
         }
 
         return $builder->findAll();

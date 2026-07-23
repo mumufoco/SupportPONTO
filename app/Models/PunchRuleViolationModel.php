@@ -68,15 +68,15 @@ class PunchRuleViolationModel extends Model
     }
 
     /** Irregularidades pendentes de revisão, opcionalmente por departamento */
-    public function listPendingForManager(?string $department = null): array
+    public function listPendingForManager(?int $departmentId = null): array
     {
         $builder = $this->select('punch_rule_violations.*, employees.name AS employee_name, employees.department')
             ->join('employees', 'employees.id = punch_rule_violations.employee_id', 'left')
             ->where('punch_rule_violations.status', 'pendente')
             ->orderBy('punch_rule_violations.reference_date', 'DESC');
 
-        if ($department !== null && $department !== '') {
-            $builder->where('employees.department', $department);
+        if ($departmentId !== null) {
+            $builder->where('employees.department_id', $departmentId);
         }
 
         return $builder->findAll();

@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Models\AuditModel;
+use App\Models\DepartmentModel;
 use App\Models\EmployeeModel;
 use App\Models\JustificationModel;
 use App\Services\Queue\AsyncJobService;
@@ -21,6 +22,7 @@ class ReportCoordinatorService
             new EmployeeModel(),
             new JustificationModel(),
             new TimesheetService(),
+            new DepartmentModel(),
         ),
         private readonly AuthorizationService $authorizationService = new AuthorizationService(),
     ) {
@@ -43,6 +45,7 @@ class ReportCoordinatorService
             'email' => $employee->email,
             'role' => $employee->role,
             'department' => $employee->department,
+            'department_id' => $employee->department_id ?? null,
         ];
     }
 

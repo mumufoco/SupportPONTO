@@ -77,7 +77,7 @@ class WarningQueryService
         $query = $this->employeeModel->where('active IS TRUE', null, false)->where('role !=', 'admin');
 
         if ($actor['role'] === 'gestor') {
-            $query->where('department', $actor['department']);
+            $query->where('department_id', ! empty($actor['department_id']) ? (int) $actor['department_id'] : 0);
         }
 
         return [

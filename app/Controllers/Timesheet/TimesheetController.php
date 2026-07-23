@@ -492,6 +492,7 @@ class TimesheetController extends BaseController
             'email' => $employee->email,
             'role' => $employee->role,
             'department' => $employee->department,
+            'department_id' => $employee->department_id ?? null,
             'active' => (bool) $employee->active,
         ];
     }

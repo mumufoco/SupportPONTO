@@ -50,8 +50,11 @@ class EmployeeManagementService
             ->where('role !=', 'admin')
             ->orderBy('name', 'ASC');
 
-        if ($this->authorizationService->hasRole($currentUser, 'gestor') && $currentUser !== null && !empty($currentUser->department)) {
-            $query->where('department', $currentUser->department);
+        if ($this->authorizationService->hasRole($currentUser, 'gestor') && $currentUser !== null) {
+            // Sem department_id no gestor, força zero resultados em vez de
+            // cair para "sem filtro" (mostraria todo mundo para um gestor mal
+            // configurado) -- mesmo raciocínio usado em ReportViewService.
+            $query->where('department_id', ! empty($currentUser->department_id) ? (int) $currentUser->department_id : 0);
         }
 
         return $query->findAll();
