@@ -176,11 +176,52 @@ window.SupportPontoPunchUI = (() => {
         return cb ? (cb.checked ? 1 : 0) : 0;
     }
 
+    // Métodos capturáveis offline: código/CPF/QR/facial funcionam só com
+    // câmera/formulário do navegador. Biometria digital fica de fora porque
+    // depende do leitor físico via WebSocket local (fp_bridge) — um fluxo de
+    // hardware separado, com sua própria mensagem de indisponibilidade.
+    function methodForEndpoint(endpoint) {
+        if (endpoint === endpointMap.codigo) return 'codigo';
+        if (endpoint === endpointMap.cpf) return 'cpf';
+        if (endpoint === endpointMap.qr) return 'qrcode';
+        if (endpoint === endpointMap.face) return 'facial';
+        return null;
+    }
+
+    function renderOfflineReceipt(item) {
+        const when = new Date(item.client_captured_at).toLocaleString('pt-BR');
+        return `<div class="small mt-2">Salvo em ${escHtml(when)} · será sincronizado automaticamente. Acompanhe o status na lista de pendências offline abaixo.</div>`;
+    }
+
+    async function queueOfflinePunch(method, payload) {
+        if (!window.SupportPontoOffline) {
+            setResult('danger', 'Sem conexão e o módulo de fila offline não carregou. Tente recarregar a página assim que possível.');
+            return false;
+        }
+        try {
+            const item = await window.SupportPontoOffline.queuePunch(method, payload);
+            setResult('warning', 'Sem conexão: seu ponto foi salvo neste dispositivo e será sincronizado automaticamente quando a internet voltar.', renderOfflineReceipt(item));
+            clearMethodInputs();
+            return true;
+        } catch (error) {
+            setResult('danger', 'Não foi possível salvar o ponto localmente neste dispositivo. Tente novamente.');
+            return false;
+        }
+    }
+
     async function sendPunch(endpoint, payload) {
         const override = getHolidayOverride();
         if (override) {
             payload = Object.assign({}, payload, { holiday_override: 1 });
         }
+
+        const offlineMethod = methodForEndpoint(endpoint);
+        const canQueueOffline = !!(window.SupportPontoOffline && offlineMethod);
+
+        if (canQueueOffline && !navigator.onLine) {
+            return await queueOfflinePunch(offlineMethod, payload);
+        }
+
         setResult('secondary', 'Processando registro de ponto...');
         try {
             const response = await spFetch(endpoint, {
@@ -214,6 +255,12 @@ window.SupportPontoPunchUI = (() => {
             }
             return response.ok;
         } catch (error) {
+            // navigator.onLine pode reportar "online" incorretamente (falso
+            // positivo comum) -- se o fetch falhar por rede mesmo assim, cai
+            // para a fila offline como último recurso antes de desistir.
+            if (canQueueOffline) {
+                return await queueOfflinePunch(offlineMethod, payload);
+            }
             setResult('danger', 'Falha de comunicação com o servidor.');
             return false;
         }

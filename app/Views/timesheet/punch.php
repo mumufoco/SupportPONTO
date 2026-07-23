@@ -190,6 +190,18 @@
         </div>
     </div>
 
+    <!-- Pontos salvos neste dispositivo (fila offline) -->
+    <div class="sp-punch-stage d-none" id="offlineQueueStage">
+        <div class="sp-punch-stage__header">
+            <h2 class="sp-profile-card__title">
+                <i class="bi bi-cloud-arrow-up"></i> Pontos salvos neste dispositivo
+            </h2>
+        </div>
+        <div class="sp-punch-stage__body">
+            <div id="offlineQueueList" class="small"></div>
+        </div>
+    </div>
+
     <!-- Métodos disponíveis — colapsável -->
     <?php if (!empty($methodReadiness)): ?>
     <div class="sp-callout-neutral mt-2">
@@ -256,6 +268,69 @@ $canOverride  = !empty($canOverride);
             cb.addEventListener('change', () => togglePunchForms(cb.checked));
         }
     });
+})();
+</script>
+<script <?= csp_script_nonce_attr() ?>>
+(function () {
+    const stage = document.getElementById('offlineQueueStage');
+    const list = document.getElementById('offlineQueueList');
+    if (!stage || !list) return;
+
+    const statusMeta = {
+        queued: { label: 'Aguardando conexão para sincronizar', cls: 'alert-secondary' },
+        syncing: { label: 'Sincronizando...', cls: 'alert-info' },
+        synced: { label: 'Sincronizado com sucesso', cls: 'alert-success' },
+        pending_review: { label: 'Sincronizado — pendente de aprovação do gestor', cls: 'alert-warning' },
+        failed: { label: 'Falha ao sincronizar', cls: 'alert-danger' },
+    };
+
+    const typeLabels = {
+        entrada: 'Entrada',
+        saida: 'Saída',
+        intervalo_inicio: 'Início do intervalo',
+        intervalo_fim: 'Fim do intervalo',
+    };
+
+    function escHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = String(str ?? '');
+        return div.innerHTML;
+    }
+
+    function render(queue) {
+        if (!queue || queue.length === 0) {
+            stage.classList.add('d-none');
+            list.innerHTML = '';
+            return;
+        }
+
+        stage.classList.remove('d-none');
+        list.innerHTML = queue.map((item) => {
+            const meta = statusMeta[item.status] || { label: item.status, cls: 'alert-secondary' };
+            const when = new Date(item.client_captured_at).toLocaleString('pt-BR');
+            const typeLabel = escHtml(typeLabels[item.punch_type] || item.punch_type);
+            const errorLine = item.status === 'failed' && item.error_message
+                ? `<div class="mt-1">${escHtml(item.error_message)}</div>`
+                : '';
+            return `<div class="alert ${meta.cls} py-2 px-3 mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">`
+                + `<span><strong>${typeLabel}</strong> · ${escHtml(when)}</span>`
+                + `<span>${escHtml(meta.label)}${errorLine}</span>`
+                + `</div>`;
+        }).join('');
+    }
+
+    function refresh() {
+        if (window.SupportPontoOffline) {
+            window.SupportPontoOffline.getQueue().then(render).catch(() => {});
+        }
+    }
+
+    if (window.SupportPontoOffline) {
+        window.SupportPontoOffline.onStatusChange((event) => render(event.queue || []));
+        refresh();
+    } else {
+        document.addEventListener('DOMContentLoaded', refresh);
+    }
 })();
 </script>
 <?= $this->endSection() ?>

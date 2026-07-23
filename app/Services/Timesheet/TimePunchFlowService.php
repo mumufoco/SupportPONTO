@@ -2,6 +2,7 @@
 
 namespace App\Services\Timesheet;
 
+use App\DTO\Timesheet\PunchRegistrationCommand;
 use App\Models\AuditModel;
 use App\Models\EmployeeModel;
 use App\Models\SettingModel;
@@ -216,6 +217,167 @@ class TimePunchFlowService
             $this->logFacialRecognitionAttempt(null, false, 0, 'punch', $e->getMessage(), $request);
             return $this->errorResult('Erro ao processar reconhecimento facial.', 500);
         }
+    }
+
+    /**
+     * Sincroniza UMA marcação capturada offline (PWA) pelo colaborador logado.
+     * Diferente dos handlers online (handleCodePunch, handleFacialPunch, etc.),
+     * o horário gravado é o capturado no dispositivo no momento original da
+     * marcação ($clientCapturedAt), não o horário em que a sincronização
+     * acontece — e a chamada é idempotente via $clientUuid (ver
+     * TimesheetPunchRegistrationService::idempotentResultFor()).
+     *
+     * A sequência de marcação (entrada -> intervalo -> saída) continua sendo
+     * validada normalmente contra o estado real do servidor: como o cliente
+     * envia os itens da fila em ordem cronológica, um de cada vez, cada
+     * chamada já reflete o resultado da anterior. Se mesmo assim a sequência
+     * não bater (ex.: o colaborador bateu ponto por outro canal enquanto
+     * estava offline), o item cai automaticamente na fila de aprovação do
+     * gestor em vez de falhar sem alternativa.
+     */
+    public function handleOfflineSync(
+        RequestInterface $request,
+        string $method,
+        string $punchType,
+        string $clientUuid,
+        string $clientCapturedAt,
+        array $credentials,
+        ?string $photo,
+        mixed $latitude,
+        mixed $longitude,
+        mixed $accuracy
+    ): array {
+        $validation = $this->validateRequiredPunchInput([
+            'method' => $method,
+            'punch_type' => $punchType,
+            'client_uuid' => $clientUuid,
+            'client_captured_at' => $clientCapturedAt,
+        ], [
+            'method' => 'required|in_list[codigo,cpf,qrcode,facial,biometria]',
+            'punch_type' => 'required|in_list[entrada,saida,intervalo_inicio,intervalo_fim]',
+            'client_uuid' => 'required|min_length[8]|max_length[64]',
+            'client_captured_at' => 'required|valid_date',
+        ]);
+
+        if (! $validation['valid']) {
+            return $this->invalidDataResponse($validation['errors']);
+        }
+
+        $employeeResolution = $this->resolveOfflineSyncEmployee($method, $credentials, $photo);
+        if (! ($employeeResolution['success'] ?? false)) {
+            return $employeeResolution;
+        }
+
+        $employee = $employeeResolution['employee'];
+        $employeeId = (int) $employee->id;
+
+        $command = new PunchRegistrationCommand(
+            employeeId: $employeeId,
+            punchType: $punchType,
+            method: $method,
+            punchTime: $clientCapturedAt,
+            latitude: $latitude,
+            longitude: $longitude,
+            accuracy: $accuracy,
+            ipAddress: $request->getIPAddress(),
+            userAgent: (string) $request->getUserAgent()->getAgentString(),
+            photo: $photo,
+            context: ['offline_sync' => true],
+            skipCooldownValidation: true,
+            source: 'offline_sync',
+            clientUuid: $clientUuid,
+        );
+
+        $result = (new TimesheetPunchRegistrationService())->register($command);
+
+        if (! ($result['success'] ?? false) && (($result['errors']['punch_type'] ?? null) === 'invalid_sequence')) {
+            $this->auditModel->log(
+                $employeeId,
+                'PUNCH_OFFLINE_SYNC_CONFLICT',
+                'pending_punches',
+                null,
+                null,
+                ['punch_type' => $punchType, 'method' => $method, 'client_captured_at' => $clientCapturedAt],
+                'Sincronização offline com conflito de sequência — roteado para aprovação do gestor.',
+                'warning'
+            );
+
+            return (new PendingPunchService())->submitFromOfflineSync(
+                $employeeId,
+                $punchType,
+                $clientCapturedAt,
+                $method,
+                $photo,
+                is_numeric($latitude) ? (float) $latitude : null,
+                is_numeric($longitude) ? (float) $longitude : null,
+                $clientUuid,
+                $request
+            );
+        }
+
+        if (! ($result['success'] ?? false)) {
+            $this->auditModel->log(
+                $employeeId,
+                'PUNCH_OFFLINE_SYNC_FAILED',
+                'time_punches',
+                null,
+                null,
+                ['punch_type' => $punchType, 'method' => $method, 'status' => $result['status'] ?? 400, 'errors' => $result['errors'] ?? null],
+                $result['message'] ?? 'Falha ao sincronizar marcação offline.',
+                'warning'
+            );
+        }
+
+        return $result;
+    }
+
+    private function resolveOfflineSyncEmployee(string $method, array $credentials, ?string $photo): array
+    {
+        switch ($method) {
+            case 'codigo':
+                $employee = $this->punchService->findEmployeeByCode((string) ($credentials['unique_code'] ?? ''));
+                if (! $employee) {
+                    return $this->errorResult('Código inválido.', 404);
+                }
+                break;
+
+            case 'cpf':
+                $cpfDigits = preg_replace('/\D+/', '', (string) ($credentials['cpf'] ?? '')) ?? '';
+                $employee = $this->punchService->findEmployeeByCpf($cpfDigits);
+                if (! $employee) {
+                    return $this->errorResult('CPF inválido ou funcionário inativo.', 404);
+                }
+                break;
+
+            case 'qrcode':
+                $qrValidation = $this->punchService->validateQrToken((string) ($credentials['qr_data'] ?? ''));
+                if (! ($qrValidation['valid'] ?? false)) {
+                    return $this->errorResult($qrValidation['error'] ?? 'QR Code inválido.', 400);
+                }
+                $employee = $qrValidation['employee'] ?? null;
+                break;
+
+            case 'facial':
+                if (! $photo) {
+                    return $this->errorResult('Foto é obrigatória para registro facial.', 400);
+                }
+                $faceService = service('faceRecognition') ?: new \App\Services\Biometric\FaceRecognitionService();
+                $recognition = $faceService->recognizeFace($photo);
+                if (! ($recognition['success'] ?? false) || ! ($recognition['recognized'] ?? false)) {
+                    return $this->errorResult('Rosto não reconhecido.', 404);
+                }
+                $employee = $recognition['employee'] ?? null;
+                break;
+
+            default:
+                return $this->errorResult('Método de sincronização inválido.', 400);
+        }
+
+        if (! $employee || ! ($employee->active ?? false)) {
+            return $this->errorResult('Funcionário não encontrado ou inativo.', 404);
+        }
+
+        return ['success' => true, 'employee' => $employee];
     }
 
     public function validateKioskToken(?string $token, string $clientIp, ?RequestInterface $request = null): bool

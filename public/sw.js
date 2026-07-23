@@ -1,12 +1,23 @@
 // SupportPONTO - Advanced Service Worker
-// Version: 1.1.502
+// Version: 1.1.503
 // Description: Professional PWA with advanced caching, offline support, and background sync
 
-const CACHE_VERSION = '1.1.502-network-first-default';
+const CACHE_VERSION = '1.1.503-offline-punch-sync';
 const CACHE_PREFIX = 'supportponto';
 const CACHE_CORE = `${CACHE_PREFIX}-core-v${CACHE_VERSION}`;
 const CACHE_STATIC = `${CACHE_PREFIX}-static-v${CACHE_VERSION}`;
+const CACHE_OFFLINE_SHELL = `${CACHE_PREFIX}-offline-shell-v${CACHE_VERSION}`;
 const MAX_CORE_CACHE_SIZE = 20;
+
+// Página "molde" da experiência de ponto offline: sempre que carregada com
+// sucesso online, o HTML mais recente é salvo neste cache. É o que
+// getOfflineFallback() serve para QUALQUER navegação autenticada que falhar
+// por falta de rede — não só para /timesheet/punch em si — para que "todas
+// as páginas autenticadas redirecionam para a tela de ponto offline" quando
+// o dispositivo perde conexão (ver offline-sync.js no lado do cliente, que
+// cobre o caso de a página já estar aberta e ficar offline em primeiro
+// plano; este cache cobre o caso de navegação/refresh sem rede alguma).
+const OFFLINE_SHELL_PATH = '/timesheet/punch';
 
 // Core assets - cached immediately on install. Estas sao as UNICAS paginas
 // HTML que ficam disponiveis offline (landing/acesso rapido); tudo o mais e
@@ -72,7 +83,8 @@ self.addEventListener('activate', (event) => {
               // Delete old caches that don't match current version
               return cacheName.startsWith(CACHE_PREFIX) &&
                      cacheName !== CACHE_CORE &&
-                     cacheName !== CACHE_STATIC;
+                     cacheName !== CACHE_STATIC &&
+                     cacheName !== CACHE_OFFLINE_SHELL;
             })
             .map((cacheName) => {
               console.log('[SW] Deleting old cache:', cacheName);
@@ -98,7 +110,9 @@ self.addEventListener('activate', (event) => {
 //
 //   1. Asset estatico (css/js/fonte/imagem)  -> cache-first
 //   2. Pagina de entrada do PWA (CORE_ASSETS) -> cache-first com fallback de rede
-//   3. Qualquer outra coisa (toda pagina HTML dinamica do app)
+//   3. Pagina "molde" do ponto offline        -> network-first, atualiza o
+//      (OFFLINE_SHELL_PATH)                      cache do shell a cada acesso online
+//   4. Qualquer outra coisa (toda pagina HTML dinamica do app)
 //                                              -> SEMPRE rede (network-only)
 // ============================================================================
 self.addEventListener('fetch', (event) => {
@@ -124,7 +138,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3) Padrao: qualquer outra pagina (dashboard, timesheet, employees,
+  // 3) Pagina de registro de ponto autenticada: busca da rede sempre que
+  //    possivel (conteudo dinamico: CSRF token, nome do colaborador, metodos
+  //    habilitados) mas atualiza uma copia offline a cada sucesso, para servir
+  //    de fallback quando qualquer pagina autenticada falhar por falta de rede.
+  if (requestURL.pathname === OFFLINE_SHELL_PATH) {
+    event.respondWith(networkFirstAndUpdateOfflineShell(request));
+    return;
+  }
+
+  // 4) Padrao: qualquer outra pagina (dashboard, timesheet, employees,
   //    my-schedules, lgpd, notifications, chat, audit, qrcode, o que vier a
   //    ser criado no futuro, etc.) e sempre buscada da rede.
   event.respondWith(networkOnly(request));
@@ -191,6 +214,31 @@ async function cacheFirstWithNetworkFallback(request, cacheName) {
 }
 
 /**
+ * Network First + atualiza o shell offline do ponto
+ * Busca a rede normalmente; em caso de sucesso, guarda uma copia em
+ * CACHE_OFFLINE_SHELL (sobrescrevendo a anterior). Se a rede falhar, serve a
+ * ultima copia salva — e so ai, na falta de qualquer copia, cai no fallback
+ * generico (getOfflineFallback).
+ */
+async function networkFirstAndUpdateOfflineShell(request) {
+  try {
+    const networkResponse = await fetch(request);
+
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(CACHE_OFFLINE_SHELL);
+      cache.put(OFFLINE_SHELL_PATH, networkResponse.clone());
+    }
+
+    return networkResponse;
+  } catch (error) {
+    console.log('[SW] Offline: servindo shell salvo de', OFFLINE_SHELL_PATH);
+    const cache = await caches.open(CACHE_OFFLINE_SHELL);
+    const cachedShell = await cache.match(OFFLINE_SHELL_PATH);
+    return cachedShell || await getOfflineFallback(request);
+  }
+}
+
+/**
  * Network Only Strategy - Always fetch from network
  * Default strategy for every dynamic HTML page in the app.
  */
@@ -216,16 +264,30 @@ function isStaticAsset(pathname) {
 
 /**
  * Get offline fallback based on request type
+ *
+ * Para navegacao de documento (qualquer pagina autenticada que falhou por
+ * falta de rede), prioriza o shell salvo de /timesheet/punch — e assim a
+ * pessoa cai na tela de ponto offline em vez de um erro generico, atendendo
+ * "todas as paginas autenticadas redirecionam para a tela de ponto offline"
+ * sem precisar cachear cada pagina do sistema individualmente. So se esse
+ * shell nunca foi salvo (colaborador nunca abriu /timesheet/punch online)
+ * e' que cai no fallback publico antigo (/registro-rapido).
  */
 async function getOfflineFallback(request) {
-  const cache = await caches.open(CACHE_CORE);
-
   if (request.destination === 'document') {
-    return await cache.match(OFFLINE_PAGE) || new Response('Offline', { status: 503 });
+    const shellCache = await caches.open(CACHE_OFFLINE_SHELL);
+    const cachedShell = await shellCache.match(OFFLINE_SHELL_PATH);
+    if (cachedShell) {
+      return cachedShell;
+    }
+
+    const coreCache = await caches.open(CACHE_CORE);
+    return await coreCache.match(OFFLINE_PAGE) || new Response('Offline', { status: 503 });
   }
 
   if (request.destination === 'image') {
-    return await cache.match(OFFLINE_IMAGE) || new Response('Offline', { status: 503 });
+    const coreCache = await caches.open(CACHE_CORE);
+    return await coreCache.match(OFFLINE_IMAGE) || new Response('Offline', { status: 503 });
   }
 
   return new Response('Offline', { status: 503 });
@@ -257,19 +319,146 @@ self.addEventListener('sync', (event) => {
   }
 });
 
+// Mesmo nome/versao/store usados pelo modulo de pagina em
+// public/assets/js/offline-sync.js — os dois precisam concordar sobre o
+// schema do IndexedDB, ja que ambos podem ler/escrever a mesma fila.
+const OFFLINE_DB_NAME = 'supportponto-offline';
+const OFFLINE_DB_VERSION = 1;
+const OFFLINE_STORE_NAME = 'pending_punches';
+const OFFLINE_SYNC_ENDPOINT = '/timesheet/punch/sync';
+const OFFLINE_CSRF_COOKIE_NAME = 'csrf_cookie_name';
+const OFFLINE_CSRF_HEADER_NAME = 'X-CSRF-TOKEN';
+
 /**
- * Sync offline time punches when connection is restored
+ * Sync offline time punches when connection is restored.
+ *
+ * Caminho COMPLEMENTAR de sincronizacao: o caminho principal e' o listener
+ * 'online' em primeiro plano (offline-sync.js, com acesso normal a
+ * document.cookie para o token CSRF). Este caminho roda em background sync
+ * (paginas fechadas), suportado apenas em navegadores Chromium — e nesse
+ * contexto nao ha' acesso a document.cookie, entao o token CSRF e' lido via
+ * Cookie Store API quando disponivel; se nao estiver, a tentativa falha com
+ * 403 e o item permanece na fila para a proxima sincronizacao em primeiro
+ * plano (nunca e' perdido).
  */
 async function syncTimePunches() {
-  try {
-    console.log('[SW] Syncing offline time punches...');
-    // This would integrate with IndexedDB to sync offline data
-    // Implementation depends on your backend API structure
-    return Promise.resolve();
-  } catch (error) {
-    console.error('[SW] Failed to sync time punches:', error);
-    throw error;
+  console.log('[SW] Syncing offline time punches...');
+
+  const db = await openOfflineDb();
+  const queued = await getQueuedPunches(db);
+
+  queued.sort((a, b) => String(a.client_captured_at).localeCompare(String(b.client_captured_at)));
+
+  const csrfToken = await getCsrfTokenForBackgroundSync();
+
+  for (const item of queued) {
+    try {
+      const headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+      if (csrfToken) {
+        headers[OFFLINE_CSRF_HEADER_NAME] = csrfToken;
+      }
+
+      const response = await fetch(OFFLINE_SYNC_ENDPOINT, {
+        method: 'POST',
+        headers,
+        credentials: 'same-origin',
+        body: JSON.stringify(offlineItemToPayload(item)),
+      });
+
+      if (response.status === 401 || response.status === 429) {
+        // Sessao expirada ou throttle: para a fila inteira aqui — a proxima
+        // sincronizacao em primeiro plano (offline-sync.js) trata esses casos
+        // com a UI apropriada (pedir login / respeitar Retry-After).
+        break;
+      }
+
+      const json = await response.json().catch(() => ({}));
+      await updateQueuedPunch(db, item.client_uuid, response.ok && json.success !== false
+        ? { status: (response.status === 202 ? 'pending_review' : 'synced'), server_response: json.data || null }
+        : { status: 'failed', error_message: json.message || `HTTP ${response.status}` });
+    } catch (error) {
+      console.error('[SW] Falha ao sincronizar item offline (mantido na fila):', error);
+      break;
+    }
   }
+
+  db.close();
+}
+
+function offlineItemToPayload(item) {
+  return {
+    client_uuid: item.client_uuid,
+    punch_type: item.punch_type,
+    method: item.method,
+    unique_code: item.credentials ? item.credentials.unique_code : null,
+    cpf: item.credentials ? item.credentials.cpf : null,
+    qr_data: item.credentials ? item.credentials.qr_data : null,
+    photo: item.photo || null,
+    latitude: item.location_lat ?? null,
+    longitude: item.location_lng ?? null,
+    accuracy: item.location_accuracy ?? null,
+    client_captured_at: item.client_captured_at,
+  };
+}
+
+async function getCsrfTokenForBackgroundSync() {
+  try {
+    if ('cookieStore' in self) {
+      const cookie = await self.cookieStore.get(OFFLINE_CSRF_COOKIE_NAME);
+      if (cookie && cookie.value) {
+        return cookie.value;
+      }
+    }
+  } catch (error) {
+    console.warn('[SW] Nao foi possivel ler o cookie de CSRF via cookieStore:', error);
+  }
+  return null;
+}
+
+function openOfflineDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(OFFLINE_DB_NAME, OFFLINE_DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(OFFLINE_STORE_NAME)) {
+        const store = db.createObjectStore(OFFLINE_STORE_NAME, { keyPath: 'client_uuid' });
+        store.createIndex('by_status', 'status', { unique: false });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function getQueuedPunches(db) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(OFFLINE_STORE_NAME, 'readonly');
+    const store = tx.objectStore(OFFLINE_STORE_NAME);
+    const index = store.index('by_status');
+    const request = index.getAll('queued');
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function updateQueuedPunch(db, clientUuid, changes) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(OFFLINE_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(OFFLINE_STORE_NAME);
+    const getRequest = store.get(clientUuid);
+    getRequest.onsuccess = () => {
+      const record = getRequest.result;
+      if (!record) {
+        resolve();
+        return;
+      }
+      Object.assign(record, changes, { updated_at: new Date().toISOString() });
+      const putRequest = store.put(record);
+      putRequest.onsuccess = () => resolve();
+      putRequest.onerror = () => reject(putRequest.error);
+    };
+    getRequest.onerror = () => reject(getRequest.error);
+  });
 }
 
 // ============================================================================

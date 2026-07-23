@@ -243,6 +243,90 @@ class PendingPunchService
     }
 
     /**
+     * Cria uma pendência a partir de uma marcação capturada offline (PWA) cuja
+     * sincronização esbarrou em conflito de sequência (ex.: o colaborador já
+     * registrou o ponto por outro canal enquanto o dispositivo estava sem
+     * conexão). Diferente de submit() — feito para falhas técnicas detectadas
+     * enquanto o colaborador está ONLINE, com attemptLog da sessão — este
+     * caminho não depende de PendingPunchAttemptStore: a "evidência" é o
+     * próprio horário original capturado no dispositivo e a foto/localização
+     * enviadas junto. Preserva intended_time = horário real da captura, não o
+     * horário da sincronização.
+     */
+    public function submitFromOfflineSync(
+        int $employeeId,
+        string $punchType,
+        string $intendedTime,
+        string $method,
+        ?string $photo,
+        ?float $lat,
+        ?float $lng,
+        string $clientUuid,
+        RequestInterface $request
+    ): array {
+        $duplicate = $this->pendingModel->findByClientUuid($clientUuid);
+        if ($duplicate) {
+            return [
+                'success' => true,
+                'message' => 'Esta marcação já está pendente de aprovação do gestor.',
+                'status'  => 202,
+                'data'    => ['pending_id' => $duplicate->id, 'pending_review' => true, 'already_processed' => true],
+            ];
+        }
+
+        $evidencePackage = [
+            'offline_sync'  => true,
+            'method'        => $method,
+            'has_photo'     => $photo !== null && $photo !== '',
+            'ip_address'    => $request->getIPAddress(),
+            'user_agent'    => (string) $request->getUserAgent(),
+            'synced_at'     => date('Y-m-d H:i:s'),
+        ];
+
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+24 hours'));
+
+        $data = [
+            'employee_id'         => $employeeId,
+            'intended_punch_type' => $punchType,
+            'intended_time'       => $intendedTime,
+            'justification_text'  => 'Marcação capturada offline (sem conexão com o servidor) e sincronizada automaticamente; o horário original foi preservado, mas a sequência de marcações não pôde ser confirmada em tempo real.',
+            'situation_type'      => 'offline_sync_conflict',
+            'evidence_package'    => json_encode($evidencePackage, JSON_UNESCAPED_UNICODE),
+            'ip_address'          => $request->getIPAddress(),
+            'user_agent'          => (string) $request->getUserAgent(),
+            'geolocation_lat'     => $lat,
+            'geolocation_lng'     => $lng,
+            'status'              => 'pending',
+            'expires_at'          => $expiresAt,
+            'client_uuid'         => $clientUuid,
+        ];
+
+        if (!$this->pendingModel->insert($data)) {
+            return ['success' => false, 'message' => 'Erro ao registrar marcação offline pendente. Tente novamente.', 'status' => 500];
+        }
+
+        $pendingId = $this->pendingModel->getInsertID();
+
+        $this->auditLogger->logEntityEvent(
+            $employeeId,
+            'PENDING_PUNCH_SUBMITTED',
+            'pending_punches',
+            (int) $pendingId,
+            null,
+            ['punch_type' => $punchType, 'situation' => 'offline_sync_conflict', 'method' => $method],
+            'Marcação offline sincronizada com conflito de sequência — pendente de aprovação do gestor',
+            'warning'
+        );
+
+        return [
+            'success' => true,
+            'message' => 'Marcação sincronizada, mas ficou pendente de aprovação do gestor devido a um conflito de sequência.',
+            'status'  => 202,
+            'data'    => ['pending_id' => $pendingId, 'pending_review' => true, 'expires_at' => $expiresAt],
+        ];
+    }
+
+    /**
      * Gestor/RH aprova o registro pendente e efetiva o ponto.
      */
     public function approve(int $pendingId, object|array $reviewer, string $reviewNotes = ''): array

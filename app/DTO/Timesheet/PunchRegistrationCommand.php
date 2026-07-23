@@ -25,6 +25,7 @@ final class PunchRegistrationCommand
         public readonly bool $confirmedOutsideGeofence = false,
         public readonly bool $holidayOverride = false,
         public readonly string $source = 'unknown',
+        public readonly ?string $clientUuid = null,
     ) {
     }
 
@@ -35,7 +36,8 @@ final class PunchRegistrationCommand
         RequestInterface $request,
         array $additionalData = [],
         array $context = [],
-        string $source = 'web'
+        string $source = 'web',
+        ?string $clientUuid = null
     ): self {
         $jsonBody = $request->getJSON(true) ?? [];
 
@@ -106,6 +108,7 @@ final class PunchRegistrationCommand
             confirmedOutsideGeofence: $confirmedOutsideGeofence,
             holidayOverride: $holidayOverride,
             source: $source,
+            clientUuid: $clientUuid,
         );
     }
 

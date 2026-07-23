@@ -96,6 +96,28 @@ class TimePunchEndpointPunchProcessor
         );
     }
 
+    public function handleOfflineSync(RequestInterface $request): array
+    {
+        return $this->flowService->handleOfflineSync(
+            $request,
+            (string) ($this->inputResolver->resolvePunchMethod($request) ?? ''),
+            (string) ($this->inputResolver->resolvePunchType($request) ?? ''),
+            (string) ($this->inputResolver->input($request, 'client_uuid') ?? ''),
+            (string) ($this->inputResolver->input($request, 'client_captured_at') ?? ''),
+            [
+                'unique_code' => $this->inputResolver->input($request, 'unique_code'),
+                'cpf' => $this->inputResolver->input($request, 'cpf'),
+                'qr_data' => $this->inputResolver->input($request, 'qr_data', 'token'),
+            ],
+            $this->inputResolver->input($request, 'photo', 'face_image') !== null
+                ? (string) $this->inputResolver->input($request, 'photo', 'face_image')
+                : null,
+            $this->inputResolver->input($request, 'latitude', 'location_lat'),
+            $this->inputResolver->input($request, 'longitude', 'location_lng'),
+            $this->inputResolver->input($request, 'accuracy', 'location_accuracy')
+        );
+    }
+
     private function resolveFaceGuard(): TimePunchEndpointFaceGuard
     {
         return $this->faceGuard ?? new TimePunchEndpointFaceGuard($this->flowService, $this->resultFactory);

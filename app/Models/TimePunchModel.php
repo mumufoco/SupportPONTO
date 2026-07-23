@@ -57,6 +57,8 @@ class TimePunchModel extends Model
         'photo_path',
         'validation_method',
         'is_valid',
+        // Sincronização offline (PWA): chave de idempotência gerada pelo dispositivo.
+        'client_uuid',
     ];
 
     protected $useTimestamps = true;
@@ -260,6 +262,16 @@ class TimePunchModel extends Model
     public function getDateRangeBounds(string $startDate, string $endDate): array
     {
         return [$startDate . ' 00:00:00', date('Y-m-d H:i:s', strtotime($endDate . ' +1 day'))];
+    }
+
+    /**
+     * Sincronização offline (PWA): localiza uma marcação já gravada pelo mesmo
+     * client_uuid, para que um reenvio (timeout/retry) devolva o resultado já
+     * processado em vez de duplicar a marcação.
+     */
+    public function findByClientUuid(string $clientUuid): ?object
+    {
+        return $this->where('client_uuid', $clientUuid)->first();
     }
 
     public function canPunch(int $employeeId): bool

@@ -16,6 +16,8 @@ class PendingPunchModel extends Model
         'technical_failures_count', 'terminal_id', 'ip_address', 'user_agent',
         'geolocation_lat', 'geolocation_lng', 'status', 'reviewed_by', 'reviewed_at',
         'review_notes', 'final_punch_id', 'expires_at', 'processed_at',
+        // Sincronização offline (PWA): chave de idempotência gerada pelo dispositivo.
+        'client_uuid',
     ];
 
     protected $useTimestamps = true;
@@ -27,9 +29,19 @@ class PendingPunchModel extends Model
         'intended_punch_type'  => 'required|in_list[entrada,saida,intervalo_inicio,intervalo_fim]',
         'intended_time'        => 'required',
         'justification_text'   => 'required|min_length[20]|max_length[1000]',
-        'situation_type'       => 'required|in_list[equipment_failure,system_slow,camera_inaccessible,biometric_failed,missing_checkout,other]',
+        'situation_type'       => 'required|in_list[equipment_failure,system_slow,camera_inaccessible,biometric_failed,missing_checkout,offline_sync_conflict,other]',
         'status'               => 'required|in_list[pending,approved,rejected,expired,cancelled,awaiting_employee]',
     ];
+
+    /**
+     * Sincronização offline (PWA): localiza uma pendência já gravada pelo mesmo
+     * client_uuid, para que um reenvio (timeout/retry) devolva o resultado já
+     * processado em vez de duplicar a pendência.
+     */
+    public function findByClientUuid(string $clientUuid): ?object
+    {
+        return $this->where('client_uuid', $clientUuid)->first();
+    }
 
     /** Retorna pendências aguardando aprovação, opcionalmente por departamento */
     public function getPending(?string $department = null): array

@@ -29,6 +29,11 @@
                         <div>
                             <strong><?= esc($p->employee_name ?? 'Colaborador') ?></strong>
                             <span class="badge bg-secondary ms-2"><?= esc($p->department ?? '') ?></span>
+                            <?php if (($p->situation_type ?? '') === 'offline_sync_conflict'): ?>
+                                <span class="badge bg-info text-dark ms-2" title="Marcação capturada offline (PWA) e sincronizada automaticamente; caiu aqui por um conflito de sequência.">
+                                    <i class="bi bi-cloud-arrow-up me-1"></i>Sincronizado offline
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <small class="text-muted"><?= esc(date('d/m/Y H:i', strtotime($p->intended_time))) ?></small>
                     </div>
@@ -40,7 +45,7 @@
 
                     <p class="mb-1 small">
                         <span class="fw-semibold">Situação:</span>
-                        <?= esc(str_replace('_', ' ', $p->situation_type)) ?>
+                        <?= esc($p->situation_type === 'offline_sync_conflict' ? 'Sincronização offline (conflito de sequência)' : str_replace('_', ' ', $p->situation_type)) ?>
                     </p>
 
                     <p class="mb-2 small text-muted border-start border-3 ps-2">

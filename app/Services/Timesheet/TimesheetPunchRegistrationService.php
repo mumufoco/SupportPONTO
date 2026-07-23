@@ -42,6 +42,13 @@ class TimesheetPunchRegistrationService
     public function register(PunchRegistrationCommand $command): array
     {
         try {
+            if ($command->clientUuid !== null && $command->clientUuid !== '') {
+                $idempotentResult = $this->idempotentResultFor($command->clientUuid);
+                if ($idempotentResult !== null) {
+                    return $idempotentResult;
+                }
+            }
+
             $employee = $this->employeeModel->find($command->employeeId);
             if (! $employee || ! ($employee->active ?? false)) {
                 return $this->failure('Funcionário não encontrado ou inativo.', 404, ['employee' => 'inactive_or_missing']);
@@ -144,6 +151,7 @@ class TimesheetPunchRegistrationService
                 'longitude' => $this->normalizeNullableNumber($command->longitude),
                 'ip_address' => $command->ipAddress ?: (function_exists('get_client_ip') ? get_client_ip() : null),
                 'user_agent' => $command->userAgent ?: (function_exists('get_user_agent') ? get_user_agent() : null),
+                'client_uuid' => ($command->clientUuid !== '' ? $command->clientUuid : null),
             ], $additionalData);
 
             if ($command->accuracy !== null && $command->accuracy !== '') {
@@ -204,6 +212,53 @@ class TimesheetPunchRegistrationService
             log_message('error', 'TimesheetPunchRegistrationService::register failed: ' . $e->getMessage(), $command->toAuditContext());
             return $this->failure('Erro interno ao registrar ponto.', 500);
         }
+    }
+
+    /**
+     * Sincronização offline (PWA): se este client_uuid já foi processado
+     * (marcação gravada ou pendência criada), devolve o mesmo resultado em vez
+     * de reprocessar — protege contra duplicidade quando o dispositivo reenvia
+     * por timeout/queda de conexão sem ter recebido a resposta anterior.
+     */
+    private function idempotentResultFor(string $clientUuid): ?array
+    {
+        $existingPunch = $this->timePunchModel->findByClientUuid($clientUuid);
+        if ($existingPunch !== null) {
+            return [
+                'success' => true,
+                'status' => 200,
+                'message' => 'Ponto já havia sido registrado anteriormente.',
+                'punch' => $existingPunch,
+                'data' => [
+                    'id' => $existingPunch->id,
+                    'punch_id' => $existingPunch->id,
+                    'nsr' => $existingPunch->nsr ?? null,
+                    'punch_time' => function_exists('format_datetime_br') ? format_datetime_br($existingPunch->punch_time) : (string) $existingPunch->punch_time,
+                    'punch_type' => $existingPunch->punch_type,
+                    'method' => $existingPunch->method ?? null,
+                    'hash' => $existingPunch->hash ?? null,
+                    'chain_hash' => $existingPunch->chain_hash ?? null,
+                    'already_processed' => true,
+                ],
+            ];
+        }
+
+        $pendingModel = new \App\Models\PendingPunchModel();
+        $existingPending = $pendingModel->findByClientUuid($clientUuid);
+        if ($existingPending !== null) {
+            return [
+                'success' => true,
+                'status' => 202,
+                'message' => 'Esta marcação já está pendente de aprovação do gestor.',
+                'data' => [
+                    'pending_id' => $existingPending->id,
+                    'pending_review' => true,
+                    'already_processed' => true,
+                ],
+            ];
+        }
+
+        return null;
     }
 
     private function validateLocation(PunchRegistrationCommand $command): array

@@ -135,6 +135,19 @@ class TimePunchController extends BaseController
         return $this->safePunchResponse(fn () => $this->endpointService->handleFingerprintPunch($this->request));
     }
 
+    /**
+     * Sincroniza UMA marcação capturada offline (PWA) pela fila local do
+     * colaborador (IndexedDB). Exige sessão autenticada — igual ao restante do
+     * grupo timesheet/punch — porque quem sincroniza é sempre o próprio
+     * colaborador reconectando o dispositivo onde a fila está armazenada.
+     */
+    public function syncOfflinePunch()
+    {
+        $this->requireAuth();
+
+        return $this->safePunchResponse(fn () => $this->endpointService->handleOfflineSync($this->request));
+    }
+
     public function generateKioskToken()
     {
         return $this->respondPunchResult($this->endpointService->generateKioskToken($this->request));

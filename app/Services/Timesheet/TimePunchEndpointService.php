@@ -128,6 +128,11 @@ class TimePunchEndpointService
         return $this->punchProcessor->handleFingerprintPunch($request);
     }
 
+    public function handleOfflineSync(RequestInterface $request): array
+    {
+        return $this->punchProcessor->handleOfflineSync($request);
+    }
+
     public function generateKioskToken(\CodeIgniter\HTTP\RequestInterface|string $requestOrIp): array
     {
         return $this->flowService->generateKioskToken($requestOrIp);

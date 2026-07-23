@@ -20,6 +20,7 @@ $routes->group('timesheet', $timesheetAuth, static function ($routes) use ($time
     $routes->post('punch/qr', $timePunchController . '::punchByQRCode', ['as' => 'timesheet.punch.qr']);
     $routes->post('punch/face', $timePunchController . '::punchByFace', ['as' => 'timesheet.punch.face']);
     $routes->post('punch/fingerprint', $timePunchController . '::punchByFingerprint', ['as' => 'timesheet.punch.fingerprint']);
+    $routes->post('punch/sync', $timePunchController . '::syncOfflinePunch', ['as' => 'timesheet.punch.sync']);
     $routes->get('punch/capabilities', $timePunchController . '::capabilities', ['as' => 'timesheet.punch.capabilities']);
     $routes->get('history', $timesheetController . '::history', ['as' => 'timesheet.history']);
     $routes->get('history/export/pdf', $timesheetController . '::historyExportPdf', ['as' => 'timesheet.history.export.pdf']);
