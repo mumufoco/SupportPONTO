@@ -7,7 +7,7 @@ use App\Models\EmployeeModel;
 use App\Models\SettingModel;
 
 /**
- * Sincroniza dados estruturais e de funcionários do SupportPONTO para o SupportCHECK.
+ * Sincroniza dados estruturais e de colaboradores do SupportPONTO para o SupportCHECK.
  *
  * Fase 1 + Fase 2 da integração.
  */
@@ -113,11 +113,11 @@ class SupportCheckSyncService
     }
 
     // -------------------------------------------------------------------------
-    // Funcionários
+    // Colaboradores
     // -------------------------------------------------------------------------
 
     /**
-     * Sincroniza todos os funcionários ativos.
+     * Sincroniza todos os colaboradores ativos.
      *
      * @return array{synced: int, failed: int, errors: array<string>}
      */
@@ -125,7 +125,7 @@ class SupportCheckSyncService
     {
         // getActive() já exclui administradores do sistema (não são
         // colaboradores) -- sem isso, o admin inicial era enviado ao
-        // SupportCHECK como se fosse um funcionário real.
+        // SupportCHECK como se fosse um colaborador real.
         $employees = $this->employeeModel->getActive();
 
         $synced = 0;
@@ -138,7 +138,7 @@ class SupportCheckSyncService
                 $synced++;
             } catch (\Throwable $e) {
                 $failed++;
-                $errors[] = 'Funcionário #' . $employee->id . ' (' . $employee->name . '): ' . $e->getMessage();
+                $errors[] = 'Colaborador #' . $employee->id . ' (' . $employee->name . '): ' . $e->getMessage();
             }
         }
 

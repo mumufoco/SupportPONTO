@@ -37,7 +37,7 @@ class SupportCheckCallbackController extends ResourceController
         try {
             if ($externalEmployeeId !== null && $externalEmployeeId !== '') {
                 $result  = $service->sendMonthForEmployee((int) $externalEmployeeId, $year, $month);
-                $message = 'Relatório enviado para o funcionário.';
+                $message = 'Relatório enviado para o colaborador.';
                 $data    = ['sent' => 1, 'failed' => 0, 'detail' => $result];
             } else {
                 $result  = $service->sendMonthForAll($year, $month);

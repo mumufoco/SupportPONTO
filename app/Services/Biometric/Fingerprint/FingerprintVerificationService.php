@@ -20,7 +20,7 @@ class FingerprintVerificationService
     {
         $templates = $this->stateService->activeTemplatesForEmployee($employeeId);
         if (empty($templates)) {
-            return ['success' => true, 'verified' => false, 'message' => 'Funcionário não possui impressões digitais cadastradas'];
+            return ['success' => true, 'verified' => false, 'message' => 'Colaborador não possui impressões digitais cadastradas'];
         }
 
         $extractResult = $this->extractionService->extractFromInput($fingerprintData);

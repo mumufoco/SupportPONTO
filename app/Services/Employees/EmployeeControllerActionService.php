@@ -97,7 +97,7 @@ class EmployeeControllerActionService
 
         $result = $this->coordinator->deleteEmployee($id);
         if (!($result['success'] ?? false)) {
-            return ['success' => false, 'status' => (int) ($result['status'] ?? 500), 'message' => $result['error'] ?? 'Erro ao excluir funcionário.'];
+            return ['success' => false, 'status' => (int) ($result['status'] ?? 500), 'message' => $result['error'] ?? 'Erro ao excluir colaborador.'];
         }
 
         $identity = $this->identityService->toArray($result['employee']);
@@ -114,9 +114,9 @@ class EmployeeControllerActionService
                 'action' => 'EMPLOYEE_DELETED',
                 'old_values' => ['name' => $identity['name'], 'email' => $identity['email']],
                 'new_values' => null,
-                'description' => "Funcionário excluído: {$identity['name']} ({$identity['email']})",
+                'description' => "Colaborador excluído: {$identity['name']} ({$identity['email']})",
             ],
-            'message' => 'Funcionário excluído com sucesso.',
+            'message' => 'Colaborador excluído com sucesso.',
         ];
     }
 
@@ -128,7 +128,7 @@ class EmployeeControllerActionService
 
         $result = $this->coordinator->setEmployeeActive($id, $active);
         if (!($result['success'] ?? false)) {
-            return ['success' => false, 'status' => (int) ($result['status'] ?? 404), 'message' => $result['error'] ?? 'Funcionário não encontrado.'];
+            return ['success' => false, 'status' => (int) ($result['status'] ?? 404), 'message' => $result['error'] ?? 'Colaborador não encontrado.'];
         }
 
         $identity = $this->identityService->toArray($result['employee']);
@@ -151,15 +151,15 @@ class EmployeeControllerActionService
                     'action' => 'EMPLOYEE_ACTIVATED',
                     'old_values' => ['active' => false],
                     'new_values' => ['active' => true],
-                    'description' => "Funcionário ativado: {$identity['name']}",
+                    'description' => "Colaborador ativado: {$identity['name']}",
                 ]
                 : [
                     'action' => 'EMPLOYEE_DEACTIVATED',
                     'old_values' => ['active' => true],
                     'new_values' => ['active' => false],
-                    'description' => "Funcionário desativado: {$identity['name']}",
+                    'description' => "Colaborador desativado: {$identity['name']}",
                 ],
-            'message' => $active ? 'Funcionário ativado com sucesso.' : 'Funcionário desativado com sucesso.',
+            'message' => $active ? 'Colaborador ativado com sucesso.' : 'Colaborador desativado com sucesso.',
         ];
     }
 
@@ -167,7 +167,7 @@ class EmployeeControllerActionService
     {
         $result = $this->coordinator->approveRegistration($id);
         if (!($result['success'] ?? false)) {
-            return ['success' => false, 'status' => (int) ($result['status'] ?? 404), 'message' => $result['error'] ?? 'Funcionário não encontrado.'];
+            return ['success' => false, 'status' => (int) ($result['status'] ?? 404), 'message' => $result['error'] ?? 'Colaborador não encontrado.'];
         }
 
         $identity = $this->identityService->toArray($result['employee']);
@@ -194,7 +194,7 @@ class EmployeeControllerActionService
     {
         $result = $this->coordinator->rejectRegistration($id);
         if (!($result['success'] ?? false)) {
-            return ['success' => false, 'status' => (int) ($result['status'] ?? 404), 'message' => $result['error'] ?? 'Funcionário não encontrado.'];
+            return ['success' => false, 'status' => (int) ($result['status'] ?? 404), 'message' => $result['error'] ?? 'Colaborador não encontrado.'];
         }
 
         $identity = $this->identityService->toArray($result['employee']);
@@ -219,7 +219,7 @@ class EmployeeControllerActionService
 
         $data = $this->coordinator->exportEmployeeData($id);
         if ($data === null) {
-            return ['success' => false, 'status' => 404, 'message' => 'Funcionário não encontrado.'];
+            return ['success' => false, 'status' => 404, 'message' => 'Colaborador não encontrado.'];
         }
 
         $identity = $this->identityService->toArray($data['employee']);

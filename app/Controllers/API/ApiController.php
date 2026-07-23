@@ -40,7 +40,7 @@ class ApiController extends BaseController
      * POST /api/validate-code
      *
      * Endpoint legado para terminais. Mantém compatibilidade, mas reduz exposição:
-     * não retorna nome, departamento ou cargo do funcionário. Use endpoints OAuth2
+     * não retorna nome, departamento ou cargo do colaborador. Use endpoints OAuth2
      * autenticados para obter dados cadastrais completos.
      */
     public function validateCode(): ResponseInterface
@@ -62,7 +62,7 @@ class ApiController extends BaseController
             ->first();
 
         if (! $employee) {
-            return $this->apiError('invalid_employee_code', 'Código inválido ou funcionário inativo.', 404);
+            return $this->apiError('invalid_employee_code', 'Código inválido ou colaborador inativo.', 404);
         }
 
         return $this->apiSuccess([
@@ -120,7 +120,7 @@ class ApiController extends BaseController
 
             $employee = $this->employeeModel->find($employeeId);
             if (! $employee || ! (bool) ($employee->active ?? false)) {
-                return $this->apiError('employee_not_found', 'Funcionário não encontrado ou inativo.', 404);
+                return $this->apiError('employee_not_found', 'Colaborador não encontrado ou inativo.', 404);
             }
 
             $job = $this->asyncJobService->enqueue(AsyncJobService::TYPE_FACE_ENROLL, [

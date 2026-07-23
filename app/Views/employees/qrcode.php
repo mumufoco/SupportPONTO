@@ -12,7 +12,7 @@
                     <i class="fas fa-qrcode me-2"></i>QR Code
                 </h2>
                 <p class="text-muted mb-0 sp-text-sm-muted">
-                    Funcionário: <?= esc($employee->name) ?>
+                    Colaborador: <?= esc($employee->name) ?>
                 </p>
             </div>
             <div>
@@ -28,7 +28,7 @@
             <!-- QR Code Card -->
             <div class="card text-center">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-qrcode me-2"></i>QR Code do Funcionário</h5>
+                    <h5 class="mb-0"><i class="fas fa-qrcode me-2"></i>QR Code do Colaborador</h5>
                 </div>
                 <div class="card-body">
                     <!-- QR Code Image from API -->
@@ -47,14 +47,14 @@
                     </div>
 
                     <div class="mb-4">
-                        <h6 class="text-muted">Funcionário</h6>
+                        <h6 class="text-muted">Colaborador</h6>
                         <p class="mb-0 fw-bold"><?= esc($employee->name) ?></p>
                         <p class="text-muted small mb-0">CPF: <?= function_exists('format_cpf') ? format_cpf($employee->cpf ?? '') : esc($employee->cpf) ?></p>
                     </div>
 
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Instruções:</strong> Este QR Code contém o código único do funcionário. 
+                        <strong>Instruções:</strong> Este QR Code contém o código único do colaborador. 
                         Use-o para registro de ponto rápido via aplicativo móvel ou terminal.
                     </div>
                 </div>
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </style>
             </head>
             <body>
-                <h2>QR Code do Funcionário</h2>
+                <h2>QR Code do Colaborador</h2>
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=<?= urlencode($employee->unique_code) ?>&format=png&color=000000&bgcolor=FFFFFF&margin=4&ecc=H" alt="QR Code">
                 <div class="info">
                     <h3><?= str_replace('`', '&#96;', esc($employee->name)) ?></h3>

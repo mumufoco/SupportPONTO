@@ -11,7 +11,7 @@ namespace App\Services\Contracts;
 interface BiometricServiceInterface
 {
     /**
-     * Cadastra a face de um funcionário no sistema biométrico.
+     * Cadastra a face de um colaborador no sistema biométrico.
      *
      * @param  int    $employeeId
      * @param  string $imageBase64 Foto em base64
@@ -20,7 +20,7 @@ interface BiometricServiceInterface
     public function enrollFace(int $employeeId, string $imageBase64): array;
 
     /**
-     * Reconhece um funcionário a partir de uma foto.
+     * Reconhece um colaborador a partir de uma foto.
      *
      * @param  string $imageBase64 Foto em base64
      * @return array{success:bool, recognized:bool, employee_id?:int, similarity?:float, message?:string}
@@ -28,14 +28,14 @@ interface BiometricServiceInterface
     public function recognizeFace(string $imageBase64): array;
 
     /**
-     * Verifica se uma foto pertence ao funcionário esperado (verificação 1:1).
+     * Verifica se uma foto pertence ao colaborador esperado (verificação 1:1).
      *
      * @return array{success:bool, match:bool, similarity?:float}
      */
     public function verifyFace(int $employeeId, string $imageBase64): array;
 
     /**
-     * Remove todos os templates biométricos de um funcionário.
+     * Remove todos os templates biométricos de um colaborador.
      */
     public function deleteTemplates(int $employeeId): bool;
 

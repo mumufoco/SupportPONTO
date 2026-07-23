@@ -22,7 +22,7 @@
                 <h2 class="h5 mb-1"><?= esc($employee['name'] ?? '') ?></h2>
                 <p class="text-muted small mb-2"><?= esc($employee['email'] ?? '') ?></p>
                 <span class="badge rounded-pill text-bg-primary">
-                    <?= esc(ucfirst($employee['role'] ?? 'funcionario')) ?>
+                    <?= esc((\App\Enums\Role::tryFrom($employee['role'] ?? '') ?? \App\Enums\Role::Funcionario)->label()) ?>
                 </span>
 
                 <?php if (!empty($employee['department'] ?? null)): ?>

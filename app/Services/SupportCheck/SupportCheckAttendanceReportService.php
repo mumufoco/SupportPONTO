@@ -10,7 +10,7 @@ use App\Models\JustificationModel;
 use App\Models\HolidayModel;
 
 /**
- * Gera e envia o relatório mensal de ponto de um funcionário ao SupportCHECK.
+ * Gera e envia o relatório mensal de ponto de um colaborador ao SupportCHECK.
  *
  * Fase 3 da integração: executado no dia 1° de cada mês para o mês anterior.
  */
@@ -27,7 +27,7 @@ class SupportCheckAttendanceReportService
     }
 
     /**
-     * Envia o relatório de ponto do mês anterior para todos os funcionários ativos.
+     * Envia o relatório de ponto do mês anterior para todos os colaboradores ativos.
      *
      * @return array{sent: int, failed: int, errors: array<string>}
      */
@@ -56,7 +56,7 @@ class SupportCheckAttendanceReportService
                 $sent++;
             } catch (\Throwable $e) {
                 $failed++;
-                $errors[] = 'Funcionário #' . $employee->id . ' (' . $employee->name . '): ' . $e->getMessage();
+                $errors[] = 'Colaborador #' . $employee->id . ' (' . $employee->name . '): ' . $e->getMessage();
             }
         }
 
@@ -67,7 +67,7 @@ class SupportCheckAttendanceReportService
     {
         $employee = $this->employeeModel->find($employeeId);
         if (! $employee) {
-            throw new \RuntimeException('Funcionário #' . $employeeId . ' não encontrado.');
+            throw new \RuntimeException('Colaborador #' . $employeeId . ' não encontrado.');
         }
 
         $periodStart = sprintf('%04d-%02d-01', $year, $month);

@@ -24,7 +24,7 @@ class LegacyNotificationEventService
         return $this->deliveryService->notifyMultiple(
             $this->routingService->adminIds(),
             'Novo cadastro pendente',
-            "O funcionário {$employee->name} ({$employee->email}) solicitou cadastro no sistema.",
+            "O colaborador {$employee->name} ({$employee->email}) solicitou cadastro no sistema.",
             'employee_registration',
             '/employees/pending'
         );
@@ -41,7 +41,7 @@ class LegacyNotificationEventService
         return $this->deliveryService->notifyMultiple(
             $this->routingService->managerIds(),
             'Nova justificativa pendente',
-            "O funcionário {$employee->name} enviou uma justificativa para aprovação.",
+            "O colaborador {$employee->name} enviou uma justificativa para aprovação.",
             'justification',
             "/justifications/{$justificationId}"
         );

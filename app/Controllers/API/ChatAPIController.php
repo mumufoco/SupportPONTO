@@ -107,7 +107,7 @@ class ChatAPIController extends BaseApiController
     {
         $newMemberId = (int) $this->requestValue('employee_id');
         if ($newMemberId <= 0) {
-            return $this->failStandard('validation_error', 'ID do funcionário é obrigatório.', 400);
+            return $this->failStandard('validation_error', 'ID do colaborador é obrigatório.', 400);
         }
 
         return $this->roomAction($roomId, fn (object $employee, int $roomId): array => $this->chatApiWorkflowService->addMember($roomId, (int) $employee->id, $newMemberId), 'Membro adicionado com sucesso.', 'chat_add_member_success', 201);
@@ -153,7 +153,7 @@ class ChatAPIController extends BaseApiController
 
         $otherEmployeeId = (int) $this->requestValue('employee_id');
         if ($otherEmployeeId <= 0) {
-            return $this->failStandard('validation_error', 'ID do funcionário é obrigatório.', 400);
+            return $this->failStandard('validation_error', 'ID do colaborador é obrigatório.', 400);
         }
 
         return $this->respondWorkflowResult(

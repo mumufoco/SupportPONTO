@@ -205,7 +205,7 @@ class ScheduleController extends BaseController
         return csv_download_response(
             $this->response,
             (string) $data['filename'],
-            ['Data', 'Funcionário', 'Turno', 'Horário Início', 'Horário Fim', 'Status', 'Observações'],
+            ['Data', 'Colaborador', 'Turno', 'Horário Início', 'Horário Fim', 'Status', 'Observações'],
             $rows
         );
     }

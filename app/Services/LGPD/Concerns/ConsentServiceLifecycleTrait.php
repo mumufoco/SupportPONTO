@@ -18,7 +18,7 @@ trait ConsentServiceLifecycleTrait
             if (!$employee) {
                 return [
                     'success' => false,
-                    'message' => 'Funcionário não encontrado',
+                    'message' => 'Colaborador não encontrado',
                     'consent_id' => null,
                 ];
             }

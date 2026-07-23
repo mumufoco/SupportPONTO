@@ -23,7 +23,7 @@ class TimePunchRepository
     ) {}
 
     /**
-     * Registros de ponto de um funcionário em uma data específica.
+     * Registros de ponto de um colaborador em uma data específica.
      *
      * Quando a migration OptimizePunchTimeIndexes estiver aplicada no PostgreSQL,
      * esta consulta passa a aproveitar filtros por intervalo no campo punch_time.
@@ -63,7 +63,7 @@ class TimePunchRepository
     }
 
     /**
-     * Registros mensais para um funcionário.
+     * Registros mensais para um colaborador.
      *
      * Quando a migration OptimizePunchTimeIndexes estiver aplicada no PostgreSQL,
      * esta consulta passa a aproveitar o índice idx_tp_month_trunc.
@@ -84,7 +84,7 @@ class TimePunchRepository
     }
 
     /**
-     * Último ponto de um funcionário.
+     * Último ponto de um colaborador.
      */
     public function findLastPunch(int $employeeId, ?string $date = null): ?object
     {

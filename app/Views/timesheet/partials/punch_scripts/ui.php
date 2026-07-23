@@ -268,7 +268,7 @@ window.SupportPontoPunchUI = (() => {
 
     /**
      * Segunda camada de segurança contra fraude: código/CPF/QR/biometria digital
-     * já identificaram o funcionário, mas antes de efetivar o registro exigimos
+     * já identificaram o colaborador, mas antes de efetivar o registro exigimos
      * uma foto confirmando que é a própria pessoa (comparação 1:1 contra o
      * cadastro biométrico facial dela — não é o método "facial" livre).
      */

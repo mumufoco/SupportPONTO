@@ -7,11 +7,11 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
 /**
- * Migra fotos de funcionário já enviadas do webroot público (FCPATH/store/employees/
+ * Migra fotos de colaborador já enviadas do webroot público (FCPATH/store/employees/
  * photos) para o armazenamento privado (WRITEPATH/uploads/employees/photos), e
  * renomeia com um nome aleatório em vez de emp_{id}_{timestamp}.jpg.
  *
- * MED-09 (auditoria): antes do fix, toda foto de funcionário ficava acessível via URL
+ * MED-09 (auditoria): antes do fix, toda foto de colaborador ficava acessível via URL
  * pública direta e previsível, sem nenhum controle de acesso. A correção de código
  * passa a gravar novos uploads direto em armazenamento privado e a servi-los só por
  * rota autenticada (EmployeeController::photo()) — mas fotos já enviadas antes da
@@ -25,7 +25,7 @@ class MigrateEmployeePhotosToPrivateStorage extends BaseCommand
 {
     protected $group       = 'Operations';
     protected $name        = 'employees:migrate-photos';
-    protected $description = 'Move fotos de funcionário do webroot público para armazenamento privado (MED-09).';
+    protected $description = 'Move fotos de colaborador do webroot público para armazenamento privado (MED-09).';
     protected $usage       = 'employees:migrate-photos [--dry-run]';
     protected $options     = [
         '--dry-run' => 'Exibe o que seria migrado sem mover arquivos nem atualizar o banco.',
@@ -60,7 +60,7 @@ class MigrateEmployeePhotosToPrivateStorage extends BaseCommand
 
             $sourcePath = FCPATH . ltrim($photoPath, '/');
             if (!is_file($sourcePath)) {
-                CLI::write("  [skip] funcionário #{$employee->id}: arquivo de origem não encontrado ({$photoPath}).", 'dark_gray');
+                CLI::write("  [skip] colaborador #{$employee->id}: arquivo de origem não encontrado ({$photoPath}).", 'dark_gray');
                 $skipped++;
                 continue;
             }
@@ -69,7 +69,7 @@ class MigrateEmployeePhotosToPrivateStorage extends BaseCommand
             $newFilename = 'emp_' . $employee->id . '_' . bin2hex(random_bytes(16)) . '.' . $extension;
             $newRelativePath = 'uploads/employees/photos/' . $newFilename;
 
-            CLI::write("  [migrate] funcionário #{$employee->id}: {$photoPath} -> {$newRelativePath}", 'yellow');
+            CLI::write("  [migrate] colaborador #{$employee->id}: {$photoPath} -> {$newRelativePath}", 'yellow');
 
             if (!$dryRun) {
                 $newAbsolutePath = $targetDir . $newFilename;
@@ -78,7 +78,7 @@ class MigrateEmployeePhotosToPrivateStorage extends BaseCommand
                     $model->update((int) $employee->id, ['photo_path' => $newRelativePath]);
                     @unlink($sourcePath);
                 } else {
-                    CLI::write("    ERRO ao copiar arquivo do funcionário #{$employee->id}.", 'red');
+                    CLI::write("    ERRO ao copiar arquivo do colaborador #{$employee->id}.", 'red');
                     continue;
                 }
             }

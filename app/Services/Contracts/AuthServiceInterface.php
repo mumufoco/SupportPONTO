@@ -8,14 +8,14 @@ namespace App\Services\Contracts;
 interface AuthServiceInterface
 {
     /**
-     * Autentica um funcionário com email e senha.
+     * Autentica um colaborador com email e senha.
      *
      * @return array{success:bool, user?:object, tokens?:array, message?:string, status?:int}
      */
     public function login(string $email, string $password, array $scopes = []): array;
 
     /**
-     * Encerra a sessão de um funcionário.
+     * Encerra a sessão de um colaborador.
      */
     public function logout(int $employeeId, int $accessTokenId, string $employeeName): void;
 

@@ -325,7 +325,7 @@
                             <strong><?= number_format($compliance['total_punches']) ?></strong>
                         </div>
                         <div class="list-group-item d-flex justify-content-between">
-                            <span>Funcionários ativos</span>
+                            <span>Colaboradores ativos</span>
                             <strong><?= number_format($compliance['total_employees']) ?></strong>
                         </div>
                         <div class="list-group-item d-flex justify-content-between">
@@ -351,7 +351,7 @@
                         <li>AFD do período solicitado (gere acima)</li>
                         <li>Atestado Técnico assinado digitalmente</li>
                         <li>Registro do software no INPI</li>
-                        <li>Espelho de ponto dos funcionários</li>
+                        <li>Espelho de ponto dos colaboradores</li>
                     </ul>
                     <div class="alert alert-info small mb-0">
                         <i class="bi bi-info-circle me-1"></i>O prazo para entrega do AFD e AEJ é de <strong>2 dias úteis</strong> após solicitação do Auditor-Fiscal.

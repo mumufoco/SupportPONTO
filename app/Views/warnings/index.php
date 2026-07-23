@@ -93,7 +93,7 @@
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>Funcionário</th>
+                            <th>Colaborador</th>
                             <th>Tipo</th>
                             <th>Motivo</th>
                             <th>Emitida por</th>
@@ -108,7 +108,7 @@
                                 <td>
                                     <strong><?= esc($warning->employee_name) ?></strong>
                                     <a href="<?= sp_warning_dashboard_url((int) $warning->employee_id) ?>"
-                                       class="text-muted ms-1" title="Dashboard do funcionário">
+                                       class="text-muted ms-1" title="Dashboard do colaborador">
                                         <i class="bi bi-graph-up"></i>
                                     </a>
                                 </td>

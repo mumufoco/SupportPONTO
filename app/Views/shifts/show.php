@@ -26,7 +26,7 @@ $lunchEnd = $hasLunch ? substr((string) $shift->lunch_end_time, 0, 5) : null;
 <div class="container-fluid sp-responsive-screen">
     <?= view('components/page_header', [
         'title'    => $shift->name,
-        'subtitle' => 'Detalhes do turno, funcionários escalados e estatísticas.',
+        'subtitle' => 'Detalhes do turno, colaboradores escalados e estatísticas.',
         'icon'     => 'bi bi-calendar2-week-fill',
         'actions'  => [
             ['label' => 'Voltar', 'icon' => 'bi bi-arrow-left-circle', 'url' => sp_shifts_index_url()],
@@ -56,7 +56,7 @@ $lunchEnd = $hasLunch ? substr((string) $shift->lunch_end_time, 0, 5) : null;
         <div class="stat-card">
             <div class="stat-card-icon success"><i class="bi bi-people-fill"></i></div>
             <div class="stat-card-content">
-                <div class="stat-card-label">Funcionários Escalados</div>
+                <div class="stat-card-label">Colaboradores Escalados</div>
                 <div class="stat-card-value"><?= count($assignedEmployees) ?></div>
             </div>
         </div>
@@ -169,20 +169,20 @@ $lunchEnd = $hasLunch ? substr((string) $shift->lunch_end_time, 0, 5) : null;
 
             <div class="sp-card" id="assigned-employees">
                 <div class="sp-card-header">
-                    <span class="sp-card-title"><i class="bi bi-people-fill"></i> Funcionários Escalados (<?= count($assignedEmployees) ?>)</span>
+                    <span class="sp-card-title"><i class="bi bi-people-fill"></i> Colaboradores Escalados (<?= count($assignedEmployees) ?>)</span>
                 </div>
                 <div class="sp-card-body p-0">
                     <?php if (empty($assignedEmployees)): ?>
                         <div class="sp-empty m-3">
                             <div class="sp-empty-icon"><i class="bi bi-people"></i></div>
-                            <p class="sp-empty-title">Nenhum funcionário escalado neste turno</p>
+                            <p class="sp-empty-title">Nenhum colaborador escalado neste turno</p>
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Funcionário</th>
+                                        <th>Colaborador</th>
                                         <th>Departamento</th>
                                         <th>Próxima Escala</th>
                                         <th class="text-center">Total de Escalas</th>

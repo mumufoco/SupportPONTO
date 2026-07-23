@@ -25,7 +25,7 @@ $canAudit         = sp_can_audit_area($normalizedRole);
                     <!-- Ações exclusivas do Administrador -->
                     <a href="<?= sp_employees_index_url() ?>" class="list-group-item list-group-item-action">
                         <i class="bi bi-people-fill text-primary me-2"></i>
-                        <strong>Funcionários</strong>
+                        <strong>Colaboradores</strong>
                         <small class="d-block text-muted">Gerenciar equipe e cadastros</small>
                     </a>
                     <a href="<?= sp_timesheet_index_url() ?>" class="list-group-item list-group-item-action">
@@ -58,7 +58,7 @@ $canAudit         = sp_can_audit_area($normalizedRole);
                     <?php endif; ?>
 
                 <?php else: ?>
-                    <!-- Ações de Gestor / Funcionário / Colaborador -->
+                    <!-- Ações de Gestor / Colaborador / Colaborador -->
                     <a href="<?= sp_timesheet_punch_url() ?>" class="list-group-item list-group-item-action">
                         <i class="bi bi-fingerprint text-primary me-2"></i>
                         <strong>Registrar ponto</strong>
@@ -92,7 +92,7 @@ $canAudit         = sp_can_audit_area($normalizedRole);
                         </a>
                         <a href="<?= base_url('employees') ?>" class="list-group-item list-group-item-action">
                             <i class="bi bi-people-fill text-secondary me-2"></i>
-                            <strong>Funcionários</strong>
+                            <strong>Colaboradores</strong>
                             <small class="d-block text-muted">Gerenciar equipe e cadastros</small>
                         </a>
                     <?php endif; ?>

@@ -47,7 +47,8 @@ $routes->group('notifications', ['filter' => 'auth'], static function ($routes) 
 
 $routes->get('admin/home', $dashboardController . '::admin', ['as' => 'dashboard.admin.home', 'filter' => ['auth', 'admin']]);
 $routes->get('gestor/home', $dashboardController . '::manager', ['as' => 'dashboard.manager.home', 'filter' => ['auth', 'manager']]);
-$routes->get('funcionario/home', $dashboardController . '::employee', ['as' => 'dashboard.employee.home', 'filter' => 'auth']);
+$routes->get('colaborador/home', $dashboardController . '::employee', ['as' => 'dashboard.employee.home', 'filter' => 'auth']);
+$routes->get('funcionario/home', 'Compatibility\LegacyRouteRedirectController::employeeHome', ['as' => 'dashboard.employee.home.legacy', 'filter' => 'auth']);
 $routes->get('dpo/home', $dashboardController . '::dpo', ['as' => 'dashboard.dpo.home', 'filter' => ['auth', 'role:admin,dpo']]);
 
 $routes->get('conta/perfil', 'ProfileController::index', ['as' => 'conta.perfil', 'filter' => 'auth']);

@@ -90,7 +90,7 @@ class PendingCenterService
     }
 
     /**
-     * Advertências com status 'pendente-assinatura' (funcionário ainda não assinou).
+     * Advertências com status 'pendente-assinatura' (colaborador ainda não assinou).
      */
     private function countUnsignedWarnings(): int
     {
@@ -106,7 +106,7 @@ class PendingCenterService
     }
 
     /**
-     * Funcionários ativos sem nenhum cadastro biométrico (nem facial nem digital).
+     * Colaboradores ativos sem nenhum cadastro biométrico (nem facial nem digital).
      * Administradores são excluídos — eles não têm obrigação de cadastro biométrico.
      */
     private function countEmployeesWithoutBiometric(): int
@@ -126,7 +126,7 @@ class PendingCenterService
     }
 
     /**
-     * Funcionários com pontos abertos hoje (entrada sem saída correspondente).
+     * Colaboradores com pontos abertos hoje (entrada sem saída correspondente).
      * Consulta leve: apenas o dia atual, não todo o histórico.
      */
     private function countInconsistentPunchesToday(): int

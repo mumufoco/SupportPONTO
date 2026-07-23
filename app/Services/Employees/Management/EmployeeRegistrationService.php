@@ -94,13 +94,13 @@ class EmployeeRegistrationService
         $oldActive = is_array($employee) ? ($employee['active'] ?? null) : ($employee->active ?? null);
         $newActive = array_key_exists('active', $payload) ? $payload['active'] : $oldActive;
 
-        // ALTO-02 (auditoria): trocar o papel (role) de um funcionário ou desativá-lo por
+        // ALTO-02 (auditoria): trocar o papel (role) de um colaborador ou desativá-lo por
         // esta tela de edição não revogava a sessão já aberta — quem estivesse logado
         // mantinha os privilégios do papel antigo até a sessão expirar naturalmente.
         $roleChanged = $oldRole !== null && $payload['role'] !== $oldRole;
         $becameInactive = $oldActive && !$newActive;
         if ($roleChanged || $becameInactive) {
-            $reason = $roleChanged ? 'Papel (role) do funcionário alterado' : 'Funcionário desativado';
+            $reason = $roleChanged ? 'Papel (role) do colaborador alterado' : 'Colaborador desativado';
             $this->sessionSecurityService->revokeAllSessionsForUser($id, $reason);
         }
 

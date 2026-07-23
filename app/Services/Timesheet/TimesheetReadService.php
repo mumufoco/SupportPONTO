@@ -23,18 +23,18 @@ class TimesheetReadService
     public function resolveAuthorizedEmployee(array $actor, int $targetEmployeeId): array
     {
         if ($targetEmployeeId !== (int) $actor['id'] && ! $this->canManageEmployees($actor)) {
-            return ['success' => false, 'status' => 403, 'message' => 'Você não tem permissão para visualizar dados de outros funcionários.'];
+            return ['success' => false, 'status' => 403, 'message' => 'Você não tem permissão para visualizar dados de outros colaboradores.'];
         }
 
         $viewingEmployee = $this->employeeModel->find($targetEmployeeId);
         if (! $viewingEmployee) {
-            return ['success' => false, 'status' => 404, 'message' => 'Funcionário não encontrado.'];
+            return ['success' => false, 'status' => 404, 'message' => 'Colaborador não encontrado.'];
         }
 
         if ($this->hasDepartmentScope($actor)) {
             $actorDepartmentId = ! empty($actor['department_id']) ? (int) $actor['department_id'] : null;
             if ($actorDepartmentId === null || (int) ($viewingEmployee->department_id ?? 0) !== $actorDepartmentId) {
-                return ['success' => false, 'status' => 403, 'message' => 'Você só pode visualizar funcionários do seu departamento.'];
+                return ['success' => false, 'status' => 403, 'message' => 'Você só pode visualizar colaboradores do seu departamento.'];
             }
         }
 

@@ -128,7 +128,7 @@ class FacialFraudAlertModel extends Model
         ]);
     }
 
-    /** Quantidade de alertas pendentes/analisados por funcionário — para identificar padrões. */
+    /** Quantidade de alertas pendentes/analisados por colaborador — para identificar padrões. */
     public function countByEmployee(int $employeeId): int
     {
         return $this->where('employee_id', $employeeId)->countAllResults();

@@ -117,7 +117,7 @@ Valores aceitos: `entrada`, `saida`, `intervalo_inicio`, `intervalo_fim`
 ```
 
 #### `valid_employee_role`
-Valida função do funcionário.
+Valida função do colaborador.
 
 Valores aceitos: `admin`, `gestor`, `funcionario`
 
@@ -167,7 +167,7 @@ Valida que a data é dia útil (segunda a sexta).
 ### Unicidade
 
 #### `unique_employee_code[id]`
-Valida que o código do funcionário é único.
+Valida que o código do colaborador é único.
 
 ```php
 'unique_code' => 'required|unique_employee_code'
@@ -291,7 +291,7 @@ if (!$validation->run($data)) {
 
 Os seguintes templates estão disponíveis em `Config/Validation.php`:
 
-- `employee` - Validação de cadastro de funcionário
+- `employee` - Validação de cadastro de colaborador
 - `login` - Validação de login
 - `timePunch` - Validação de registro de ponto
 - `geofence` - Validação de cerca virtual
@@ -331,7 +331,7 @@ $this->validate($rules);
 
 ## Exemplos Práticos
 
-### Validação de Cadastro de Funcionário
+### Validação de Cadastro de Colaborador
 
 ```php
 $rules = [

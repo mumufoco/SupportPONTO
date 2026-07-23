@@ -115,11 +115,11 @@ class RegisterController extends BaseController
             (int) ($this->currentUser->id ?? 0)
         );
         if (!($result['success'] ?? false)) {
-            $this->setError((string) ($result['message'] ?? 'Erro ao cadastrar funcionário. Tente novamente.'));
+            $this->setError((string) ($result['message'] ?? 'Erro ao cadastrar colaborador. Tente novamente.'));
             return redirect()->back()->withInput();
         }
 
-        $this->setSuccess('Funcionário cadastrado com sucesso!');
+        $this->setSuccess('Colaborador cadastrado com sucesso!');
         return redirect()->to(route_to('employees.show', (int) $result['employee_id']));
     }
 

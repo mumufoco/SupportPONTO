@@ -11,7 +11,7 @@
         'icon'     => 'bi bi-people-fill',
         'actions'  => [
             ['label' => 'Registrar Ponto', 'icon' => 'bi bi-fingerprint',       'url' => site_url('punch')],
-            ['label' => 'Funcionários',     'icon' => 'bi bi-person-lines-fill', 'url' => site_url('employees')],
+            ['label' => 'Colaboradores',     'icon' => 'bi bi-person-lines-fill', 'url' => site_url('employees')],
             ['label' => 'Justificativas',   'icon' => 'bi bi-journal-check',     'url' => site_url('justifications')],
         ],
     ]) ?>
@@ -88,7 +88,7 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Funcionário</th>
+                                        <th>Colaborador</th>
                                         <th>Data</th>
                                         <th>Tipo</th>
                                         <th>Motivo</th>
@@ -150,7 +150,7 @@
                     </a>
                     <a href="<?= site_url('employees') ?>" class="sp-shortcut-card">
                         <div class="icon"><i class="bi bi-person-lines-fill"></i></div>
-                        <strong>Funcionários</strong>
+                        <strong>Colaboradores</strong>
                         <span>Gerencie a equipe e cadastros.</span>
                     </a>
                 </div>

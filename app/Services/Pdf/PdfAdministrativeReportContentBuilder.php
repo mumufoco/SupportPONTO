@@ -120,7 +120,7 @@ class PdfAdministrativeReportContentBuilder
         $html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:100%;">';
         $html .= $this->tableHeader([
             ['Data',         '8%'],
-            ['Funcionário',  '18%'],
+            ['Colaborador',  '18%'],
             ['Tipo',         '11%'],
             ['Categoria',    '11%'],
             ['Motivo',       '30%'],
@@ -178,7 +178,7 @@ class PdfAdministrativeReportContentBuilder
         $html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:100%;">';
         $html .= $this->tableHeader([
             ['Data',        '8%'],
-            ['Funcionário', '20%'],
+            ['Colaborador', '20%'],
             ['Depto',       '12%'],
             ['Tipo',        '11%'],
             ['Motivo',      '33%'],

@@ -67,7 +67,7 @@
                         <div class="sp-form-card__icon"><i class="bi bi-info-circle-fill"></i></div>
                         <div>
                             <p class="sp-form-card__title">Informações da escala</p>
-                            <p class="sp-form-card__sub">Funcionário, turno e data.</p>
+                            <p class="sp-form-card__sub">Colaborador, turno e data.</p>
                         </div>
                     </div>
                     <div class="sp-form-card__body">
@@ -75,10 +75,10 @@
                         <div class="row">
                             <div class="col-12 mb-3">
                                 <label for="employee_id" class="form-label">
-                                    Funcionário <span class="text-danger">*</span>
+                                    Colaborador <span class="text-danger">*</span>
                                 </label>
                                 <select class="form-select" id="employee_id" name="employee_id" required>
-                                    <option value="">Selecione um funcionário...</option>
+                                    <option value="">Selecione um colaborador...</option>
                                     <?php foreach ($employees as $employee): ?>
                                         <option value="<?= (int) $employee->id ?>"
                                                 <?= old('employee_id') == $employee->id ? 'selected' : '' ?>
@@ -193,7 +193,7 @@
                 </div>
                 <div class="sp-card-body">
                     <ul class="list-unstyled mb-0" style="line-height:1.9;">
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Selecione o funcionário e o turno desejado</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Selecione o colaborador e o turno desejado</li>
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>Escolha a data da escala</li>
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>Use <strong>Escala Recorrente</strong> para criar automaticamente</li>
                         <li><i class="bi bi-info-circle-fill text-info me-2"></i>O sistema verifica conflitos automaticamente</li>

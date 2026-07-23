@@ -24,7 +24,7 @@
                 <div class="sp-signature-box__body">
                     <div class="sp-meta-list">
                         <div class="sp-meta-item"><small>Número</small><strong>#<?= esc($warning->id ?? '-') ?></strong></div>
-                        <div class="sp-meta-item"><small>Funcionário</small><strong><?= esc($warning->employee_name ?? ($warningEmployee->name ?? '-')) ?></strong></div>
+                        <div class="sp-meta-item"><small>Colaborador</small><strong><?= esc($warning->employee_name ?? ($warningEmployee->name ?? '-')) ?></strong></div>
                         <div class="sp-meta-item"><small>Tipo</small><strong><?= esc($warning->warning_type ?? '-') ?></strong></div>
                         <div class="sp-meta-item"><small>Data da ocorrência</small><strong><?= esc($warning->occurrence_date ?? '-') ?></strong></div>
                         <div class="sp-meta-item"><small>Emitida por</small><strong><?= esc($issuer->name ?? ($warning->issuer_name ?? '-')) ?></strong></div>

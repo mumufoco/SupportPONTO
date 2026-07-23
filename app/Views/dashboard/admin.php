@@ -412,9 +412,9 @@ $catHead = static function (string $variantClass, string $icon, string $title, s
 <div class="sp-cat sp-cat--rh" id="cat-rh">
     <?php $catHead('rh', 'bi-people-fill', 'RH', 'Quadro de colaboradores — quem está ativo, inativo e chegando.'); ?>
     <div class="row g-3">
-        <?php $kpiCard('Total de funcionários', (string) ($statistics['total_employees'] ?? 0), 'bi bi-people-fill', 'rgba(91,115,232,.14)', 'var(--sp-info)'); ?>
-        <?php $kpiCard('Funcionários ativos', (string) ($statistics['active_employees'] ?? 0), 'bi bi-person-check-fill', 'var(--sp-success-light)', 'var(--sp-success)'); ?>
-        <?php $kpiCard('Funcionários inativos', (string) ($statistics['total_inactive'] ?? 0), 'bi bi-person-x-fill', 'var(--sp-danger-light)', 'var(--sp-danger)'); ?>
+        <?php $kpiCard('Total de colaboradores', (string) ($statistics['total_employees'] ?? 0), 'bi bi-people-fill', 'rgba(91,115,232,.14)', 'var(--sp-info)'); ?>
+        <?php $kpiCard('Colaboradores ativos', (string) ($statistics['active_employees'] ?? 0), 'bi bi-person-check-fill', 'var(--sp-success-light)', 'var(--sp-success)'); ?>
+        <?php $kpiCard('Colaboradores inativos', (string) ($statistics['total_inactive'] ?? 0), 'bi bi-person-x-fill', 'var(--sp-danger-light)', 'var(--sp-danger)'); ?>
         <?php $kpiCard('Cadastros recentes (7 dias)', (string) ($statistics['pending_registrations'] ?? 0), 'bi bi-calendar-plus', 'rgba(91,115,232,.14)', 'var(--sp-info)', 'col-6 col-md-3', site_url('employees')); ?>
     </div>
 </div>

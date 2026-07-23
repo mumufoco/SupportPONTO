@@ -69,7 +69,7 @@ class WarningWorkflowService
         $employeeId = (int) $input['employee_id'];
 
         if ($this->warningModel->isAtLimit($employeeId)) {
-            return ['success' => false, 'warning' => 'ATENÇÃO: Este funcionário já possui 3 advertências. Considere medidas adicionais.'];
+            return ['success' => false, 'warning' => 'ATENÇÃO: Este colaborador já possui 3 advertências. Considere medidas adicionais.'];
         }
 
         $uploadResult = $this->warningEvidenceService->handleEvidenceUploads($files);
@@ -134,7 +134,7 @@ class WarningWorkflowService
             $warning->id,
             ['status' => 'pendente-assinatura'],
             ['status' => 'assinado', 'signature' => $signature],
-            "Advertência ID {$warning->id} assinada pelo funcionário",
+            "Advertência ID {$warning->id} assinada pelo colaborador",
             'info'
         );
 
@@ -221,7 +221,7 @@ class WarningWorkflowService
             $warningId,
             null,
             $data,
-            "Advertência {$data['warning_type']} emitida para funcionário ID {$employeeId}",
+            "Advertência {$data['warning_type']} emitida para colaborador ID {$employeeId}",
             'warning'
         );
     }

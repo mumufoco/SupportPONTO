@@ -63,7 +63,7 @@ class PunchService
      *  1. O QR dinâmico de autoatendimento (/qrcode/my-qrcode) — um JWT assinado,
      *     de uso único, válido por 5 minutos (QRCodeService).
      *  2. O QR "crachá" gerado pelo admin em employees/{id}/qrcode — apenas o
-     *     unique_code puro do funcionário, sem expiração, pensado para ser
+     *     unique_code puro do colaborador, sem expiração, pensado para ser
      *     impresso e reutilizado indefinidamente.
      *
      * Antes desta correção, só o formato 1 era aceito aqui: um crachá impresso

@@ -38,7 +38,7 @@
     </style>
 </head>
 <body>
-    <h2>QR Code do Funcionário</h2>
+    <h2>QR Code do Colaborador</h2>
     
     <div class="qr-container">
         <div class="qr-placeholder">

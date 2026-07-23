@@ -142,7 +142,7 @@ class EmployeeController extends BaseController
         }
 
         if (!$this->employeeCoordinatorService->employeeIsActive($access['employee'])) {
-            $this->setError('Funcionários desligados não podem ser editados.');
+            $this->setError('Colaboradores desligados não podem ser editados.');
             return redirect()->to(sp_employees_index_url());
         }
 
@@ -184,7 +184,7 @@ class EmployeeController extends BaseController
         return $this->respondActionWithAudit(
             $this->employeeControllerActionService->deleteEmployee($id, $this->currentUser),
             $id,
-            'Erro ao excluir funcionário.'
+            'Erro ao excluir colaborador.'
         );
     }
 
@@ -223,7 +223,7 @@ class EmployeeController extends BaseController
             $this->employeeControllerActionService->approveRegistration($id),
             $id,
             '/employees/pending',
-            'Funcionário não encontrado.'
+            'Colaborador não encontrado.'
         );
     }
 
@@ -235,7 +235,7 @@ class EmployeeController extends BaseController
             $this->employeeControllerActionService->rejectRegistration($id),
             $id,
             '/employees/pending',
-            'Funcionário não encontrado.'
+            'Colaborador não encontrado.'
         );
     }
 
@@ -342,7 +342,7 @@ class EmployeeController extends BaseController
 
         $data = $this->employeeCoordinatorService->biometricPageData($this->currentUser->id);
         if ($data === null) {
-            return redirect()->to(route_to('dashboard'))->with('error', 'Funcionário não encontrado.');
+            return redirect()->to(route_to('dashboard'))->with('error', 'Colaborador não encontrado.');
         }
 
         return view('profile/biometric', $data);
@@ -557,7 +557,7 @@ class EmployeeController extends BaseController
                 return redirect()->back();
             }
 
-            return $this->respondError($action['message'] ?? 'Funcionário não encontrado.', null, (int) ($action['status'] ?? 404));
+            return $this->respondError($action['message'] ?? 'Colaborador não encontrado.', null, (int) ($action['status'] ?? 404));
         }
 
         $this->logActionAudit($action, $id);
@@ -744,7 +744,7 @@ class EmployeeController extends BaseController
     }
 
     /**
-     * Serve a foto do funcionário sob autenticação + checagem de posse — ver MED-09
+     * Serve a foto do colaborador sob autenticação + checagem de posse — ver MED-09
      * na auditoria. Nunca serve arquivo estático diretamente do webroot público.
      */
     public function photo(int $id)

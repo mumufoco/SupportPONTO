@@ -60,12 +60,12 @@
             <div class="sp-form-card__head">
                 <div class="sp-form-card__icon c-blue"><i class="bi bi-person-badge-fill"></i></div>
                 <div>
-                    <p class="sp-form-card__title">Funcionário</p>
-                    <p class="sp-form-card__sub">O vínculo com o funcionário não pode ser alterado após o cadastro.</p>
+                    <p class="sp-form-card__title">Colaborador</p>
+                    <p class="sp-form-card__sub">O vínculo com o colaborador não pode ser alterado após o cadastro.</p>
                 </div>
             </div>
             <div class="sp-form-card__body">
-                <label class="form-label">Funcionário</label>
+                <label class="form-label">Colaborador</label>
                 <input type="text" class="form-control" value="<?= esc(($employee->name ?? '-') . ' — ' . ($employee->department ?? '-')) ?>" disabled>
             </div>
         </div>

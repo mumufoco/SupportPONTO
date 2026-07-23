@@ -16,7 +16,7 @@
             <div>
                 <strong>ATENÇÃO — LIMITE ATINGIDO!</strong><br>
                 <span style="font-size:.875rem;">
-                    Este funcionário já recebeu <strong>3 advertências</strong>.
+                    Este colaborador já recebeu <strong>3 advertências</strong>.
                     Qualquer nova advertência pode resultar em medidas mais severas, incluindo possível demissão por justa causa.
                 </span>
             </div>

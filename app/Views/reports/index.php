@@ -183,21 +183,21 @@
         </div>
     </div>
 
-    <!-- Relatório por funcionário -->
+    <!-- Relatório por colaborador -->
     <div class="row g-4 mt-0">
         <div class="col-12">
             <div class="sp-data-card">
                 <div class="sp-data-card__header">
                     <h2 class="sp-data-card__title">
                         <span style="width:2.1rem;height:2.1rem;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(111,66,193,.12);color:#6f42c1;"><i class="bi bi-person-lines-fill"></i></span>
-                        Relatório por funcionário
+                        Relatório por colaborador
                     </h2>
                 </div>
                 <div class="sp-data-card__body">
                     <form id="form-employee-report" action="<?= route_to('reports.generate') ?>" method="post" class="row g-3">
                         <?= csrf_field() ?>
                         <div class="col-md-4">
-                            <label for="emp-select" class="form-label">Funcionário <span class="text-danger">*</span></label>
+                            <label for="emp-select" class="form-label">Colaborador <span class="text-danger">*</span></label>
                             <select name="filters[employee_id]" id="emp-select" class="form-select" required>
                                 <option value="">Selecione…</option>
                                 <?php foreach (($employees ?? []) as $emp): ?>
@@ -239,7 +239,7 @@
                         </div>
                         <div class="col-12 d-flex gap-2 align-items-center flex-wrap">
                             <button type="submit" id="btn-emp-report" class="btn btn-primary">
-                                <i class="bi bi-person-check-fill me-1"></i>Gerar por funcionário
+                                <i class="bi bi-person-check-fill me-1"></i>Gerar por colaborador
                             </button>
                             <a id="emp-timesheet-link" href="#" class="btn btn-outline-secondary" style="display:none;" target="_blank">
                                 <i class="bi bi-calendar-range me-1"></i>Ver espelho detalhado
@@ -648,7 +648,7 @@
         e.preventDefault();
 
         const empId = document.getElementById('emp-select').value;
-        if (!empId) { alert('Selecione um funcionário.'); return; }
+        if (!empId) { alert('Selecione um colaborador.'); return; }
 
         const type   = document.getElementById('emp-report-type').value;
         const format = document.getElementById('emp-report-format').value;

@@ -17,7 +17,7 @@
             <form method="POST" action="<?= sp_schedules_update_url((int) ($schedule->id ?? 0)) ?>" class="row g-3">
                 <?= csrf_field() ?>
                 <div class="col-md-6">
-                    <label class="form-label" for="employee_id">Funcionário</label>
+                    <label class="form-label" for="employee_id">Colaborador</label>
                     <select class="form-select" id="employee_id" name="employee_id" required>
                         <option value="">Selecione...</option>
                         <?php foreach (($employees ?? []) as $employee): ?>

@@ -94,7 +94,7 @@ class SecurityCenterService
                 ->where('active', true)
                 ->countAllResults();
 
-            // Alerta se mais de 20% dos funcionários ativos são admin
+            // Alerta se mais de 20% dos colaboradores ativos são admin
             $adminPercentage = $totalAtivos > 0 ? ($totalAdmins / $totalAtivos * 100) : 0;
 
             if ($totalAdmins === 0) {

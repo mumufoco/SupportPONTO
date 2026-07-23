@@ -169,7 +169,7 @@
                                 <strong>Turno Ativo</strong>
                             </label>
                         </div>
-                        <small class="text-muted">Apenas turnos ativos podem ser atribuídos a funcionários</small>
+                        <small class="text-muted">Apenas turnos ativos podem ser atribuídos a colaboradores</small>
                     </div>
 
                     <div class="col-md-4 mb-3">

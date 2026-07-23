@@ -86,9 +86,9 @@
                     </div>
                     <div class="sp-callout-neutral p-3">
                         <strong class="d-block mb-1">Vínculo com Colaboradores</strong>
-                        <p class="text-muted small mb-2">Conecte a estrutura organizacional ao cadastro de funcionários.</p>
+                        <p class="text-muted small mb-2">Conecte a estrutura organizacional ao cadastro de colaboradores.</p>
                         <a href="<?= site_url('employees') ?>" class="btn btn-sm btn-outline-secondary">
-                            Validar em Funcionários
+                            Validar em Colaboradores
                         </a>
                     </div>
                 </div>

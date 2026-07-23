@@ -65,7 +65,7 @@ class TestSeeder extends Seeder
 
         // Seed regular employee
         $this->db->table('employees')->insert([
-            'name' => 'Funcionário Teste',
+            'name' => 'Colaborador Teste',
             'cpf' => '222.222.222-22',
             'email' => 'funcionario@pontoeletronico.com.br',
             'password' => password_hash(self::TEST_EMPLOYEE_PASSWORD, PASSWORD_ARGON2ID),

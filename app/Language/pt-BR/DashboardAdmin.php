@@ -7,11 +7,11 @@ return [
     'pageIcon' => 'bi bi-speedometer2',
 
     'stats' => [
-        'totalEmployees' => 'Total de Funcionários',
-        'activeEmployees' => 'Funcionários Ativos',
+        'totalEmployees' => 'Total de Colaboradores',
+        'activeEmployees' => 'Colaboradores Ativos',
         'presentToday' => 'Presentes Hoje',
         'pendingJustifications' => 'Justificativas Pendentes',
-        'inactiveEmployees' => 'Funcionários Inativos',
+        'inactiveEmployees' => 'Colaboradores Inativos',
         'pendingWarnings' => 'Advertências Pendentes',
         'recentRegistrations' => 'Cadastros Recentes (7 dias)',
     ],
@@ -65,7 +65,7 @@ return [
             'title' => 'Justificativas Pendentes',
             'badge' => '{0} aguardando',
             'columns' => [
-                'employee' => 'Funcionário',
+                'employee' => 'Colaborador',
                 'date' => 'Data',
                 'type' => 'Tipo',
                 'status' => 'Status',
@@ -206,6 +206,6 @@ return [
 
     'alertsData' => [
         'criticalErrors' => '{0} erro(s) crítico(s) nas últimas 24 horas.',
-        'noBiometric' => '{0} funcionário(s) sem cadastro biométrico.',
+        'noBiometric' => '{0} colaborador(es) sem cadastro biométrico.',
     ],
 ];

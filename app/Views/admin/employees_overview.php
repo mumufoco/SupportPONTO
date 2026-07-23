@@ -168,7 +168,7 @@ $statusBadge = [
                                         <?php $__rb = match($emp->role ?? '') {
                                             'gestor' => ['Gestor',      'text-bg-info'],
                                             'rh'     => ['RH',          'text-bg-warning'],
-                                            default  => ['Funcionário', 'text-bg-secondary'],
+                                            default  => ['Colaborador', 'text-bg-secondary'],
                                         }; ?>
                                         <span class="badge <?= $__rb[1] ?>" style="font-size:.62rem;margin-top:2px"><?= $__rb[0] ?></span>
                                     </div>

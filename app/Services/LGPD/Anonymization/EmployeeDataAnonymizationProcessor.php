@@ -151,7 +151,7 @@ class EmployeeDataAnonymizationProcessor
             try {
                 $this->faceRecognitionService->deleteFaceEnrollment($employeeId);
             } catch (\Throwable $e) {
-                log_message('error', "Falha ao sincronizar exclusão facial externa durante anonimização LGPD do funcionário {$employeeId}: " . $e->getMessage());
+                log_message('error', "Falha ao sincronizar exclusão facial externa durante anonimização LGPD do colaborador {$employeeId}: " . $e->getMessage());
             }
         }
 

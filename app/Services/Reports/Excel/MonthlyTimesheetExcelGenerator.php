@@ -47,7 +47,7 @@ class MonthlyTimesheetExcelGenerator
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $row = 4;
-        $sheet->setCellValue("A{$row}", 'Funcionário:');
+        $sheet->setCellValue("A{$row}", 'Colaborador:');
         $sheet->setCellValue("B{$row}", $timesheet['employee']['name']);
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
 

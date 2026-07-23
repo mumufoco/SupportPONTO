@@ -58,4 +58,9 @@ final class LegacyRouteRedirectController extends BaseController
     {
         return redirect()->to(route_to('geofences.edit', $id));
     }
+
+    public function employeeHome(): RedirectResponse
+    {
+        return redirect()->to(route_to('dashboard.employee.home'));
+    }
 }

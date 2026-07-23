@@ -88,8 +88,8 @@ class TimePunchModel extends Model
 
     protected $validationMessages = [
         'employee_id' => [
-            'required' => 'O ID do funcionário é obrigatório.',
-            'integer'  => 'O ID do funcionário deve ser um número.',
+            'required' => 'O ID do colaborador é obrigatório.',
+            'integer'  => 'O ID do colaborador deve ser um número.',
         ],
         'punch_type' => [
             'required' => 'O tipo de marcação é obrigatório.',

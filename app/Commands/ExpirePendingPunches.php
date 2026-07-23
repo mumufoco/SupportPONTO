@@ -10,7 +10,7 @@ use CodeIgniter\CLI\CLI;
  * Expira registros de ponto pendentes de aprovação vencidos há mais de N horas.
  *
  * MED-03 (auditoria): antes, PendingPunchModel::expireStale() só era chamado de forma
- * "preguiçosa" — quando o próprio funcionário submetia uma nova justificativa
+ * "preguiçosa" — quando o próprio colaborador submetia uma nova justificativa
  * (PendingPunchService::evaluateEligibility) ou quando um gestor abria o painel de
  * pendências (listPendingForManager). Sem cron dedicado, se nenhuma dessas duas rotas
  * fosse acionada, registros vencidos ficavam presos com status='pending'

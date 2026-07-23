@@ -57,7 +57,7 @@ class SupportCheckSettingsController extends BaseSettingsController
         try {
             if ($employeeId !== null && $employeeId !== '') {
                 $result = $service->sendMonthForEmployee((int) $employeeId, $year, $month);
-                $message = 'Relatório enviado com sucesso para o funcionário.';
+                $message = 'Relatório enviado com sucesso para o colaborador.';
                 $data = ['sent' => 1, 'failed' => 0, 'detail' => $result];
             } else {
                 $result  = $service->sendMonthForAll($year, $month);

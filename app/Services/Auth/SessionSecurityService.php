@@ -195,7 +195,7 @@ class SessionSecurityService
      * Revoga TODAS as sessões ativas de um usuário (inclusive a atual, se houver) —
      * diferente de revokeOtherSessions(), que preserva a sessão de quem está chamando.
      *
-     * ALTO-02 (auditoria): usado quando um funcionário é desativado ou tem o papel
+     * ALTO-02 (auditoria): usado quando um colaborador é desativado ou tem o papel
      * (role) alterado por um admin/RH — sem isso, quem já estivesse logado continuava
      * com acesso pleno (inclusive privilégios do papel antigo) até a sessão expirar
      * naturalmente, mesmo após uma ação administrativa explícita de bloqueio.

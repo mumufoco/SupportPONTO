@@ -173,8 +173,8 @@ class DashboardAdminService
         [$monthStart, $nextMonthStart] = DashboardDateRange::month();
 
         // 'total_employees' precisa ser o total real (ativos + inativos), não só os
-        // ativos — o card "Funcionários Ativos" é quem mostra só os ativos. Antes desta
-        // correção os dois cards liam a mesma query e "Funcionários Ativos" sempre
+        // ativos — o card "Colaboradores Ativos" é quem mostra só os ativos. Antes desta
+        // correção os dois cards liam a mesma query e "Colaboradores Ativos" sempre
         // aparecia zerado (chave nunca era gerada), o que fazia os dois números do
         // dashboard parecerem inconsistentes entre si.
         $activeEmployees = $this->employeeModel->where('active', true)->where('role !=', 'admin')->countAllResults();

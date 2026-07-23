@@ -51,7 +51,7 @@ class TimePunchFlowService
         }
 
         if (! $employee->active) {
-            return $this->errorResult('Funcionário inativo.', 403);
+            return $this->errorResult('Colaborador inativo.', 403);
         }
 
         return $this->processPunchRegistration((int) $employee->id, (string) $punchType, 'codigo', $request);
@@ -77,7 +77,7 @@ class TimePunchFlowService
 
         if (! $employee || ! $employee->active) {
             $this->auditModel->log(null, 'PUNCH_FAILED_CPF', 'time_punches', null, null, ['cpf' => $cpfDigits], 'Tentativa de registro com CPF inválido/inativo.', 'warning');
-            return $this->errorResult('CPF inválido ou funcionário inativo.', 404);
+            return $this->errorResult('CPF inválido ou colaborador inativo.', 404);
         }
 
         return $this->processPunchRegistration((int) $employee->id, (string) $punchType, 'cpf', $request);
@@ -107,13 +107,13 @@ class TimePunchFlowService
 
             $employee = $qrValidation['employee'] ?? null;
             if (! $employee || ! $employee->active) {
-                return $this->errorResult('Funcionário não encontrado ou inativo.', 404);
+                return $this->errorResult('Colaborador não encontrado ou inativo.', 404);
             }
 
             $result = $this->processPunchRegistration((int) $employee->id, (string) $punchType, 'qrcode', $request);
 
             // Só marca o token como consumido se o registro realmente foi efetuado —
-            // caso contrário (ex.: sequência de ponto inválida), o funcionário precisa
+            // caso contrário (ex.: sequência de ponto inválida), o colaborador precisa
             // poder tentar de novo com o mesmo QR Code dentro da janela de 5 minutos.
             if (($result['success'] ?? false) && ! empty($qrValidation['jti'])) {
                 $this->punchService->markQrTokenUsed((string) $qrValidation['jti'], (int) $employee->id);
@@ -150,7 +150,7 @@ class TimePunchFlowService
 
         $employee = $this->employeeModel->find((int) $employeeId);
         if (! $employee || ! $employee->active) {
-            return $this->errorResult('Funcionário não encontrado ou inativo.', 404);
+            return $this->errorResult('Colaborador não encontrado ou inativo.', 404);
         }
 
         return $this->processPunchRegistration((int) $employeeId, (string) $punchType, 'biometria', $request, [
@@ -185,7 +185,7 @@ class TimePunchFlowService
 
             if (! $employee || ! $employee->active) {
                 $this->logFacialRecognitionAttempt($employeeId ?: null, false, $similarity, 'punch', 'Colaborador inativo', $request);
-                return $this->errorResult('Funcionário não encontrado ou inativo.', 404);
+                return $this->errorResult('Colaborador não encontrado ou inativo.', 404);
             }
 
             $this->logFacialRecognitionAttempt($employeeId, true, $similarity, 'punch', null, $request);
@@ -345,7 +345,7 @@ class TimePunchFlowService
                 $cpfDigits = preg_replace('/\D+/', '', (string) ($credentials['cpf'] ?? '')) ?? '';
                 $employee = $this->punchService->findEmployeeByCpf($cpfDigits);
                 if (! $employee) {
-                    return $this->errorResult('CPF inválido ou funcionário inativo.', 404);
+                    return $this->errorResult('CPF inválido ou colaborador inativo.', 404);
                 }
                 break;
 
@@ -374,7 +374,7 @@ class TimePunchFlowService
         }
 
         if (! $employee || ! ($employee->active ?? false)) {
-            return $this->errorResult('Funcionário não encontrado ou inativo.', 404);
+            return $this->errorResult('Colaborador não encontrado ou inativo.', 404);
         }
 
         return ['success' => true, 'employee' => $employee];

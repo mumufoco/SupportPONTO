@@ -34,7 +34,7 @@
         <div class="stat-card">
             <div class="stat-card-icon info"><i class="bi bi-people-fill"></i></div>
             <div class="stat-card-content">
-                <div class="stat-card-label">Funcionários Escalados</div>
+                <div class="stat-card-label">Colaboradores Escalados</div>
                 <div class="stat-card-value"><?= (int) ($statistics['employees_scheduled'] ?? 0) ?></div>
             </div>
         </div>
@@ -98,7 +98,7 @@
                                 <th>Turno</th>
                                 <th>Horário</th>
                                 <th>Intervalo</th>
-                                <th>Funcionários</th>
+                                <th>Colaboradores</th>
                                 <th>Status</th>
                                 <th class="text-end">Ações</th>
                             </tr>

@@ -35,7 +35,7 @@ class DepartmentSummaryExcelGenerator
         if (empty($employees)) {
             return [
                 'success' => false,
-                'error' => 'Nenhum funcionário encontrado no departamento.',
+                'error' => 'Nenhum colaborador encontrado no departamento.',
             ];
         }
 
@@ -83,7 +83,7 @@ class DepartmentSummaryExcelGenerator
         $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $row = 5;
-        $headers = ['Funcionário', 'Horas Trabalhadas', 'Horas Previstas', 'Saldo', 'Dias Trabalhados', 'Atrasos'];
+        $headers = ['Colaborador', 'Horas Trabalhadas', 'Horas Previstas', 'Saldo', 'Dias Trabalhados', 'Atrasos'];
         $col = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue("{$col}{$row}", $header);

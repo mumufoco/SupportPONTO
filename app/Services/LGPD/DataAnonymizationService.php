@@ -48,7 +48,7 @@ class DataAnonymizationService
 
                 return [
                     'success' => false,
-                    'message' => 'Funcionário não encontrado',
+                    'message' => 'Colaborador não encontrado',
                     'anonymized_count' => 0,
                 ];
             }
@@ -58,7 +58,7 @@ class DataAnonymizationService
 
                 return [
                     'success' => false,
-                    'message' => 'Funcionário já está anonimizado',
+                    'message' => 'Colaborador já está anonimizado',
                     'anonymized_count' => 0,
                 ];
             }
@@ -90,7 +90,7 @@ class DataAnonymizationService
             ];
         } catch (\Throwable $e) {
             $db->transRollback();
-            log_message('error', 'Erro ao anonimizar funcionário: ' . $e->getMessage());
+            log_message('error', 'Erro ao anonimizar colaborador: ' . $e->getMessage());
 
             return [
                 'success' => false,
@@ -106,7 +106,7 @@ class DataAnonymizationService
         if (! $employee) {
             return [
                 'success' => false,
-                'message' => 'Funcionário não encontrado',
+                'message' => 'Colaborador não encontrado',
             ];
         }
 
@@ -138,7 +138,7 @@ class DataAnonymizationService
                 $processed++;
             } else {
                 $failed++;
-                log_message('error', sprintf('Falha ao anonimizar funcionário #%d: %s', $employee->id, $result['message']));
+                log_message('error', sprintf('Falha ao anonimizar colaborador #%d: %s', $employee->id, $result['message']));
             }
         }
 
@@ -146,7 +146,7 @@ class DataAnonymizationService
             'success' => true,
             'processed' => $processed,
             'failed' => $failed,
-            'message' => sprintf('%d funcionários anonimizados, %d falharam', $processed, $failed),
+            'message' => sprintf('%d colaboradores anonimizados, %d falharam', $processed, $failed),
         ];
     }
 

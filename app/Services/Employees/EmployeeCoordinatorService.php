@@ -35,11 +35,11 @@ class EmployeeCoordinatorService
         $employee = $this->managementService->findEmployee($employeeId);
 
         if (!$employee) {
-            return ['success' => false, 'message' => 'Funcionário não encontrado.', 'status' => 404];
+            return ['success' => false, 'message' => 'Colaborador não encontrado.', 'status' => 404];
         }
 
         if (!$this->managementService->canActorAccessEmployee($currentUser, $employee)) {
-            return ['success' => false, 'message' => 'Você não tem permissão para acessar este funcionário.', 'status' => 403];
+            return ['success' => false, 'message' => 'Você não tem permissão para acessar este colaborador.', 'status' => 403];
         }
 
         return ['success' => true, 'employee' => $employee];
@@ -50,7 +50,7 @@ class EmployeeCoordinatorService
         $overview = $this->insightsService->getEmployeeOverview($employeeId);
 
         if ($overview === null) {
-            return ['success' => false, 'message' => 'Funcionário não encontrado.', 'status' => 404];
+            return ['success' => false, 'message' => 'Colaborador não encontrado.', 'status' => 404];
         }
 
         return ['success' => true, 'overview' => $overview];

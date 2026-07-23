@@ -111,7 +111,7 @@
                                 Painel de sincronização &raquo;
                             </a>
                         </div>
-                        <div class="form-text mb-2">Gestão documental, biometria e assinatura eletrônica. Já integrado (relatórios de ponto, termos de consentimento, cadastro de funcionários).</div>
+                        <div class="form-text mb-2">Gestão documental, biometria e assinatura eletrônica. Já integrado (relatórios de ponto, termos de consentimento, cadastro de colaboradores).</div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">URL base</label>
@@ -162,7 +162,7 @@
                             Resistividade (SEV). O SupportSEV busca os colaboradores chamando
                             <code>GET /api/v1/supportsev/team</code> com este token no cabeçalho
                             <code>Authorization: Bearer</code>. Migrado de um login OAuth2 por usuário/senha
-                            de uma conta de funcionário dedicada — o token abaixo tem escopo restrito a este
+                            de uma conta de colaborador dedicada — o token abaixo tem escopo restrito a este
                             endpoint, sem depender de um colaborador cadastrado. Ao trocar o token, atualize
                             também o <code>SUPPORTPONTO_API_TOKEN</code> no <code>.env</code> do SupportSEV.
                         </div>

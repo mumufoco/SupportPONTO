@@ -99,7 +99,7 @@ class TimesheetService
     {
         $employee = $this->employeeModel->find($employeeId);
         if (!$employee) {
-            return ['success' => false, 'error' => 'Funcionário não encontrado.'];
+            return ['success' => false, 'error' => 'Colaborador não encontrado.'];
         }
 
         $monthRange = get_month_datetime_range($month);

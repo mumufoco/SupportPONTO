@@ -47,7 +47,7 @@ class TimesheetDailyConsolidationService
             return [
                 'success' => false,
                 'status' => 404,
-                'message' => 'Funcionário não encontrado para consolidação.',
+                'message' => 'Colaborador não encontrado para consolidação.',
             ];
         }
 

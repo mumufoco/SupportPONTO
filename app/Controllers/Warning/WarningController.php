@@ -82,7 +82,7 @@ class WarningController extends BaseController
 
         $payload = $this->controllerActionService->createPayload($this->request);
         if (! $this->accessService->canManageEmployee($employee, (int) $payload['employee_id'])) {
-            return redirect()->back()->withInput()->with('error', 'Você só pode advertir funcionários do seu departamento.');
+            return redirect()->back()->withInput()->with('error', 'Você só pode advertir colaboradores do seu departamento.');
         }
 
         if (strtotime($payload['occurrence_date']) > strtotime('today')) {
@@ -95,7 +95,7 @@ class WarningController extends BaseController
             return redirect()->back()->withInput()->with($key, $result[$key]);
         }
 
-        return redirect()->to(sp_warning_index_url())->with('success', 'Advertência emitida com sucesso. Notificação enviada ao funcionário.');
+        return redirect()->to(sp_warning_index_url())->with('success', 'Advertência emitida com sucesso. Notificação enviada ao colaborador.');
     }
 
     public function show($id = null)
@@ -130,7 +130,7 @@ class WarningController extends BaseController
         }
 
         if (! $this->accessService->isOwner($employee, $details['warning'])) {
-            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Apenas o funcionário advertido pode assinar a advertência.');
+            return redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Apenas o colaborador advertido pode assinar a advertência.');
         }
 
         if ($details['warning']->status !== 'pendente-assinatura') {
@@ -156,8 +156,8 @@ class WarningController extends BaseController
 
         if (! $this->accessService->isOwner($employee, $warning)) {
             return $this->requestExpectsJson()
-                ? $this->jsonError('Apenas o funcionário advertido pode assinar.')
-                : redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Apenas o funcionário advertido pode assinar.');
+                ? $this->jsonError('Apenas o colaborador advertido pode assinar.')
+                : redirect()->to(sp_warning_show_url((int) $id))->with('error', 'Apenas o colaborador advertido pode assinar.');
         }
 
         if ($warning->status !== 'pendente-assinatura') {
@@ -346,7 +346,7 @@ class WarningController extends BaseController
         $data = $this->queryService->dashboardData($targetId);
 
         if (! $data) {
-            return redirect()->to(route_to('dashboard'))->with('error', 'Funcionário não encontrado.');
+            return redirect()->to(route_to('dashboard'))->with('error', 'Colaborador não encontrado.');
         }
 
         if (! $this->accessService->canViewEmployeeDashboard($employee, $data['targetEmployee'])) {

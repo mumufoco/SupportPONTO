@@ -54,8 +54,8 @@ class EmployeeChangeRequestController extends BaseController
         $isSelf = (int)($this->currentUser->id ?? 0) === $employeeId;
 
         // MED-04 (auditoria): isManager() checava só o papel, não o escopo — um gestor
-        // do Departamento A conseguia abrir/criar solicitações de qualquer funcionário,
-        // fora do seu time, diferente do resto do módulo de funcionários (que restringe
+        // do Departamento A conseguia abrir/criar solicitações de qualquer colaborador,
+        // fora do seu time, diferente do resto do módulo de colaboradores (que restringe
         // gestor ao próprio departamento via canAccessEmployeeRecord()).
         if (!$this->canAccessEmployeeRecord($employee)) {
             return redirect()->to(site_url('dashboard'))->with('error', 'Sem permissão.');

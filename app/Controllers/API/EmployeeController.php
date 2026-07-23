@@ -83,7 +83,7 @@ class EmployeeController extends BaseApiController
         return $this->withAuthenticatedEmployee(function (object $employee) use ($code) {
             $result = $this->employeeApiService->employeeByCode($employee, $code);
             if (! ($result['success'] ?? false)) {
-                return $this->fail($result['message'] ?? 'Erro ao consultar funcionário.', (int) ($result['status'] ?? 400));
+                return $this->fail($result['message'] ?? 'Erro ao consultar colaborador.', (int) ($result['status'] ?? 400));
             }
 
             return $this->respond([

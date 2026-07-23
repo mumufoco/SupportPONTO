@@ -109,7 +109,7 @@ class ExcelSheetFormatter
             'start_date'  => 'Data Inicial',
             'end_date'    => 'Data Final',
             'department'  => 'Departamento',
-            'employee_id' => 'Funcionário ID',
+            'employee_id' => 'Colaborador ID',
             'status'      => 'Status',
         ];
 

@@ -50,8 +50,8 @@ class ScheduleModel extends Model
 
     protected $validationMessages = [
         'employee_id' => [
-            'required' => 'O funcionário é obrigatório',
-            'integer' => 'ID de funcionário inválido'
+            'required' => 'O colaborador é obrigatório',
+            'integer' => 'ID de colaborador inválido'
         ],
         'shift_id' => [
             'required' => 'O turno é obrigatório',

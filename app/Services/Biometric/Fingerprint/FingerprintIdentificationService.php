@@ -54,7 +54,7 @@ class FingerprintIdentificationService
             'threshold' => $this->settingsService->threshold(),
             'processing_time' => round(microtime(true) - $startTime, 3),
             'templates_checked' => count($templates),
-            'message' => $identified ? 'Funcionário identificado' : 'Impressão digital não reconhecida',
+            'message' => $identified ? 'Colaborador identificado' : 'Impressão digital não reconhecida',
         ];
 
         if ($identified && $identifiedEmployeeId !== null) {

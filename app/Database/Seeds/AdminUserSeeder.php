@@ -167,7 +167,7 @@ class AdminUserSeeder extends Seeder
         $consentData = [
             'employee_id'   => $adminId,
             'consent_type'  => 'data_processing',
-            'purpose'       => 'Administração do sistema de ponto eletrônico e processamento de dados de funcionários',
+            'purpose'       => 'Administração do sistema de ponto eletrônico e processamento de dados de colaboradores',
             'legal_basis'   => 'LGPD Art. 7º, V - execução de contrato',
             'granted'       => true,
             'granted_at'    => date('Y-m-d H:i:s'),

@@ -127,7 +127,7 @@ class DeepFaceService
         if (!$employee) {
             return [
                 'success' => false,
-                'error' => 'Funcionário não encontrado.',
+                'error' => 'Colaborador não encontrado.',
             ];
         }
 
@@ -183,7 +183,7 @@ class DeepFaceService
         if (!$template) {
             return [
                 'success' => false,
-                'error' => 'Funcionário não possui cadastro facial.',
+                'error' => 'Colaborador não possui cadastro facial.',
             ];
         }
 

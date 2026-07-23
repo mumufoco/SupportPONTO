@@ -198,7 +198,7 @@ class InstallationProvisioningService
         $builder->insert([
             'employee_id' => $adminId,
             'consent_type' => 'data_processing',
-            'purpose' => 'Administração do sistema de ponto eletrônico e processamento de dados de funcionários',
+            'purpose' => 'Administração do sistema de ponto eletrônico e processamento de dados de colaboradores',
             'legal_basis' => 'LGPD Art. 7º, V - execução de contrato',
             'granted' => true,
             'granted_at' => $now,

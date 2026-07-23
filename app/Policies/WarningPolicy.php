@@ -42,7 +42,7 @@ final class WarningPolicy
             return true;
         }
 
-        // O próprio funcionário pode ver suas advertências
+        // O próprio colaborador pode ver suas advertências
         if ((int) $actor->id === (int) $warning->employee_id) {
             return true;
         }
@@ -53,7 +53,7 @@ final class WarningPolicy
 
     /**
      * Pode assinar (confirmar ciência) da advertência?
-     * Apenas o próprio funcionário.
+     * Apenas o próprio colaborador.
      */
     public function sign(object $actor, object $warning): bool
     {
@@ -63,7 +63,7 @@ final class WarningPolicy
 
     /**
      * Pode contestar a advertência?
-     * Apenas o próprio funcionário, enquanto no prazo.
+     * Apenas o próprio colaborador, enquanto no prazo.
      */
     public function contest(object $actor, object $warning): bool
     {

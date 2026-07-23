@@ -73,7 +73,7 @@ class ChatWebWorkflowService
     public function createPrivateRoom(int $employeeId, int $targetEmployeeId): array
     {
         if ($employeeId <= 0 || $targetEmployeeId <= 0) {
-            return ['success' => false, 'message' => 'Funcionário inválido.', 'status' => 422];
+            return ['success' => false, 'message' => 'Colaborador inválido.', 'status' => 422];
         }
 
         if ($employeeId === $targetEmployeeId) {

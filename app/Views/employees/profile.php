@@ -112,7 +112,7 @@ $uploadUrl      = site_url('employees/' . ($emp->id ?? '') . '/photo');
                     <h5 class="mb-1"><?= esc($emp->name ?? '–') ?></h5>
                     <div class="text-muted small mb-3"><?= esc($emp->email ?? '–') ?></div>
                     <div class="d-flex gap-2 justify-content-center flex-wrap mb-3">
-                        <span class="sp-badge sp-badge-primary"><?= esc(ucfirst($emp->role ?? 'funcionario')) ?></span>
+                        <span class="sp-badge sp-badge-primary"><?= esc((\App\Enums\Role::tryFrom($emp->role ?? '') ?? \App\Enums\Role::Funcionario)->label()) ?></span>
                         <span class="sp-status <?= !empty($emp->active) ? 'sp-status-active' : 'sp-status-inactive' ?>">
                             <?= !empty($emp->active) ? 'Ativo' : 'Inativo' ?>
                         </span>

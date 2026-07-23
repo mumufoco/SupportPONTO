@@ -5,7 +5,7 @@ namespace App\ViewModels;
 use App\Enums\Role;
 
 /**
- * MELHORIA 3: ViewModel para a tela de funcionários.
+ * MELHORIA 3: ViewModel para a tela de colaboradores.
  *
  * Prepara dados de exibição antes de enviar para a view, eliminando
  * lógica de negócio e formatação dos templates PHP.

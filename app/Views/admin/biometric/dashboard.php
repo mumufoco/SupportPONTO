@@ -207,7 +207,7 @@
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Funcionário</th>
+                                        <th>Colaborador</th>
                                         <th>Dedo</th>
                                         <th>Qualidade</th>
                                         <th>Data</th>
@@ -264,7 +264,7 @@
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Funcionário</th>
+                                        <th>Colaborador</th>
                                         <th>Ação</th>
                                         <th>Status</th>
                                         <th>Data</th>
@@ -356,7 +356,7 @@
             data: {
                 labels: <?= json_encode(array_keys($departmentDistribution), JSON_HEX_TAG | JSON_HEX_AMP) ?>,
                 datasets: [{
-                    label: 'Funcionários com Biometria',
+                    label: 'Colaboradores com Biometria',
                     data: <?= json_encode(array_values($departmentDistribution), JSON_HEX_TAG | JSON_HEX_AMP) ?>,
                     backgroundColor: '#0d6efd'
                 }]

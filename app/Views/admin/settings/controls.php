@@ -281,7 +281,7 @@
         <!-- 7. Auto-Cadastro -->
         <div class="sp-card mb-3">
             <div class="sp-card-header">
-                <span class="sp-card-title"><i class="bi bi-person-plus-fill"></i> Auto-Cadastro de Funcionários</span>
+                <span class="sp-card-title"><i class="bi bi-person-plus-fill"></i> Auto-Cadastro de Colaboradores</span>
             </div>
             <div class="sp-card-body">
                 <div class="form-check form-switch mb-2">

@@ -24,21 +24,21 @@ class EmployeeStatusService
     {
         $employee = $this->employeeModel->find($id);
         if (!$employee) {
-            return ['success' => false, 'error' => 'Funcionário não encontrado.', 'status' => 404];
+            return ['success' => false, 'error' => 'Colaborador não encontrado.', 'status' => 404];
         }
 
         if (!$this->employeeModel->delete($id)) {
-            return ['success' => false, 'error' => 'Erro ao excluir funcionário.', 'status' => 500];
+            return ['success' => false, 'error' => 'Erro ao excluir colaborador.', 'status' => 500];
         }
 
-        // ALTO-02 (auditoria): sem isto, um funcionário excluído continuava com acesso
+        // ALTO-02 (auditoria): sem isto, um colaborador excluído continuava com acesso
         // pleno pela sessão já aberta até ela expirar naturalmente.
-        $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Funcionário excluído');
+        $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Colaborador excluído');
 
         // MED-10 (auditoria): sem isto, pendências de ponto e justificativas
         // continuavam nas filas de aprovação de gestores mesmo após o desligamento, e
         // podiam ser aprovadas para alguém que já não estava mais na folha.
-        $this->cancelOpenPendencies($id, 'Funcionário excluído do sistema.');
+        $this->cancelOpenPendencies($id, 'Colaborador excluído do sistema.');
 
         return ['success' => true, 'employee' => $employee];
     }
@@ -47,21 +47,21 @@ class EmployeeStatusService
     {
         $employee = $this->employeeModel->find($id);
         if (!$employee) {
-            return ['success' => false, 'error' => 'Funcionário não encontrado.', 'status' => 404];
+            return ['success' => false, 'error' => 'Colaborador não encontrado.', 'status' => 404];
         }
 
         $this->employeeModel->update($id, ['active' => $active]);
         $this->dispatchSupportCheckSync($id);
 
-        // ALTO-02 (auditoria): desativar um funcionário (ex.: desligamento) não
+        // ALTO-02 (auditoria): desativar um colaborador (ex.: desligamento) não
         // revogava a sessão já aberta — quem estivesse logado continuava acessando o
         // sistema normalmente até a sessão expirar naturalmente (até ~2h, conforme
         // session.expiration), mesmo após uma ação administrativa explícita de bloqueio.
         if (!$active) {
-            $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Funcionário desativado');
+            $this->sessionSecurityService->revokeAllSessionsForUser($id, 'Colaborador desativado');
 
             // MED-10 (auditoria): ver nota em deleteEmployee() acima.
-            $this->cancelOpenPendencies($id, 'Funcionário desativado/desligado.');
+            $this->cancelOpenPendencies($id, 'Colaborador desativado/desligado.');
         }
 
         return ['success' => true, 'employee' => $employee, 'active' => $active];
@@ -112,7 +112,7 @@ class EmployeeStatusService
     {
         $employee = $this->employeeModel->find($id);
         if (!$employee) {
-            return ['success' => false, 'error' => 'Funcionário não encontrado.', 'status' => 404];
+            return ['success' => false, 'error' => 'Colaborador não encontrado.', 'status' => 404];
         }
 
         // Última barreira: não finaliza (ativa) um cadastro com dados obrigatórios do
@@ -147,7 +147,7 @@ class EmployeeStatusService
     {
         $employee = $this->employeeModel->find($id);
         if (!$employee) {
-            return ['success' => false, 'error' => 'Funcionário não encontrado.', 'status' => 404];
+            return ['success' => false, 'error' => 'Colaborador não encontrado.', 'status' => 404];
         }
 
         $this->employeeModel->delete($id);

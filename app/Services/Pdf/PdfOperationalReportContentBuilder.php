@@ -122,7 +122,7 @@ class PdfOperationalReportContentBuilder
         $html .= $this->sectionTitle('Registros Diários');
         $html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:100%;">';
         $html .= $this->tableHeader([
-            ['Data', '8%'], ['Funcionário', '18%'], ['Depto', '12%'],
+            ['Data', '8%'], ['Colaborador', '18%'], ['Depto', '12%'],
             ['Entrada', '8%'], ['Saída', '8%'],
             ['Trabalhado', '10%'], ['Previsto', '10%'], ['Saldo', '10%'],
             ['Extras', '8%'], ['Débito', '8%'],
@@ -177,7 +177,7 @@ class PdfOperationalReportContentBuilder
         $html .= $this->sectionTitle('Detalhamento de Horas Extras');
         $html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:100%;">';
         $html .= $this->tableHeader([
-            ['Data', '9%'], ['Funcionário', '20%'], ['Depto', '14%'],
+            ['Data', '9%'], ['Colaborador', '20%'], ['Depto', '14%'],
             ['Trabalhado', '11%'], ['Previsto', '11%'],
             ['Extras', '11%'], ['Extras 50%', '11%'], ['Dia', '13%'],
         ]);
@@ -228,7 +228,7 @@ class PdfOperationalReportContentBuilder
         $html .= $this->sectionTitle('Registros de Faltas e Atrasos');
         $html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:100%;">';
         $html .= $this->tableHeader([
-            ['Data', '8%'], ['Funcionário', '20%'], ['Depto', '13%'],
+            ['Data', '8%'], ['Colaborador', '20%'], ['Depto', '13%'],
             ['Tipo', '8%'], ['Horário', '8%'], ['Esperado', '8%'],
             ['Atraso (min)', '10%'], ['Status', '10%'],
         ]);
@@ -268,7 +268,7 @@ class PdfOperationalReportContentBuilder
         $credors = count(array_filter($data, fn($r) => ((float)($r['extra_hours_balance'] ?? 0) - (float)($r['owed_hours_balance'] ?? 0)) > 0));
 
         $kpis = [
-            $this->kpi('Funcionários',   (string) count($data),         self::C_NAVY),
+            $this->kpi('Colaboradores',   (string) count($data),         self::C_NAVY),
             $this->kpi('Total Extras',   $this->fmtH($totExt),          self::C_GREEN),
             $this->kpi('Total Débitos',  $this->fmtH($totOwd),          self::C_RED),
             $this->kpi('Saldo Geral',    ($totBal >= 0 ? '+' : '') . $this->fmtH($totBal), $totBal >= 0 ? self::C_GREEN : self::C_RED),
@@ -276,10 +276,10 @@ class PdfOperationalReportContentBuilder
 
         $html  = $this->header('Relatório de Banco de Horas', 'Posição atual', $filters);
         $html .= $this->kpiRow($kpis);
-        $html .= $this->sectionTitle('Posição de Banco de Horas por Funcionário');
+        $html .= $this->sectionTitle('Posição de Banco de Horas por Colaborador');
         $html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:100%;">';
         $html .= $this->tableHeader([
-            ['Funcionário', '25%'], ['Departamento', '20%'],
+            ['Colaborador', '25%'], ['Departamento', '20%'],
             ['H. Extras Acum.', '15%'], ['H. Débitos Acum.', '15%'],
             ['Saldo Total', '13%'], ['Situação', '12%'],
         ]);
@@ -319,7 +319,7 @@ class PdfOperationalReportContentBuilder
         $totAbs   = array_sum(array_column($data, 'absence_count'));
 
         $kpis = [
-            $this->kpi('Funcionários',   (string) count($data),         self::C_NAVY),
+            $this->kpi('Colaboradores',   (string) count($data),         self::C_NAVY),
             $this->kpi('Total Trabalhado', $this->fmtH($totWork),       self::C_BLUE),
             $this->kpi('Total Atrasos',  (string) $totLate,             self::C_YELLOW),
             $this->kpi('Total Faltas',   (string) $totAbs,              self::C_RED),
@@ -327,10 +327,10 @@ class PdfOperationalReportContentBuilder
 
         $html  = $this->header('Relatório Consolidado Mensal', 'Período: ' . $period, $filters);
         $html .= $this->kpiRow($kpis);
-        $html .= $this->sectionTitle('Consolidado por Funcionário');
+        $html .= $this->sectionTitle('Consolidado por Colaborador');
         $html .= '<table border="0" cellpadding="0" cellspacing="0" style="width:100%;">';
         $html .= $this->tableHeader([
-            ['Funcionário', '17%'], ['Depto', '11%'], ['Dias', '6%'],
+            ['Colaborador', '17%'], ['Depto', '11%'], ['Dias', '6%'],
             ['Trabalhado', '10%'], ['Previsto', '10%'],
             ['Extras', '9%'], ['Débitos', '9%'], ['Saldo', '9%'],
             ['Atrasos', '7%'], ['Faltas', '6%'], ['% Pres.', '6%'],

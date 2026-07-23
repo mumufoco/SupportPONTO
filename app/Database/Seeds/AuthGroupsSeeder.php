@@ -35,7 +35,7 @@ class AuthGroupsSeeder extends Seeder
             ],
             [
                 'name' => 'funcionario',
-                'description' => 'Funcionário - Registro de Ponto',
+                'description' => 'Colaborador - Registro de Ponto',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
         ];

@@ -209,7 +209,7 @@ class ReportViewService
     /**
      * Fonte canônica de departamentos (tabela `departments`), não mais
      * `DISTINCT employees.department` -- esse texto legado só trazia
-     * departamentos que já tinham pelo menos um funcionário ativo vinculado,
+     * departamentos que já tinham pelo menos um colaborador ativo vinculado,
      * então um departamento recém-cadastrado sem ninguém ainda nunca
      * aparecia no filtro.
      */

@@ -16,9 +16,9 @@ namespace App\Services\Contracts;
 interface TimePunchServiceInterface
 {
     /**
-     * Registra um ponto eletrônico para o funcionário.
+     * Registra um ponto eletrônico para o colaborador.
      *
-     * @param  object      $employee  Objeto do funcionário autenticado
+     * @param  object      $employee  Objeto do colaborador autenticado
      * @param  string      $punchType Tipo: entrada|saida|intervalo_inicio|intervalo_fim
      * @param  string      $method    Método: codigo|cpf|qrcode|facial|biometria
      * @param  float|null  $latitude  Coordenada GPS (opcional)
@@ -36,7 +36,7 @@ interface TimePunchServiceInterface
     ): array;
 
     /**
-     * Retorna os registros de ponto de um funcionário em uma data específica.
+     * Retorna os registros de ponto de um colaborador em uma data específica.
      *
      * @param  int    $employeeId
      * @param  string $date       Formato Y-m-d
@@ -45,7 +45,7 @@ interface TimePunchServiceInterface
     public function getPunchesByDate(int $employeeId, string $date): array;
 
     /**
-     * Valida se o funcionário pode registrar ponto agora (anti-duplicate).
+     * Valida se o colaborador pode registrar ponto agora (anti-duplicate).
      *
      * @param  int $employeeId
      * @return bool true se pode registrar
@@ -53,7 +53,7 @@ interface TimePunchServiceInterface
     public function canPunchNow(int $employeeId): bool;
 
     /**
-     * Retorna o próximo tipo de ponto esperado para o funcionário.
+     * Retorna o próximo tipo de ponto esperado para o colaborador.
      *
      * @param  int         $employeeId
      * @param  string|null $date

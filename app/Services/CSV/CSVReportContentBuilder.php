@@ -24,7 +24,7 @@ class CSVReportContentBuilder
 
     private function buildTimesheet(array $data): array
     {
-        $headers = ['Data', 'Funcionário', 'Departamento', 'Entrada', 'Saída', 'Trabalhado (h)', 'Esperado (h)', 'Saldo (h)', 'Observações'];
+        $headers = ['Data', 'Colaborador', 'Departamento', 'Entrada', 'Saída', 'Trabalhado (h)', 'Esperado (h)', 'Saldo (h)', 'Observações'];
         $rows = [];
 
         foreach ($data as $record) {
@@ -48,7 +48,7 @@ class CSVReportContentBuilder
 
     private function buildOvertime(array $data): array
     {
-        $headers = ['Data', 'Funcionário', 'Departamento', 'Trabalhado (h)', 'Esperado (h)', 'Extras (h)', 'Extra 50% (h)', 'Tipo'];
+        $headers = ['Data', 'Colaborador', 'Departamento', 'Trabalhado (h)', 'Esperado (h)', 'Extras (h)', 'Extra 50% (h)', 'Tipo'];
         $rows = [];
 
         foreach ($data as $record) {
@@ -71,7 +71,7 @@ class CSVReportContentBuilder
 
     private function buildAbsence(array $data): array
     {
-        $headers = ['Data', 'Funcionário', 'Departamento', 'Tipo', 'Horário', 'Esperado', 'Atraso (min)', 'Status'];
+        $headers = ['Data', 'Colaborador', 'Departamento', 'Tipo', 'Horário', 'Esperado', 'Atraso (min)', 'Status'];
         $rows = [];
 
         foreach ($data as $record) {
@@ -93,7 +93,7 @@ class CSVReportContentBuilder
 
     private function buildBankHours(array $data): array
     {
-        $headers = ['Funcionário', 'Departamento', 'Extras Acumuladas (h)', 'Devidas Acumuladas (h)', 'Saldo Total (h)', 'Status'];
+        $headers = ['Colaborador', 'Departamento', 'Extras Acumuladas (h)', 'Devidas Acumuladas (h)', 'Saldo Total (h)', 'Status'];
         $rows = [];
 
         foreach ($data as $record) {
@@ -118,7 +118,7 @@ class CSVReportContentBuilder
 
     private function buildConsolidated(array $data): array
     {
-        $headers = ['Funcionário', 'Departamento', 'Dias Trabalhados', 'Horas Trabalhadas', 'Horas Esperadas', 'Horas Extras', 'Horas Devidas', 'Saldo', 'Atrasos', 'Faltas'];
+        $headers = ['Colaborador', 'Departamento', 'Dias Trabalhados', 'Horas Trabalhadas', 'Horas Esperadas', 'Horas Extras', 'Horas Devidas', 'Saldo', 'Atrasos', 'Faltas'];
         $rows = [];
 
         foreach ($data as $record) {
@@ -146,7 +146,7 @@ class CSVReportContentBuilder
 
     private function buildJustifications(array $data): array
     {
-        $headers = ['Data', 'Funcionário', 'Tipo', 'Categoria', 'Motivo', 'Status', 'Possui Anexos', 'Criado em'];
+        $headers = ['Data', 'Colaborador', 'Tipo', 'Categoria', 'Motivo', 'Status', 'Possui Anexos', 'Criado em'];
         $rows = [];
 
         foreach ($data as $record) {
@@ -168,7 +168,7 @@ class CSVReportContentBuilder
 
     private function buildWarnings(array $data): array
     {
-        $headers = ['Data', 'Funcionário', 'Departamento', 'Tipo', 'Motivo', 'Status', 'Emitido por'];
+        $headers = ['Data', 'Colaborador', 'Departamento', 'Tipo', 'Motivo', 'Status', 'Emitido por'];
         $rows = [];
 
         foreach ($data as $record) {

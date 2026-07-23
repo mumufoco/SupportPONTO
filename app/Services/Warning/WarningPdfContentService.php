@@ -88,7 +88,7 @@ class WarningPdfContentService
             </p>
         </div>
 
-        <p style="margin-top: 10mm;"><strong>Funcionário:</strong></p>
+        <p style="margin-top: 10mm;"><strong>Colaborador:</strong></p>
         <p>' . htmlspecialchars($employee->name) . '</p>
         <div class="signature-box">
             <p style="text-align: center; padding-top: 7mm; color: #999;">
@@ -172,7 +172,7 @@ class WarningPdfContentService
             <em style="font-size: 8pt;">Assinado digitalmente via Certificado ICP-Brasil</em></p>
         </div>
 
-        <p style="margin-top: 10mm;"><strong>Funcionário:</strong></p>';
+        <p style="margin-top: 10mm;"><strong>Colaborador:</strong></p>';
 
         if ($warning->status === 'assinado' && $warning->employee_signature) {
             $html .= '<div class="signature-box"><p><strong>' . htmlspecialchars($employee->name) . '</strong><br>

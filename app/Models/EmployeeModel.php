@@ -54,7 +54,7 @@ class EmployeeModel extends Model
     protected $updatedField  = 'updated_at';
 
     // CRIT-08 (auditoria): sem isso, delete($id) disparava um DELETE físico real, que
-    // arrastava em cascata (ON DELETE CASCADE) todo o histórico legal do funcionário —
+    // arrastava em cascata (ON DELETE CASCADE) todo o histórico legal do colaborador —
     // batidas de ponto, justificativas, advertências e templates biométricos — de forma
     // irrecuperável, violando a obrigação de retenção da Portaria MTE 671/2021. A coluna
     // deleted_at já existia na tabela desde a migração original, só nunca foi ativada
@@ -161,7 +161,7 @@ class EmployeeModel extends Model
      * sanitizeData(), então já recebe o valor normalizado (só dígitos). Grava
      * cpf_hash (SHA-256 dos dígitos) junto, usado para busca exata (ver
      * findByCpf()/isCpfUnique() e PunchService::findEmployeeByCpf()) sem precisar
-     * decriptar toda a tabela para localizar um funcionário por CPF.
+     * decriptar toda a tabela para localizar um colaborador por CPF.
      */
     protected function encryptCpf(array $data): array
     {

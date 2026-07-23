@@ -23,7 +23,7 @@
                         <th>Módulo</th>
                         <th>Admin</th>
                         <th>Gestor</th>
-                        <th>Funcionário</th>
+                        <th>Colaborador</th>
                     </tr>
                 </thead>
                 <tbody>

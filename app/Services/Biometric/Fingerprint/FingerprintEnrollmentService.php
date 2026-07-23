@@ -32,7 +32,7 @@ class FingerprintEnrollmentService
     public function enroll(int $employeeId, string $fingerprintData, string $fingerPosition, string $captureMethod, array $options = []): array
     {
         if (!$this->stateService->employeeExists($employeeId)) {
-            return ['success' => false, 'message' => 'Funcionário não encontrado'];
+            return ['success' => false, 'message' => 'Colaborador não encontrado'];
         }
 
         if ($this->settingsService->requireConsent() && !$this->stateService->hasValidConsent($employeeId)) {
@@ -40,7 +40,7 @@ class FingerprintEnrollmentService
         }
 
         if ($this->stateService->activeTemplatesCount($employeeId) >= $this->settingsService->maxTemplatesPerUser()) {
-            return ['success' => false, 'message' => 'Limite máximo de ' . $this->settingsService->maxTemplatesPerUser() . ' digitais por funcionário atingido'];
+            return ['success' => false, 'message' => 'Limite máximo de ' . $this->settingsService->maxTemplatesPerUser() . ' digitais por colaborador atingido'];
         }
 
         if ($this->stateService->hasFingerPositionTemplate($employeeId, $fingerPosition)) {
@@ -68,7 +68,7 @@ class FingerprintEnrollmentService
             if (($duplicate['is_duplicate'] ?? false) === true) {
                 return [
                     'success' => false,
-                    'message' => 'Esta impressão digital já está cadastrada para outro funcionário',
+                    'message' => 'Esta impressão digital já está cadastrada para outro colaborador',
                     'duplicate' => true,
                     'similarity' => $duplicate['similarity'] ?? 0,
                     'existing_employee_id' => $duplicate['existing_employee_id'] ?? null,

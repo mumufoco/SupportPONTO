@@ -119,7 +119,7 @@ class AuditComplianceService
 
         // Administradores do sistema não são colaboradores (não batem ponto, não
         // têm CTPS/PIS) — precisam ficar fora deste relatório de conformidade
-        // trabalhista (Portaria MTE 671/2021), senão aparecem como "funcionário
+        // trabalhista (Portaria MTE 671/2021), senão aparecem como "colaborador
         // sem PIS" numa auditoria real.
         $missingPIS = $this->db->table('employees')
             ->where('role !=', 'admin')

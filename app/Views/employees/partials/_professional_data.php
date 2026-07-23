@@ -105,7 +105,7 @@ if (!empty($formOptions['workShifts'])) {
             </select>
         <?php else: ?>
             <select id="role_id" name="role_id" class="form-select" required>
-                <option value="1" <?= $_roleId===1?'selected':'' ?>>Funcionário</option>
+                <option value="1" <?= $_roleId===1?'selected':'' ?>>Colaborador</option>
                 <option value="2" <?= $_roleId===2?'selected':'' ?>>Gestor</option>
                 <option value="4" <?= $_roleId===4?'selected':'' ?>>RH</option>
                 <option value="6" <?= $_roleId===6?'selected':'' ?>>DPO / LGPD</option>

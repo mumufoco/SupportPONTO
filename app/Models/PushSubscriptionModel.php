@@ -40,7 +40,7 @@ class PushSubscriptionModel extends Model
 
     protected $validationMessages = [
         'employee_id' => [
-            'required' => 'ID do funcionário é obrigatório.',
+            'required' => 'ID do colaborador é obrigatório.',
         ],
         'endpoint' => [
             'required' => 'Endpoint é obrigatório.',

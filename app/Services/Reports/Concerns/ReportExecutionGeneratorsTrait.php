@@ -186,7 +186,7 @@ trait ReportExecutionGeneratorsTrait
         [$startDate, $endDate] = $this->resolveDateRange($filters);
 
         // Pacote 448: agregação em lote. Evita N+1 de employeeModel->find(),
-        // countLateArrivals() e countAbsences() para cada funcionário do relatório.
+        // countLateArrivals() e countAbsences() para cada colaborador do relatório.
         $query = $this->consolidatedModel
             ->select("timesheet_consolidated.employee_id")
             ->select("employees.name AS employee_name, employees.department")
@@ -229,7 +229,7 @@ trait ReportExecutionGeneratorsTrait
     {
         [$startDate, $endDate] = $this->resolveDateRange($filters);
 
-        // Pacote 448: join direto com employees para eliminar busca por funcionário dentro do loop.
+        // Pacote 448: join direto com employees para eliminar busca por colaborador dentro do loop.
         $query = $this->justificationModel
             ->select('justifications.*, employees.name AS employee_name')
             ->join('employees', 'employees.id = justifications.employee_id', 'left')

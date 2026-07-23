@@ -33,7 +33,7 @@ $exportQuery = http_build_query(array_filter([
                 <?php if (!empty($isManager) && !empty($employeesList)): ?>
                 <div class="sp-form-group" style="margin:0;min-width:200px;flex:2;">
                     <label class="sp-label" for="employee_id">
-                        <i class="bi bi-person-fill me-1"></i>Funcionário
+                        <i class="bi bi-person-fill me-1"></i>Colaborador
                     </label>
                     <select class="sp-select" id="employee_id" name="employee_id">
                         <option value="">— Todos —</option>

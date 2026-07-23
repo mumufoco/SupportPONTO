@@ -33,9 +33,9 @@
         <div class="card-body">
             <form method="get" class="row g-3 align-items-end mb-3">
                 <div class="col-md-6">
-                    <label class="form-label">Funcionário</label>
+                    <label class="form-label">Colaborador</label>
                     <select name="employee_id" class="form-select">
-                        <option value="">Todos os funcionários</option>
+                        <option value="">Todos os colaboradores</option>
                         <?php foreach ($employees ?? [] as $emp): ?>
                             <option value="<?= esc($emp->id) ?>" <?= (int) ($employeeId ?? 0) === (int) $emp->id ? 'selected' : '' ?>>
                                 <?= esc($emp->name) ?> — <?= esc($emp->department ?? '-') ?>
@@ -63,7 +63,7 @@
                         <tr>
                             <th>Nome</th>
                             <th>CPF</th>
-                            <th>Funcionário</th>
+                            <th>Colaborador</th>
                             <th>Parentesco</th>
                             <th>Nascimento</th>
                             <th class="text-center">Benefícios</th>

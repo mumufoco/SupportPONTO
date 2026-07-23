@@ -21,7 +21,7 @@ class ExcelAdministrativeReportBuilder
 
         $detailsSheet = $spreadsheet->createSheet();
         $detailsSheet->setTitle('Detalhes');
-        $headers = ['Data', 'Funcionário', 'Tipo', 'Categoria', 'Motivo', 'Status', 'Anexos', 'Criado em'];
+        $headers = ['Data', 'Colaborador', 'Tipo', 'Categoria', 'Motivo', 'Status', 'Anexos', 'Criado em'];
         $this->formatter->createTableHeader($detailsSheet, $headers, 1);
 
         $row = 2;
@@ -55,7 +55,7 @@ class ExcelAdministrativeReportBuilder
 
         $detailsSheet = $spreadsheet->createSheet();
         $detailsSheet->setTitle('Detalhes');
-        $headers = ['Data', 'Funcionário', 'Departamento', 'Tipo', 'Motivo', 'Status', 'Emitido por'];
+        $headers = ['Data', 'Colaborador', 'Departamento', 'Tipo', 'Motivo', 'Status', 'Emitido por'];
         $this->formatter->createTableHeader($detailsSheet, $headers, 1);
 
         $row = 2;

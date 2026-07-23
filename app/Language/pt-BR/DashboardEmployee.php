@@ -5,7 +5,7 @@ return [
     'subtitle' => 'Acompanhe sua jornada, registre o ponto e acesse suas ações mais importantes.',
     'icon' => 'bi bi-person-workspace',
     'common' => [
-        'defaultUser' => 'Funcionário',
+        'defaultUser' => 'Colaborador',
     ],
     'actions' => [
         'punch' => 'Bater ponto',

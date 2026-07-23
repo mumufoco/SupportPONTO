@@ -168,7 +168,7 @@ class TXTReportContentBuilder
             $record = (array) $record;
             $lines[] = str_repeat('-', 80);
             $lines[] = 'Data: ' . (isset($record['date']) ? date('d/m/Y', strtotime((string) $record['date'])) : '-');
-            $lines[] = 'Funcionário: ' . ($record['employee_name'] ?? '-');
+            $lines[] = 'Colaborador: ' . ($record['employee_name'] ?? '-');
             $lines[] = 'Tipo: ' . ($record['type'] ?? '-');
             $lines[] = 'Status: ' . ($record['status'] ?? '-');
             $lines[] = 'Justificativa: ' . ($record['justification'] ?? '-');
@@ -189,7 +189,7 @@ class TXTReportContentBuilder
             $record = (array) $record;
             $lines[] = str_repeat('-', 80);
             $lines[] = 'Data: ' . (isset($record['date']) ? date('d/m/Y', strtotime((string) $record['date'])) : '-');
-            $lines[] = 'Funcionário: ' . ($record['employee_name'] ?? '-');
+            $lines[] = 'Colaborador: ' . ($record['employee_name'] ?? '-');
             $lines[] = 'Tipo: ' . ($record['type'] ?? '-');
             $lines[] = 'Motivo: ' . ($record['reason'] ?? '-');
             $lines[] = '';

@@ -51,7 +51,7 @@ class TimesheetPunchRegistrationService
 
             $employee = $this->employeeModel->find($command->employeeId);
             if (! $employee || ! ($employee->active ?? false)) {
-                return $this->failure('Funcionário não encontrado ou inativo.', 404, ['employee' => 'inactive_or_missing']);
+                return $this->failure('Colaborador não encontrado ou inativo.', 404, ['employee' => 'inactive_or_missing']);
             }
 
             $resolvedPunchType = PunchType::tryFrom($this->timePunchModel->normalizePunchType($command->punchType));
@@ -115,8 +115,8 @@ class TimesheetPunchRegistrationService
             } elseif ($this->settingModel->get('punch_require_face_second_factor', true)) {
                 // Segunda camada de segurança contra fraude (empréstimo de código/CPF/QR,
                 // ou leitor de digital comprometido): além do método principal já ter
-                // identificado o funcionário, exige uma foto ao vivo comparada 1:1 com o
-                // cadastro biométrico facial DESSE funcionário (verificação, não
+                // identificado o colaborador, exige uma foto ao vivo comparada 1:1 com o
+                // cadastro biométrico facial DESSE colaborador (verificação, não
                 // identificação aberta — não é possível "cadastrar por cima" do rosto de
                 // outra pessoa por esse caminho, ver validateFaceSecondFactor()).
                 $secondFactor = $this->validateFaceSecondFactor($command);
@@ -318,10 +318,10 @@ class TimesheetPunchRegistrationService
 
         // ALTO-06 (auditoria): api/v1/time-punch atende todos os métodos de ponto (código,
         // QR, facial), então gatear a rota inteira pelo bucket 'biometric' (mais restrito)
-        // penalizaria funcionários usando código/QR no mesmo IP/NAT. Em vez disso,
+        // penalizaria colaboradores usando código/QR no mesmo IP/NAT. Em vez disso,
         // aplicamos aqui, especificamente no caminho facial, o mesmo bucket 'biometric'
         // (10 tentativas/min) já existente em RateLimitPolicyService — chaveado por
-        // funcionário, não só por IP, para conter tentativas repetidas de burlar o
+        // colaborador, não só por IP, para conter tentativas repetidas de burlar o
         // reconhecimento com fotos/telas contra um único colaborador.
         $limitInfo = $this->rateLimitService->attempt(
             'facial_punch_' . $command->employeeId,
@@ -338,7 +338,7 @@ class TimesheetPunchRegistrationService
         }
 
         if ((int) ($recognition['employee_id'] ?? 0) !== $command->employeeId) {
-            return $this->failure('A foto não corresponde ao funcionário autenticado.', 403, ['face' => 'employee_mismatch']);
+            return $this->failure('A foto não corresponde ao colaborador autenticado.', 403, ['face' => 'employee_mismatch']);
         }
 
         return ['success' => true, 'similarity' => $recognition['similarity'] ?? null];
@@ -347,14 +347,14 @@ class TimesheetPunchRegistrationService
     /**
      * Segunda camada de verificação facial para os métodos não-biométricos
      * (código, CPF, QR) e para a biometria digital: confirma 1:1 que a pessoa
-     * na foto é o próprio funcionário já identificado pelo método principal,
+     * na foto é o próprio colaborador já identificado pelo método principal,
      * usando o cadastro biométrico facial dele (FaceRecognitionService::
      * verifyFace — comparação 1:1 contra UM cadastro específico, diferente do
      * método "facial" puro, que faz reconhecimento aberto 1:N para descobrir
      * quem é a pessoa).
      *
      * Importante para segurança: não existe caminho aqui para "cadastrar" ou
-     * sobrescrever o rosto de outro funcionário — o link de autocadastro
+     * sobrescrever o rosto de outro colaborador — o link de autocadastro
      * devolvido no caso "sem cadastro" só permite que a PRÓPRIA pessoa logada
      * cadastre o PRÓPRIO rosto (ver FaceRecognitionController::enroll()), então
      * uma tentativa de fraude com CPF/código de outra pessoa não consegue usar
@@ -421,7 +421,7 @@ class TimesheetPunchRegistrationService
 
         if (! ($result['verified'] ?? false)) {
             // Mudança de comportamento a pedido: NÃO bloqueia o registro. A foto não
-            // corresponder ao cadastro biométrico não impede a marcação (o funcionário
+            // corresponder ao cadastro biométrico não impede a marcação (o colaborador
             // já foi identificado pelo método principal) — em vez disso, o ponto é
             // registrado normalmente e um alerta de possível fraude fica registrado
             // para revisão de gestor/RH (ver facial_fraud_alerts / register()).

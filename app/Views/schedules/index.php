@@ -50,7 +50,7 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Funcionário</th>
+                            <th>Colaborador</th>
                             <th>Turno</th>
                             <th>Data</th>
                             <th>Status</th>

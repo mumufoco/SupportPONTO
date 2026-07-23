@@ -44,7 +44,7 @@ class RegisterWorkflowService
         try {
             $employeeId = $this->employeeModel->insert($data);
             if (!$employeeId) {
-                throw new \RuntimeException('Erro ao criar funcionário.');
+                throw new \RuntimeException('Erro ao criar colaborador.');
             }
 
             $this->recordConsents((int) $employeeId, $clientIp);
@@ -86,7 +86,7 @@ class RegisterWorkflowService
         try {
             $employeeId = $this->employeeModel->insert($data);
             if (!$employeeId) {
-                throw new \RuntimeException('Erro ao criar funcionário.');
+                throw new \RuntimeException('Erro ao criar colaborador.');
             }
 
             $this->auditModel->log(
@@ -96,7 +96,7 @@ class RegisterWorkflowService
                 (int) $employeeId,
                 null,
                 $data,
-                "Funcionário criado por gestor: {$data['name']} ({$data['email']})",
+                "Colaborador criado por gestor: {$data['name']} ({$data['email']})",
                 'info'
             );
 
@@ -110,7 +110,7 @@ class RegisterWorkflowService
             $db->transRollback();
             log_message('error', 'Employee creation error: ' . $e->getMessage());
 
-            return ['success' => false, 'message' => 'Erro ao cadastrar funcionário. Tente novamente.'];
+            return ['success' => false, 'message' => 'Erro ao cadastrar colaborador. Tente novamente.'];
         }
     }
 
@@ -295,7 +295,7 @@ class RegisterWorkflowService
             $this->notificationModel->insert([
                 'user_id' => $admin->id,
                 'title' => 'Novo cadastro pendente de aprovação',
-                'message' => "O funcionário {$employee->name} ({$employee->email}) solicitou cadastro no sistema.",
+                'message' => "O colaborador {$employee->name} ({$employee->email}) solicitou cadastro no sistema.",
                 'type' => 'employee_registration',
                 'link' => site_url('employees/pending'),
                 'read' => false,

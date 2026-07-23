@@ -77,7 +77,7 @@ class FingerprintService
                     'BIOMETRIC_DUPLICATE_ATTEMPT',
                     'biometric_templates',
                     null,
-                    "Tentativa de cadastro duplicado detectada (similar a funcionário {$existingEmployeeId})"
+                    "Tentativa de cadastro duplicado detectada (similar a colaborador {$existingEmployeeId})"
                 );
             }
 

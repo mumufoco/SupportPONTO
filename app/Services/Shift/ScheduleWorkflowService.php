@@ -30,7 +30,7 @@ class ScheduleWorkflowService
         }
 
         if ($this->scheduleModel->isEmployeeScheduled($employeeId, $date)) {
-            return ['success' => false, 'error' => 'Este funcionário já possui um turno agendado para esta data.'];
+            return ['success' => false, 'error' => 'Este colaborador já possui um turno agendado para esta data.'];
         }
 
         $data = [
@@ -57,7 +57,7 @@ class ScheduleWorkflowService
                         'entity_id' => null,
                         'old_values' => null,
                         'new_values' => $data,
-                        'description' => "Escala recorrente criada para funcionário ID {$employeeId} a partir de {$date}",
+                        'description' => "Escala recorrente criada para colaborador ID {$employeeId} a partir de {$date}",
                     ],
                 ]
                 : ['success' => false, 'error' => 'Erro ao criar escala.'];
@@ -76,7 +76,7 @@ class ScheduleWorkflowService
                 'entity_id' => (int) $scheduleId,
                 'old_values' => null,
                 'new_values' => $data,
-                'description' => "Escala criada para funcionário ID {$employeeId} em {$date}",
+                'description' => "Escala criada para colaborador ID {$employeeId} em {$date}",
             ],
         ];
     }
@@ -92,7 +92,7 @@ class ScheduleWorkflowService
         $date = (string) ($payload['date'] ?? '');
 
         if ($this->scheduleModel->isEmployeeScheduled($employeeId, $date, $id)) {
-            return ['success' => false, 'error' => 'Este funcionário já possui outro turno agendado para esta data.'];
+            return ['success' => false, 'error' => 'Este colaborador já possui outro turno agendado para esta data.'];
         }
 
         $oldValues = [
@@ -123,7 +123,7 @@ class ScheduleWorkflowService
                 'entity_id' => $id,
                 'old_values' => $oldValues,
                 'new_values' => $data,
-                'description' => "Escala atualizada para funcionário ID {$employeeId}",
+                'description' => "Escala atualizada para colaborador ID {$employeeId}",
             ],
         ];
     }
@@ -152,7 +152,7 @@ class ScheduleWorkflowService
                     'shift_id' => $schedule->shift_id,
                 ],
                 'new_values' => null,
-                'description' => "Escala excluída para funcionário ID {$schedule->employee_id} em {$schedule->date}",
+                'description' => "Escala excluída para colaborador ID {$schedule->employee_id} em {$schedule->date}",
             ],
         ];
     }
@@ -219,7 +219,7 @@ class ScheduleWorkflowService
                     'end_date' => $endDate,
                     'assigned_count' => $created,
                 ],
-                'description' => "Atribuição em massa: {$created} escalas criadas para " . count($employeeIds) . ' funcionários',
+                'description' => "Atribuição em massa: {$created} escalas criadas para " . count($employeeIds) . ' colaboradores',
             ],
         ];
     }

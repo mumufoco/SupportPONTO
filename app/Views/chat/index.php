@@ -99,7 +99,7 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Selecione um funcionário:</label>
+                    <label class="form-label">Selecione um colaborador:</label>
                     <input type="text" class="form-control mb-2" id="employeeSearch" placeholder="Buscar...">
                     <div class="list-group sp-scroll-y-400" id="employeeList">
                         <?php foreach ($employees as $emp): ?>

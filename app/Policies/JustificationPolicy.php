@@ -24,7 +24,7 @@ final class JustificationPolicy
 {
     /**
      * Pode visualizar a justificativa?
-     * O próprio funcionário, seu gestor, RH e admin podem ver.
+     * O próprio colaborador, seu gestor, RH e admin podem ver.
      */
     public function view(object $actor, object $justification): bool
     {
@@ -32,7 +32,7 @@ final class JustificationPolicy
             return true;
         }
 
-        // Próprio funcionário
+        // Próprio colaborador
         if ((int) $actor->id === (int) $justification->employee_id) {
             return true;
         }
@@ -44,7 +44,7 @@ final class JustificationPolicy
     /**
      * Pode aprovar a justificativa?
      * Gestor (mesmo departamento), RH e admin podem aprovar.
-     * O próprio funcionário NÃO pode aprovar a própria justificativa.
+     * O próprio colaborador NÃO pode aprovar a própria justificativa.
      */
     public function approve(object $actor, object $justification): bool
     {
@@ -70,7 +70,7 @@ final class JustificationPolicy
 
     /**
      * Pode criar uma justificativa?
-     * Qualquer funcionário pode criar para si mesmo.
+     * Qualquer colaborador pode criar para si mesmo.
      */
     public function create(object $actor): bool
     {
@@ -105,7 +105,7 @@ final class JustificationPolicy
             return false;
         }
 
-        // Verifica se o gestor é do mesmo departamento que o funcionário
+        // Verifica se o gestor é do mesmo departamento que o colaborador
         return !empty($actor->department)
             && !empty($justification->employee_department)
             && $actor->department === $justification->employee_department;

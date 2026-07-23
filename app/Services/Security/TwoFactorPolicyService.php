@@ -9,7 +9,7 @@ use Config\Services;
 
 /**
  * Política de 2FA em nível de sistema (não confundir com o 2FA pessoal de
- * cada funcionário, gerenciado por App\Services\Auth\TwoFactorManagerService).
+ * cada colaborador, gerenciado por App\Services\Auth\TwoFactorManagerService).
  *
  * Mesmo modelo de política do SupportCHECK (Admin\TwoFactorAdminController):
  * um modo único define quando o 2FA é exigido no login, em vez de dois

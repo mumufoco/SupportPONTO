@@ -49,11 +49,11 @@ class FingerprintWorkflowService
     {
         $targetEmployee = $this->employeeModel->find($employeeId);
         if (!$targetEmployee) {
-            return ['success' => false, 'status' => 404, 'message' => 'Funcionário não encontrado'];
+            return ['success' => false, 'status' => 404, 'message' => 'Colaborador não encontrado'];
         }
 
         if (!$this->hasConsent($employeeId)) {
-            return ['success' => false, 'status' => 403, 'message' => 'Funcionário não concedeu consentimento para uso de dados biométricos (LGPD)'];
+            return ['success' => false, 'status' => 403, 'message' => 'Colaborador não concedeu consentimento para uso de dados biométricos (LGPD)'];
         }
 
         $existingTemplate = $this->biometricModel
@@ -112,7 +112,7 @@ class FingerprintWorkflowService
                 'finger' => $finger,
                 'quality' => $quality,
             ],
-            "Cadastro de impressão digital para funcionário {$targetEmployee->name} (dedo: {$finger})",
+            "Cadastro de impressão digital para colaborador {$targetEmployee->name} (dedo: {$finger})",
             'info'
         );
 
@@ -184,7 +184,7 @@ class FingerprintWorkflowService
                 'finger' => $metadata['finger'] ?? 'unknown',
             ],
             null,
-            "Exclusão de impressão digital do funcionário {$employeeName} (dedo: " . ($metadata['finger'] ?? 'unknown') . ')',
+            "Exclusão de impressão digital do colaborador {$employeeName} (dedo: " . ($metadata['finger'] ?? 'unknown') . ')',
             'warning'
         );
 

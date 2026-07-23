@@ -41,16 +41,16 @@ class FingerprintController extends BaseController
         }
 
         if ($employeeId === null) {
-            return redirect()->to(sp_employees_index_url())->with('error', 'ID do funcionário é obrigatório.');
+            return redirect()->to(sp_employees_index_url())->with('error', 'ID do colaborador é obrigatório.');
         }
 
         $targetEmployee = $this->workflowService->findEmployee((int) $employeeId);
         if (!$targetEmployee) {
-            return redirect()->to(sp_employees_index_url())->with('error', 'Funcionário não encontrado.');
+            return redirect()->to(sp_employees_index_url())->with('error', 'Colaborador não encontrado.');
         }
 
         if (!$this->canManageEmployeeRecord($targetEmployee)) {
-            return redirect()->to(sp_employees_index_url())->with('error', 'Você não tem permissão para gerenciar a biometria deste funcionário.');
+            return redirect()->to(sp_employees_index_url())->with('error', 'Você não tem permissão para gerenciar a biometria deste colaborador.');
         }
 
         // LGPD gate: verificar aceite do termo de biometria digital
@@ -105,11 +105,11 @@ class FingerprintController extends BaseController
         $targetEmployee = $this->workflowService->findEmployee($employeeId);
 
         if (!$targetEmployee) {
-            return $this->jsonError('Funcionário não encontrado', 404);
+            return $this->jsonError('Colaborador não encontrado', 404);
         }
 
         if (!$this->canManageEmployeeRecord($targetEmployee)) {
-            return $this->jsonError('Você não tem permissão para gerenciar a biometria deste funcionário', 403);
+            return $this->jsonError('Você não tem permissão para gerenciar a biometria deste colaborador', 403);
         }
 
         $result = $this->workflowService->enrollFingerprint(

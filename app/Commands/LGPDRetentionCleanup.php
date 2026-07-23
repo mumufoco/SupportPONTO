@@ -39,7 +39,7 @@ class LGPDRetentionCleanup extends BaseCommand
 {
     protected $group       = 'LGPD';
     protected $name        = 'lgpd:retention';
-    protected $description = 'Aplica política de retenção LGPD: anonimiza ex-funcionários além da janela legal e purga dados biométricos sem consentimento.';
+    protected $description = 'Aplica política de retenção LGPD: anonimiza ex-colaboradores além da janela legal e purga dados biométricos sem consentimento.';
     protected $usage       = 'lgpd:retention [--execute] [--report]';
     protected $options     = [
         '--execute' => 'Executa as operações de anonimização (sem esta flag, roda em dry-run).',
@@ -77,7 +77,7 @@ class LGPDRetentionCleanup extends BaseCommand
         CLI::write('  Modo: ' . ($isDryRun ? '🔍 DRY-RUN (use --execute para aplicar)' : '🔴 EXECUÇÃO REAL'), $isDryRun ? 'yellow' : 'red');
         CLI::write('');
 
-        // ── ETAPA 1: Funcionários desligados além da janela de retenção ──────
+        // ── ETAPA 1: Colaboradores desligados além da janela de retenção ──────
         $this->processExpiredEmployees($retentionDays, $isDryRun, $isReport);
 
         // ── ETAPA 2: Dados biométricos sem consentimento ativo ───────────────
@@ -108,15 +108,15 @@ class LGPDRetentionCleanup extends BaseCommand
         CLI::write('✅ Job concluído em ' . round(microtime(true) - $startTime, 2) . 's', 'green');
     }
 
-    // ── Etapa 1: Funcionários desligados ─────────────────────────────────────
+    // ── Etapa 1: Colaboradores desligados ─────────────────────────────────────
 
     private function processExpiredEmployees(int $retentionDays, bool $isDryRun, bool $isReport): void
     {
-        CLI::write('━━━ Etapa 1: Funcionários Desligados ━━━', 'cyan');
+        CLI::write('━━━ Etapa 1: Colaboradores Desligados ━━━', 'cyan');
 
         $cutoffDate = Time::now()->subDays($retentionDays)->toDateString();
 
-        // Busca funcionários desligados há mais que $retentionDays dias
+        // Busca colaboradores desligados há mais que $retentionDays dias
         // e que ainda NÃO foram anonimizados
         $expired = $this->employeeModel
             ->where('active', false)
@@ -124,12 +124,12 @@ class LGPDRetentionCleanup extends BaseCommand
             ->where('email NOT LIKE', 'ANONIMIZADO_%')
             ->findAll();
 
-        CLI::write("  Encontrados: " . count($expired) . " funcionários elegíveis para anonimização");
+        CLI::write("  Encontrados: " . count($expired) . " colaboradores elegíveis para anonimização");
         CLI::write("  (desligados antes de {$cutoffDate})");
 
         if ($isReport || empty($expired)) {
             if (empty($expired)) {
-                CLI::write('  ✅ Nenhum funcionário elegível.', 'green');
+                CLI::write('  ✅ Nenhum colaborador elegível.', 'green');
             }
             return;
         }
@@ -177,7 +177,7 @@ class LGPDRetentionCleanup extends BaseCommand
         $db         = \Config\Database::connect();
         $cutoffDate = Time::now()->subDays($biometricRetentionDays)->toDateString();
 
-        // Funcionários com biometria mas sem consentimento ativo ou revogado.
+        // Colaboradores com biometria mas sem consentimento ativo ou revogado.
         // 'biometric_data' entra na lista porque o cadastro facial via API de
         // auto-enrollment (ApiFaceBiometricService) grava consentimento sob
         // esse tipo generico, nao 'biometric_face' -- sem isso, um colaborador
@@ -199,7 +199,7 @@ class LGPDRetentionCleanup extends BaseCommand
 
         $withoutConsent = $db->query($query, [$cutoffDate])->getResult();
 
-        CLI::write("  Encontrados: " . count($withoutConsent) . " funcionários com biometria sem consentimento ativo");
+        CLI::write("  Encontrados: " . count($withoutConsent) . " colaboradores com biometria sem consentimento ativo");
 
         if ($isReport || empty($withoutConsent)) {
             if (empty($withoutConsent)) {
@@ -235,7 +235,7 @@ class LGPDRetentionCleanup extends BaseCommand
             CLI::write($info . ' → ✅ dados biométricos removidos', 'green');
         }
 
-        CLI::write("  Resultado: {$purged} funcionários com biometria removida");
+        CLI::write("  Resultado: {$purged} colaboradores com biometria removida");
     }
 
     // ── Etapa 3: Verificação de integridade ─────────────────────────────────────

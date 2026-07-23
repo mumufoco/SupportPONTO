@@ -351,9 +351,9 @@ Authorization: Bearer {token}
 
 ---
 
-### 3. Funcionário (Employee)
+### 3. Colaborador (Employee)
 
-#### Perfil do Funcionário
+#### Perfil do Colaborador
 
 **Endpoint:** `GET /api/employee/profile`
 
@@ -380,7 +380,7 @@ Authorization: Bearer {token}
 }
 ```
 
-#### Estatísticas do Funcionário
+#### Estatísticas do Colaborador
 
 **Endpoint:** `GET /api/employee/statistics?month=2024-01`
 

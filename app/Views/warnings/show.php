@@ -36,7 +36,7 @@
                 <div class="sp-data-card__body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="text-muted small">Funcionário</div>
+                            <div class="text-muted small">Colaborador</div>
                             <div class="fw-semibold"><?= esc($warningEmployee->name ?? '—') ?></div>
                         </div>
                         <div class="col-md-3">

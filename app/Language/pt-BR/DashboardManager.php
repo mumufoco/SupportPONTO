@@ -10,7 +10,7 @@ return [
         'relativeHours' => 'Há {0}h',
     ],
     'kpis' => [
-        'totalEmployees' => ['label' => 'Funcionários na Equipe', 'indicator' => 'Ativos'],
+        'totalEmployees' => ['label' => 'Colaboradores na Equipe', 'indicator' => 'Ativos'],
         'attendanceRate' => ['label' => 'Taxa de Presença Hoje', 'indicator' => '+2%'],
         'pendingApprovals' => ['label' => 'Aprovações Pendentes', 'indicatorWarning' => 'Requer atenção', 'indicatorOk' => 'Tudo aprovado'],
         'absentToday' => ['label' => 'Ausências Hoje', 'indicator' => 'Sem justificativa'],
@@ -19,7 +19,7 @@ return [
         'title' => 'Justificativas Pendentes',
         'action' => 'Ver Todas',
         'headers' => [
-            'employee' => 'Funcionário',
+            'employee' => 'Colaborador',
             'type' => 'Tipo',
             'date' => 'Data',
             'submitted' => 'Enviado',
@@ -33,7 +33,7 @@ return [
     'activity' => [
         'title' => 'Atividade Recente da Equipe',
         'headers' => [
-            'employee' => 'Funcionário',
+            'employee' => 'Colaborador',
             'action' => 'Ação',
             'time' => 'Hora',
             'status' => 'Status',
@@ -47,7 +47,7 @@ return [
     'quickActions' => [
         'title' => 'Ações Rápidas',
         'items' => [
-            'createEmployee' => 'Cadastrar Funcionário',
+            'createEmployee' => 'Cadastrar Colaborador',
             'reports' => 'Gerar Relatório',
             'schedules' => 'Escalas de Trabalho',
             'warnings' => 'Advertências',

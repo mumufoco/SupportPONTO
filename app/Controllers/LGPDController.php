@@ -226,7 +226,7 @@ class LGPDController extends BaseController
         if (!$employee) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Funcionário não encontrado',
+                'message' => 'Colaborador não encontrado',
             ])->setStatusCode(404);
         }
 

@@ -69,7 +69,7 @@ class EmployeeDependentModel extends Model
         $this->validationRules['kinship_type'] = 'required|in_list[' . DependentKinshipType::validationList() . ']';
     }
 
-    /** Lista dependentes com dados do funcionário vinculado, para a tela geral de gestão. */
+    /** Lista dependentes com dados do colaborador vinculado, para a tela geral de gestão. */
     public function listWithEmployee(?int $employeeId = null, ?bool $onlyActive = null): array
     {
         $builder = $this->select('employee_dependents.*, employees.name AS employee_name, employees.department AS employee_department')

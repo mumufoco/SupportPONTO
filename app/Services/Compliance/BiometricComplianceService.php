@@ -23,7 +23,7 @@ class BiometricComplianceService
 
     /**
      * Resumo do status geral de consentimento biométrico.
-     * Avalia se há pendências críticas na base de funcionários.
+     * Avalia se há pendências críticas na base de colaboradores.
      */
     public function getConsentSummary(): array
     {
@@ -52,7 +52,7 @@ class BiometricComplianceService
                 return [
                     'status'      => 'Atenção',
                     'label'       => 'Consentimento biométrico com pendências',
-                    'description' => "{$semConsentimento} funcionário(s) com biometria cadastrada sem consentimento ativo registrado. Regularização necessária antes da próxima auditoria.",
+                    'description' => "{$semConsentimento} colaborador(s) com biometria cadastrada sem consentimento ativo registrado. Regularização necessária antes da próxima auditoria.",
                 ];
             }
 
@@ -60,14 +60,14 @@ class BiometricComplianceService
                 return [
                     'status'      => 'Pendente',
                     'label'       => 'Nenhuma biometria cadastrada',
-                    'description' => 'Nenhum funcionário ativo possui biometria cadastrada. Configure e registre consentimentos antes de ativar a biometria.',
+                    'description' => 'Nenhum colaborador ativo possui biometria cadastrada. Configure e registre consentimentos antes de ativar a biometria.',
                 ];
             }
 
             return [
                 'status'      => 'Regular',
                 'label'       => 'Consentimento biométrico em conformidade',
-                'description' => "{$comConsentimento} consentimento(s) ativo(s) registrado(s). Todos os funcionários com biometria possuem base legal configurada.",
+                'description' => "{$comConsentimento} consentimento(s) ativo(s) registrado(s). Todos os colaboradores com biometria possuem base legal configurada.",
             ];
         } catch (\Throwable $e) {
             log_structured('warning', 'compliance.biometric_consent_summary_failed',

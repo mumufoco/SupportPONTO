@@ -59,12 +59,12 @@
             <div class="sp-form-card__head">
                 <div class="sp-form-card__icon c-blue"><i class="bi bi-person-badge-fill"></i></div>
                 <div>
-                    <p class="sp-form-card__title">Funcionário</p>
+                    <p class="sp-form-card__title">Colaborador</p>
                     <p class="sp-form-card__sub">Apenas colaboradores ativos podem ter novos dependentes cadastrados.</p>
                 </div>
             </div>
             <div class="sp-form-card__body">
-                <label for="employee_id" class="form-label">Funcionário <span class="text-danger">*</span></label>
+                <label for="employee_id" class="form-label">Colaborador <span class="text-danger">*</span></label>
                 <select name="employee_id" id="employee_id" class="form-select" required>
                     <option value="">Selecione...</option>
                     <?php foreach ($employees ?? [] as $emp): ?>

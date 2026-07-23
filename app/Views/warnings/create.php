@@ -29,7 +29,7 @@
                         <?= csrf_field() ?>
 
                         <div class="col-12">
-                            <label for="employee_id" class="form-label">Funcionário <span class="text-danger">*</span></label>
+                            <label for="employee_id" class="form-label">Colaborador <span class="text-danger">*</span></label>
                             <select name="employee_id" id="employee_id" class="form-select" required>
                                 <option value="">Selecione...</option>
                                 <?php foreach ($employees as $emp): ?>

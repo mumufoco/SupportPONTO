@@ -39,7 +39,7 @@ class DataExportService
         try {
             $employee = $this->employeeModel->find($employeeId);
             if (!$employee) {
-                return ['success' => false, 'message' => 'Funcionário não encontrado', 'export_id' => null];
+                return ['success' => false, 'message' => 'Colaborador não encontrado', 'export_id' => null];
             }
 
             $exportId = $this->generateExportId($employeeId);
@@ -90,7 +90,7 @@ class DataExportService
                 $employeeId,
                 null,
                 ['export_id' => $exportId, 'requested_by' => $requestedBy, 'file_size' => filesize($zipFile)],
-                'Exportação de dados LGPD solicitada por ' . ($requestedBy ?? 'próprio funcionário'),
+                'Exportação de dados LGPD solicitada por ' . ($requestedBy ?? 'próprio colaborador'),
                 'info'
             );
 

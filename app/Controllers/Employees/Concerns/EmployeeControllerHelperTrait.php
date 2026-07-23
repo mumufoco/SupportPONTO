@@ -18,7 +18,7 @@ trait EmployeeControllerHelperTrait
         if (!($employeeResult['success'] ?? false)) {
             $employeeResult['response'] = $this->response
                 ->setStatusCode((int) ($employeeResult['status'] ?? 404))
-                ->setJSON(['error' => $employeeResult['message'] ?? 'Funcionário não encontrado']);
+                ->setJSON(['error' => $employeeResult['message'] ?? 'Colaborador não encontrado']);
         }
 
         return $employeeResult;
@@ -27,7 +27,7 @@ trait EmployeeControllerHelperTrait
     {
         $access = $this->employeeControllerActionService->resolveManagerAccess($this->currentUser, $id);
         if (!($access['success'] ?? false)) {
-            $this->setError($access['message'] ?? 'Funcionário não encontrado.');
+            $this->setError($access['message'] ?? 'Colaborador não encontrado.');
             $access['redirect'] = redirect()->to(sp_employees_index_url());
         }
 

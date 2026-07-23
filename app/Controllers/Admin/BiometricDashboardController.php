@@ -338,7 +338,7 @@ class BiometricDashboardController extends BaseController
             $filename,
             [
                 'ID',
-                'Funcionário',
+                'Colaborador',
                 'CPF',
                 'Departamento',
                 'Dedo',

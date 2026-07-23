@@ -34,7 +34,7 @@ enum Role: string
         return $this === self::Admin;
     }
 
-    /** Verifica se pode gerenciar funcionários */
+    /** Verifica se pode gerenciar colaboradores */
     public function canManageEmployees(): bool
     {
         return match($this) {
@@ -73,7 +73,7 @@ enum Role: string
         return match(strtolower(trim($value))) {
             'administrador', 'administrator', 'root', 'superadmin', 'super_admin' => self::Admin,
             'manager', 'gerente'          => self::Gestor,
-            'employee', 'funcionário'     => self::Funcionario,
+            'employee', 'funcionário', 'colaborador' => self::Funcionario,
             'hr', 'rh'                    => self::RH,
             'data_protection', 'dpo'      => self::DPO,
             'auditoria', 'audit', 'auditor' => self::Auditor,
@@ -86,7 +86,7 @@ enum Role: string
         return match($this) {
             self::Admin       => 'Administrador',
             self::Gestor      => 'Gestor',
-            self::Funcionario => 'Funcionário',
+            self::Funcionario => 'Colaborador',
             self::RH          => 'Recursos Humanos',
             self::DPO         => 'Encarregado de Dados (DPO)',
             self::Auditor     => 'Auditor',

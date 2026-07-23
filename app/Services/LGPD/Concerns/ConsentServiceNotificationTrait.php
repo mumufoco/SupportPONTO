@@ -23,7 +23,7 @@ trait ConsentServiceNotificationTrait
         $email->setSubject('[LGPD] Novo Consentimento Concedido');
         $email->setMessage("
             <h3>Novo Consentimento LGPD</h3>
-            <p><strong>Funcionário:</strong> {$employee->name} (ID: {$employee->id})</p>
+            <p><strong>Colaborador:</strong> {$employee->name} (ID: {$employee->id})</p>
             <p><strong>Tipo:</strong> {$label}</p>
             <p><strong>Data:</strong> {$consent->granted_at}</p>
             <p><strong>IP:</strong> {$consent->ip_address}</p>
@@ -59,7 +59,7 @@ trait ConsentServiceNotificationTrait
         $email->setSubject('[LGPD] Consentimento Revogado - Ação Necessária');
         $email->setMessage("
             <h3>Consentimento LGPD Revogado</h3>
-            <p><strong>Funcionário:</strong> {$employee->name} (ID: {$employee->id})</p>
+            <p><strong>Colaborador:</strong> {$employee->name} (ID: {$employee->id})</p>
             <p><strong>Tipo:</strong> {$label}</p>
             <p><strong>Data da Revogação:</strong> " . date('Y-m-d H:i:s') . "</p>
             <p><strong>Motivo:</strong> " . ($reason ?? 'Não informado') . "</p>

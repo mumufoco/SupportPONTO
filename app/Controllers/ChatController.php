@@ -132,7 +132,7 @@ class ChatController extends BaseController
 
         $newMemberId = (int) $this->request->getPost('employee_id');
         if ($newMemberId <= 0) {
-            return $this->jsonFail('ID do funcionário é obrigatório.', 422);
+            return $this->jsonFail('ID do colaborador é obrigatório.', 422);
         }
 
         return $this->jsonFromResult(
@@ -149,7 +149,7 @@ class ChatController extends BaseController
 
         $memberToRemove = (int) $this->request->getPost('employee_id');
         if ($memberToRemove <= 0) {
-            return $this->jsonFail('ID do funcionário é obrigatório.', 422);
+            return $this->jsonFail('ID do colaborador é obrigatório.', 422);
         }
 
         return $this->jsonFromResult(

@@ -11,7 +11,7 @@
         'icon'     => 'bi bi-people-fill',
         'actions'  => [
             ['label' => 'Novo colaborador',     'icon' => 'bi bi-person-plus-fill', 'url' => site_url('employees/create')],
-            ['label' => 'Convidar funcionário', 'icon' => 'bi bi-envelope-plus-fill', 'url' => '#', 'variant' => 'outline-primary', 'attrs' => 'data-bs-toggle="modal" data-bs-target="#inviteModal"'],
+            ['label' => 'Convidar colaborador', 'icon' => 'bi bi-envelope-plus-fill', 'url' => '#', 'variant' => 'outline-primary', 'attrs' => 'data-bs-toggle="modal" data-bs-target="#inviteModal"'],
             ['label' => 'Dependentes',          'icon' => 'bi bi-person-hearts', 'url' => site_url('employees/dependents')],
 
         ],
@@ -175,7 +175,7 @@
     </div>
     <?php endif; ?>
 
-    <!-- Modal: Convidar Funcionário -->
+    <!-- Modal: Convidar Colaborador -->
     <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalTitle" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg" style="border-radius:1rem;">
@@ -332,7 +332,7 @@
                         </select>
                       <?php else: ?>
                         <select id="inv_role" name="role" class="form-select">
-                          <option value="funcionario" selected>Funcionário</option>
+                          <option value="funcionario" selected>Colaborador</option>
                           <option value="gestor">Gestor</option>
                           <option value="rh">RH</option>
                           <option value="dpo">DPO / LGPD</option>

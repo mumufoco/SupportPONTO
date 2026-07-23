@@ -15,7 +15,7 @@ use CodeIgniter\HTTP\ResponseInterface;
  * para proteger corpo de webhook contra adulteração/replay) -- rate limit
  * já em vigor na rota cobre o risco de força bruta do token.
  *
- * Substitui o login por usuário/senha de uma conta de funcionário dedicada
+ * Substitui o login por usuário/senha de uma conta de colaborador dedicada
  * ("Integracao SupportSEV") que existia só para autenticar essa integração
  * via OAuth2 -- token com escopo restrito a este endpoint, sem depender de
  * um registro de colaborador nem de política de senha/2FA de conta humana.

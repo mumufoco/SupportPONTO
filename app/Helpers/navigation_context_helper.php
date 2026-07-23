@@ -74,7 +74,7 @@ if (!function_exists('sp_dashboard_shortcuts_for_role')) {
         $quickActions = [
             Role::Admin->value => [
                 ['label' => 'Bater ponto', 'description' => 'Abrir terminal de registro', 'icon' => 'bi bi-clock-history', 'url' => sp_timesheet_punch_url()],
-                ['label' => 'Funcionários', 'description' => 'Gerenciar equipe e cadastros', 'icon' => 'bi bi-people-fill', 'url' => site_url('employees')],
+                ['label' => 'Colaboradores', 'description' => 'Gerenciar equipe e cadastros', 'icon' => 'bi bi-people-fill', 'url' => site_url('employees')],
                 ['label' => 'Relatórios', 'description' => 'Gerar relatórios operacionais', 'icon' => 'bi bi-bar-chart-fill', 'url' => sp_reports_index_url()],
                 ['label' => 'Configurações', 'description' => 'Acessar parâmetros do sistema', 'icon' => 'bi bi-sliders', 'url' => sp_settings_center_url()],
             ],

@@ -8,7 +8,7 @@ namespace App\Services\Security;
  *
  * Qualquer célula cujo conteúdo comece com =, +, -, @ ou tab/CR é avaliada como
  * fórmula pelo Excel/LibreOffice ao abrir o arquivo. Um campo de texto livre
- * preenchido por qualquer funcionário (ex.: motivo de justificativa, observações de
+ * preenchido por qualquer colaborador (ex.: motivo de justificativa, observações de
  * advertência) podia carregar algo como =HYPERLINK("http://atacante.com","clique") e
  * ser executado quando RH/Admin exportasse o relatório. Prefixar com um apóstrofo é a
  * mitigação padrão recomendada pela OWASP — o Excel exibe o conteúdo como texto

@@ -87,7 +87,7 @@ class Validation extends BaseConfig
         'is_business_day' => 'O campo {field} deve ser um dia útil (segunda a sexta).',
 
         // Uniqueness
-        'unique_employee_code' => 'O código do funcionário já está em uso.',
+        'unique_employee_code' => 'O código do colaborador já está em uso.',
 
         // Ranges
         'valid_hours' => 'O campo {field} deve estar entre 0 e 24 horas.',

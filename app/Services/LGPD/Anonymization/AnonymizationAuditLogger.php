@@ -35,7 +35,7 @@ class AnonymizationAuditLogger
                 'anonymized_at' => date('Y-m-d H:i:s'),
             ],
             sprintf(
-                'Anonimização de dados do funcionário #%d. Solicitado por: %s. Motivo: %s',
+                'Anonimização de dados do colaborador #%d. Solicitado por: %s. Motivo: %s',
                 $employeeId,
                 $requestedBy ?? 'Sistema',
                 $reason ?? 'Direito ao esquecimento (LGPD Art. 16)'
@@ -70,7 +70,7 @@ class AnonymizationAuditLogger
             $employeeId,
             null,
             null,
-            sprintf('Anonimização de dados do tipo %s para funcionário #%d', $dataType, $employeeId),
+            sprintf('Anonimização de dados do tipo %s para colaborador #%d', $dataType, $employeeId),
             'warning'
         );
     }

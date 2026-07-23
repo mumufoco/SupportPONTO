@@ -38,7 +38,7 @@
         <div class="sp-filter-shell">
             <form method="GET" action="<?= base_url('timesheet/balance') ?>" class="row g-2 align-items-center">
                 <div class="col-auto">
-                    <label class="form-label mb-0 small">Visualizar funcionário:</label>
+                    <label class="form-label mb-0 small">Visualizar colaborador:</label>
                 </div>
                 <div class="col-md-4">
                     <select name="employee_id" class="form-select form-select-sm" onchange="this.form.submit()">

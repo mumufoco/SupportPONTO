@@ -10,7 +10,7 @@ use App\Models\FacialFraudAlertModel;
  * Painel de revisão dos alertas de possível fraude gerados pela segunda
  * camada de verificação facial (ver TimesheetPunchRegistrationService::
  * validateFaceSecondFactor()): quando a foto ao vivo não corresponde ao
- * cadastro biométrico do funcionário já identificado por código/CPF/QR/
+ * cadastro biométrico do colaborador já identificado por código/CPF/QR/
  * digital, o ponto é registrado normalmente e um alerta fica pendente aqui
  * para gestor/RH decidir se é um caso a investigar (histórico útil para
  * eventual processo disciplinar).

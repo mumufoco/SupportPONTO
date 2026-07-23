@@ -70,7 +70,7 @@ class ExcelOperationalReportBuilder
         // ── Aba Detalhes ──
         $detail = $spreadsheet->createSheet();
         $detail->setTitle('Detalhes');
-        $headers = ['Data', 'Funcionário', 'Departamento', 'Entrada', 'Saída',
+        $headers = ['Data', 'Colaborador', 'Departamento', 'Entrada', 'Saída',
                     'Trabalhado', 'Previsto', 'Saldo', 'Extras', 'Débito', 'Observações'];
         $this->formatter->createTableHeader($detail, $headers, 1);
         $this->formatter->freezeHeaderRow($detail, 1);
@@ -156,7 +156,7 @@ class ExcelOperationalReportBuilder
 
         $detail = $spreadsheet->createSheet();
         $detail->setTitle('Detalhes');
-        $this->formatter->createTableHeader($detail, ['Data', 'Funcionário', 'Departamento', 'Trabalhado', 'Previsto', 'H. Extras', 'Extras 50%', 'Dia'], 1);
+        $this->formatter->createTableHeader($detail, ['Data', 'Colaborador', 'Departamento', 'Trabalhado', 'Previsto', 'H. Extras', 'Extras 50%', 'Dia'], 1);
         $this->formatter->freezeHeaderRow($detail, 1);
         $detail->setAutoFilter('A1:H1');
 
@@ -215,7 +215,7 @@ class ExcelOperationalReportBuilder
 
         $detail = $spreadsheet->createSheet();
         $detail->setTitle('Detalhes');
-        $this->formatter->createTableHeader($detail, ['Data', 'Funcionário', 'Departamento', 'Tipo', 'Horário', 'Esperado', 'Atraso (min)', 'Status'], 1);
+        $this->formatter->createTableHeader($detail, ['Data', 'Colaborador', 'Departamento', 'Tipo', 'Horário', 'Esperado', 'Atraso (min)', 'Status'], 1);
         $this->formatter->freezeHeaderRow($detail, 1);
         $detail->setAutoFilter('A1:H1');
 
@@ -255,7 +255,7 @@ class ExcelOperationalReportBuilder
 
         $this->formatter->createTableHeader($summary, ['Indicador', 'Valor'], $row);
         $odd = true;
-        foreach ([['Funcionários', count($data)], ['Total Extras', $this->fmtH($totExt)], ['Total Débitos', $this->fmtH($totOwd)], ['Saldo Geral', ($totBal >= 0 ? '+' : '') . $this->fmtH($totBal)]] as $k) {
+        foreach ([['Colaboradores', count($data)], ['Total Extras', $this->fmtH($totExt)], ['Total Débitos', $this->fmtH($totOwd)], ['Saldo Geral', ($totBal >= 0 ? '+' : '') . $this->fmtH($totBal)]] as $k) {
             $row++;
             $summary->setCellValue("A{$row}", $k[0]);
             $summary->setCellValue("B{$row}", $k[1]);
@@ -266,7 +266,7 @@ class ExcelOperationalReportBuilder
 
         $detail = $spreadsheet->createSheet();
         $detail->setTitle('Posição Individual');
-        $this->formatter->createTableHeader($detail, ['Funcionário', 'Departamento', 'H. Extras Acum.', 'H. Débitos Acum.', 'Saldo Total', 'Situação'], 1);
+        $this->formatter->createTableHeader($detail, ['Colaborador', 'Departamento', 'H. Extras Acum.', 'H. Débitos Acum.', 'Saldo Total', 'Situação'], 1);
         $this->formatter->freezeHeaderRow($detail, 1);
         $detail->setAutoFilter('A1:F1');
 
@@ -316,7 +316,7 @@ class ExcelOperationalReportBuilder
 
         $this->formatter->createTableHeader($summary, ['Indicador', 'Valor'], $row);
         $odd = true;
-        foreach ([['Funcionários', count($data)], ['Total trabalhado', $this->fmtH($totWork)], ['Total previsto', $this->fmtH($totExp)], ['Atrasos totais', $totLate], ['Faltas totais', $totAbs]] as $k) {
+        foreach ([['Colaboradores', count($data)], ['Total trabalhado', $this->fmtH($totWork)], ['Total previsto', $this->fmtH($totExp)], ['Atrasos totais', $totLate], ['Faltas totais', $totAbs]] as $k) {
             $row++;
             $summary->setCellValue("A{$row}", $k[0]);
             $summary->setCellValue("B{$row}", $k[1]);
@@ -326,8 +326,8 @@ class ExcelOperationalReportBuilder
         $this->formatter->autoSizeColumns($summary, 'B');
 
         $detail = $spreadsheet->createSheet();
-        $detail->setTitle('Por Funcionário');
-        $this->formatter->createTableHeader($detail, ['Funcionário', 'Departamento', 'Dias', 'Trabalhado', 'Previsto', 'Extras', 'Débitos', 'Saldo', 'Atrasos', 'Faltas', '% Presença'], 1);
+        $detail->setTitle('Por Colaborador');
+        $this->formatter->createTableHeader($detail, ['Colaborador', 'Departamento', 'Dias', 'Trabalhado', 'Previsto', 'Extras', 'Débitos', 'Saldo', 'Atrasos', 'Faltas', '% Presença'], 1);
         $this->formatter->freezeHeaderRow($detail, 1);
         $detail->setAutoFilter('A1:K1');
 
